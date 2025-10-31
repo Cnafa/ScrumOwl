@@ -48,9 +48,9 @@ const LoginScreen: React.FC = () => {
            <p><span className="font-semibold">{t('login_gmail_only')}</span></p>
            <p className="mt-2">
             {t('login_terms_prefix')}
-            <a href="#" className="underline hover:text-gray-600">{t('login_terms_of_service')}</a>
+            <a href="/legal" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">{t('login_terms_of_service')}</a>
             {t('login_terms_and')}
-            <a href="#" className="underline hover:text-gray-600">{t('login_privacy_policy')}</a>
+            <a href="/legal" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">{t('login_privacy_policy')}</a>
             {t('login_terms_suffix')}
            </p>
         </div>

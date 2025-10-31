@@ -10,8 +10,11 @@ interface State {
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Removed 'public' keyword for idiomatic React code style.
-  state: State = { hasError: false };
+  // FIX: Switched from class property to constructor for state initialization to ensure wider compatibility and fix prop resolution issues.
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(_error: Error): State {
     return { hasError: true };

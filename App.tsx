@@ -27,6 +27,7 @@ import { DeleteSprintModal } from './components/DeleteSprintModal';
 import LandingPage from './components/LandingPage';
 import { useSessionIdleTimer } from './hooks/useSessionIdleTimer';
 import { ReAuthModal } from './components/ReAuthModal';
+import LegalPage from './components/LegalPage';
 
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 
@@ -79,6 +80,7 @@ const App: React.FC = () => {
 
     // Dev route state
     const [isDevRoute, setIsDevRoute] = useState(false);
+    const [isLegalPage, setIsLegalPage] = useState(false);
 
     // FIX: Move sprint selection state up from AppShell to App
     const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
@@ -132,6 +134,9 @@ const App: React.FC = () => {
     useEffect(() => {
         if (window.location.pathname === '/dev/crash') {
             setIsDevRoute(true);
+        }
+        if (window.location.pathname === '/legal') {
+            setIsLegalPage(true);
         }
     }, []);
     
@@ -643,6 +648,10 @@ const App: React.FC = () => {
     };
     
     // --- Render Logic ---
+
+    if (isLegalPage) {
+        return <LegalPage />;
+    }
 
     if (viewState === 'LANDING') {
         return <LandingPage onStart={() => setViewState('APP')} />;

@@ -69,14 +69,16 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   [workItems]);
 
   const showBugPool = useMemo(() => {
-    if (filterSet.type !== 'ALL' && filterSet.type !== WorkItemType.BUG_MINOR && filterSet.type !== WorkItemType.BUG_URGENT) {
+    // FIX: Corrected property access from filterSet.type to filterSet.typeIds.
+    // The logic now correctly checks if bug-related types are included in the multi-select filter.
+    if (filterSet.typeIds.length > 0 && !filterSet.typeIds.includes(WorkItemType.BUG_MINOR) && !filterSet.typeIds.includes(WorkItemType.BUG_URGENT)) {
         return false;
     }
     if (bugItems.length === 0) {
         return false;
     }
     return true;
-  }, [filterSet.type, bugItems.length]);
+  }, [filterSet.typeIds, bugItems.length]);
 
   const itemsByEpic = useMemo(() => {
         const grouped: Record<string, WorkItem[]> = { 'no-epic': [] };
