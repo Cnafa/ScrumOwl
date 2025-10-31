@@ -113,9 +113,10 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
             [ReportType.BURNDOWN]: analytics.getBurndownData(sprintFilter, props.workItems),
             [ReportType.VELOCITY]: analytics.getVelocityData(props.workItems),
             [ReportType.EPIC_PROGRESS]: analytics.getEpicProgressData(props.epics, props.workItems),
-            [ReportType.ASSIGNEE_WORKLOAD]: analytics.getAssigneeWorkloadData(props.workItems),
+            // FIX: Pass the 'users' prop to getAssigneeWorkloadData as it expects two arguments.
+            [ReportType.ASSIGNEE_WORKLOAD]: analytics.getAssigneeWorkloadData(props.workItems, props.users),
         };
-    }, [props.workItems, props.epics, sprintFilter]);
+    }, [props.workItems, props.epics, props.users, sprintFilter]);
 
     const renderDashboard = () => (
         <>

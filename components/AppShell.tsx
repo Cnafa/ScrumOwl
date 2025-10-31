@@ -56,7 +56,7 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
     const { user } = useAuth();
-    const { can } = useBoard();
+    const { can, activeBoardMembers } = useBoard();
     const { t } = useLocale();
     const { currentView, setCurrentView } = useNavigation();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -79,6 +79,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
     const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
 
+    const boardUsers = useMemo(() => activeBoardMembers.map(m => m.user), [activeBoardMembers]);
 
     const fetchAllEvents = useCallback(async () => {
         if (!user || props.workItems.length === 0) return;
@@ -329,7 +330,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         workItems={props.workItems}
                         epics={props.epics}
                         teams={props.teams}
-                        users={ALL_USERS}
+                        users={boardUsers}
                     />
                 );
             case 'MEMBERS':

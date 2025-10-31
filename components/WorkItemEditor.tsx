@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { WorkItem, Status, Priority, WorkItemType, Epic, Team, User, Sprint, SprintState } from '../types';
 import { useLocale } from '../context/LocaleContext';
 import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon, StarIcon } from './icons';
-import { ALL_USERS, PRIORITIES, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
+import { PRIORITIES, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
 import { LabelInput } from './LabelInput';
 import { ChecklistInput } from './ChecklistInput';
 import { AttachmentsManager } from './AttachmentsManager';
@@ -22,6 +22,7 @@ interface WorkItemEditorProps {
   onCancel: () => void;
   isNew: boolean;
   highlightSection?: string;
+  boardUsers: User[];
 }
 
 const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) => {
@@ -45,7 +46,8 @@ const UserSelect: React.FC<{
   onChange: (userId: string) => void;
   highlightKey: string;
   disabled?: boolean;
-}> = ({ icon, selectedUser, onChange, highlightKey, disabled }) => {
+  users: User[];
+}> = ({ icon, selectedUser, onChange, highlightKey, disabled, users }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   useClickOutside(dropdownRef, () => setIsOpen(false));
@@ -66,7 +68,7 @@ const UserSelect: React.FC<{
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto text-start">
           <ul>
-            {ALL_USERS.map(user => (
+            {users.map(user => (
               <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
                 <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
                 <span>{user.name}</span>
@@ -118,7 +120,7 @@ const AssigneeChip: React.FC<{ user: User, isPrimary: boolean, onRemove: () => v
     );
 };
 
-export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, sprints, onSave, onCancel, isNew, highlightSection }) => {
+export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, sprints, onSave, onCancel, isNew, highlightSection, boardUsers }) => {
   const { t } = useLocale();
   const [localWorkItem, setLocalWorkItem] = useState<Partial<WorkItem>>(workItem);
   const [originalWorkItem, setOriginalWorkItem] = useState<Partial<WorkItem>>(workItem);
@@ -137,8 +139,8 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   
   const availableAssignees = useMemo(() => {
     const selectedIds = new Set(localWorkItem.assignees?.map(a => a.id) || []);
-    return ALL_USERS.filter(u => !selectedIds.has(u) && u.name.toLowerCase().includes(assigneeSearch.toLowerCase()));
-  }, [assigneeSearch, localWorkItem.assignees]);
+    return boardUsers.filter(u => !selectedIds.has(u) && u.name.toLowerCase().includes(assigneeSearch.toLowerCase()));
+  }, [assigneeSearch, localWorkItem.assignees, boardUsers]);
 
   useEffect(() => {
     setLocalWorkItem(workItem);
@@ -198,7 +200,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   };
 
   const handleUserChange = (fieldName: 'reporter', userId: string) => {
-    const user = ALL_USERS.find(u => u.id === userId);
+    const user = boardUsers.find(u => u.id === userId);
     if (user) {
       setLocalWorkItem(prev => ({ ...prev, [fieldName]: user }));
     }
@@ -361,7 +363,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             </SideFieldWrapper>
             
             <SideFieldWrapper label={t('reporter')} highlightKey="reporter">
-              <UserSelect icon={<UserRoundIcon className="w-4 h-4" />} selectedUser={localWorkItem.reporter} onChange={(userId) => handleUserChange('reporter', userId)} highlightKey="reporter" disabled={!isNew} />
+              <UserSelect icon={<UserRoundIcon className="w-4 h-4" />} selectedUser={localWorkItem.reporter} onChange={(userId) => handleUserChange('reporter', userId)} highlightKey="reporter" disabled={!isNew} users={boardUsers} />
             </SideFieldWrapper>
             
             <SideFieldWrapper label={t('type')} highlightKey="type">

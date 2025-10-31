@@ -1,6 +1,6 @@
 // services/analyticsService.ts
 import { WorkItem, Epic, User, Status, EpicProgressReportData, AssigneeWorkloadData } from '../types';
-import { SPRINTS, WIP_LIMIT, ALL_USERS } from '../constants';
+import { SPRINTS, WIP_LIMIT } from '../constants';
 
 // --- Burndown Chart Logic ---
 export const getBurndownData = (sprintId: string, workItems: WorkItem[]) => {
@@ -81,10 +81,10 @@ export const getEpicProgressData = (epics: Epic[], workItems: WorkItem[]): EpicP
 };
 
 // --- Assignee Workload Logic ---
-export const getAssigneeWorkloadData = (workItems: WorkItem[]): AssigneeWorkloadData[] => {
+export const getAssigneeWorkloadData = (workItems: WorkItem[], users: User[]): AssigneeWorkloadData[] => {
     const workloadMap: Record<string, { open: number, inProgress: number, inReview: number, totalLoad: number }> = {};
 
-    ALL_USERS.forEach(user => {
+    users.forEach(user => {
         workloadMap[user.id] = { open: 0, inProgress: 0, inReview: 0, totalLoad: 0 };
     });
 
@@ -104,7 +104,7 @@ export const getAssigneeWorkloadData = (workItems: WorkItem[]): AssigneeWorkload
         }
     });
 
-    return ALL_USERS.map(user => {
+    return users.map(user => {
         const stats = workloadMap[user.id];
         const totalLoad = stats.open + stats.inProgress + stats.inReview;
         return {

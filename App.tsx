@@ -33,7 +33,7 @@ const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 const App: React.FC = () => {
     const { isAuthenticated, user, logout, lastAuthTime, updateLastAuthTime } = useAuth();
     const { settings } = useSettings();
-    const { activeBoard, boards, setActiveBoard, can, createBoard } = useBoard();
+    const { activeBoard, boards, setActiveBoard, can, createBoard, activeBoardMembers } = useBoard();
     const { t, locale } = useLocale();
     
     // App Flow State
@@ -315,6 +315,7 @@ const App: React.FC = () => {
     
     const selectedSprint = useMemo(() => sprints.find(s => s.id === selectedSprintId), [sprints, selectedSprintId]);
     const activeEpics = useMemo(() => epics.filter(e => (e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD) && e.status !== EpicStatus.DELETED), [epics]);
+    const boardUsers = useMemo(() => activeBoardMembers.map(m => m.user), [activeBoardMembers]);
 
     // US-42: Clear highlight states when modals are closed
     useEffect(() => {
@@ -733,6 +734,7 @@ const App: React.FC = () => {
                     onCancel={() => setEditingWorkItem(null)}
                     isNew={isNewItem}
                     highlightSection={highlightSection}
+                    boardUsers={boardUsers}
                 />
             )}
             
