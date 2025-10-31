@@ -24,6 +24,7 @@ import JoinBoardModal from './components/JoinBoardModal';
 import PendingApprovalScreen from './components/PendingApprovalScreen';
 import { DeleteEpicModal } from './components/DeleteEpicModal';
 import { DeleteSprintModal } from './components/DeleteSprintModal';
+import LandingPage from './components/LandingPage';
 
 
 const App: React.FC = () => {
@@ -31,6 +32,9 @@ const App: React.FC = () => {
     const { settings } = useSettings();
     const { activeBoard, boards, setActiveBoard, can, createBoard } = useBoard();
     const { t, locale } = useLocale();
+    
+    // App Flow State
+    const [viewState, setViewState] = useState<'LANDING' | 'APP'>('LANDING');
 
     // ONB-01: Onboarding state management
     type OnboardingStatus = 'UNKNOWN' | 'NEEDS_ONBOARDING' | 'PENDING_APPROVAL' | 'COMPLETED';
@@ -521,6 +525,10 @@ const App: React.FC = () => {
     };
     
     // --- Render Logic ---
+
+    if (viewState === 'LANDING') {
+        return <LandingPage onStart={() => setViewState('APP')} />;
+    }
 
     if (isDevRoute) {
         return <DevCrashInspector />;

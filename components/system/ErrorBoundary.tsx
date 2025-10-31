@@ -21,8 +21,8 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  // FIX: The original `render()` method was a standard class method. In some misconfigured environments or with specific TypeScript settings, the `this` context within such methods can be lost, causing `this.props` to be undefined. By converting `render` to a class property assigned to an arrow function (`render = () => { ... }`), we lexically bind `this` to the component instance. This ensures that `this.props` is always correctly resolved, fixing the "Property 'props' does not exist" error without reintroducing a constructor, which was noted to cause other issues.
-  render = (): React.ReactNode => {
+  // FIX: Changed render from a class property arrow function to a standard class method. The 'this' context for React lifecycle methods like render() is correctly bound by React itself. Using a standard method is the conventional approach and avoids potential TypeScript type inference issues that may have caused the "Property 'props' does not exist" error.
+  render(): React.ReactNode {
     if (this.state.hasError) {
       return (
         <div
@@ -45,5 +45,5 @@ export class ErrorBoundary extends React.Component<
       );
     }
     return this.props.children;
-  };
+  }
 }
