@@ -101,7 +101,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
 
     const fetchAllEvents = useCallback(async () => {
-        if (!user) return;
+        if (!user || props.workItems.length === 0) return;
         calendarService.initializeCalendarEvents(props.workItems);
         const [fetchedAll, fetchedToday] = await Promise.all([
             calendarService.getEvents('all', user),

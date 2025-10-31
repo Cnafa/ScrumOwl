@@ -1,12 +1,12 @@
 import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
-export class ErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean }> {
-  // FIX: Explicitly define constructor and initialize state to resolve potential tooling issues with `this.props` typing.
-  constructor(props: React.PropsWithChildren) {
-    super(props);
-    this.state = { hasError: false };
-  }
+// FIX: Correctly typed the component's props using `React.PropsWithChildren<{}>`.
+// The generic type `PropsWithChildren` requires a type argument. Using `{}` for components that only have children props.
+export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
+  // FIX: Initialize state using a class property. This is a modern and concise syntax for React class components
+  // that also ensures TypeScript correctly identifies `this.state` and `this.props`.
+  state = { hasError: false };
 
   static getDerivedStateFromError() { return { hasError: true }; }
 
