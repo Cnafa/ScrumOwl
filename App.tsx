@@ -25,10 +25,13 @@ import PendingApprovalScreen from './components/PendingApprovalScreen';
 import { DeleteEpicModal } from './components/DeleteEpicModal';
 import { DeleteSprintModal } from './components/DeleteSprintModal';
 import LandingPage from './components/LandingPage';
+import { useSessionIdleTimer } from './hooks/useSessionIdleTimer';
+import { ReAuthModal } from './components/ReAuthModal';
 
+const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 
 const App: React.FC = () => {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user, logout, lastAuthTime, updateLastAuthTime } = useAuth();
     const { settings } = useSettings();
     const { activeBoard, boards, setActiveBoard, can, createBoard } = useBoard();
     const { t, locale } = useLocale();
@@ -61,6 +64,10 @@ const App: React.FC = () => {
     const [highlightSection, setHighlightSection] = useState<string | undefined>(undefined);
     const coalescingRef = useRef<Map<string, { data: ToastNotification, timer: number }>>(new Map());
 
+    // Re-authentication state
+    const [isReAuthModalOpen, setIsReAuthModalOpen] = useState(false);
+    const [actionToReAuth, setActionToReAuth] = useState<(() => void) | null>(null);
+
     // US-42: State for read-only view mode
     const [isReadOnlyView, setIsReadOnlyView] = useState(false);
 
@@ -74,6 +81,22 @@ const App: React.FC = () => {
 
     // FIX: Move sprint selection state up from AppShell to App
     const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
+
+     // Idle Timer Integration
+    useSessionIdleTimer(
+        isAuthenticated,
+        () => { // onIdleWarning
+            setToastQueue(prev => [{
+                id: `toast-idle-warning-${Date.now()}`,
+                itemId: '',
+                title: 'Session Expiring Soon',
+                changes: ['You will be logged out in 1 hour due to inactivity.'],
+            }, ...prev]);
+        },
+        () => { // onIdleLogout
+            logout();
+        }
+    );
 
     // Check for dev route on mount
     useEffect(() => {
@@ -229,6 +252,23 @@ const App: React.FC = () => {
         }
     }, [selectedWorkItem, editingEpic, editingWorkItem]);
 
+    const confirmAndExecute = (action: () => void) => {
+        if (!lastAuthTime || (new Date().getTime() - lastAuthTime > TWELVE_HOURS)) {
+            setActionToReAuth(() => action);
+            setIsReAuthModalOpen(true);
+        } else {
+            action();
+        }
+    };
+
+    const handleReAuthSuccess = () => {
+        updateLastAuthTime();
+        if (actionToReAuth) {
+            actionToReAuth();
+        }
+        setIsReAuthModalOpen(false);
+        setActionToReAuth(null);
+    };
 
     // Handlers for modals and actions
     const handleSelectWorkItem = (item: WorkItem) => {
@@ -359,23 +399,25 @@ const App: React.FC = () => {
 
     // EP-DEL-001: Delete/Restore Handlers
     const handleConfirmDeleteEpic = (epicId: string, itemAction: 'detach') => {
-        console.log(`TELEMETRY: epic.deleted`, { epicId, itemAction }); // Simulate telemetry
-        // 1. Update related work items
-        if (itemAction === 'detach') {
-            setWorkItems(prev => prev.map(item => item.epicId === epicId ? { ...item, epicId: undefined, epicInfo: undefined } : item));
-        }
-        // 2. Soft delete the epic
-        handleUpdateEpicStatus(epicId, EpicStatus.DELETED);
-        // 3. Close the modal
-        setDeletingEpic(null);
-        // 4. Show Undo toast
-        setToastQueue(prev => [{
-            id: `undo-epic-${epicId}-${Date.now()}`,
-            itemId: epicId,
-            title: `Epic "${epics.find(e => e.id === epicId)?.name}" deleted.`,
-            changes: [],
-            undoAction: () => handleRestoreEpic(epicId),
-        }, ...prev]);
+        confirmAndExecute(() => {
+            console.log(`TELEMETRY: epic.deleted`, { epicId, itemAction }); // Simulate telemetry
+            // 1. Update related work items
+            if (itemAction === 'detach') {
+                setWorkItems(prev => prev.map(item => item.epicId === epicId ? { ...item, epicId: undefined, epicInfo: undefined } : item));
+            }
+            // 2. Soft delete the epic
+            handleUpdateEpicStatus(epicId, EpicStatus.DELETED);
+            // 3. Close the modal
+            setDeletingEpic(null);
+            // 4. Show Undo toast
+            setToastQueue(prev => [{
+                id: `undo-epic-${epicId}-${Date.now()}`,
+                itemId: epicId,
+                title: `Epic "${epics.find(e => e.id === epicId)?.name}" deleted.`,
+                changes: [],
+                undoAction: () => handleRestoreEpic(epicId),
+            }, ...prev]);
+        });
     };
 
     const handleRestoreEpic = (epicId: string) => {
@@ -385,28 +427,30 @@ const App: React.FC = () => {
     };
     
     const handleConfirmDeleteSprint = (sprintId: string, itemAction: 'unassign' | 'move', targetSprintId?: string) => {
-        console.log(`TELEMETRY: sprint.deleted`, { sprintId, itemAction, targetSprintId }); // Simulate telemetry
-        // 1. Update related work items
-        if (itemAction === 'unassign') {
-            setWorkItems(prev => prev.map(item => item.sprintId === sprintId ? { ...item, sprintId: undefined, sprint: '' } : item));
-        } else if (itemAction === 'move' && targetSprintId) {
-            const targetSprint = sprints.find(s => s.id === targetSprintId);
-            if (targetSprint) {
-                setWorkItems(prev => prev.map(item => item.sprintId === sprintId ? { ...item, sprintId: targetSprint.id, sprint: targetSprint.name } : item));
+        confirmAndExecute(() => {
+            console.log(`TELEMETRY: sprint.deleted`, { sprintId, itemAction, targetSprintId }); // Simulate telemetry
+            // 1. Update related work items
+            if (itemAction === 'unassign') {
+                setWorkItems(prev => prev.map(item => item.sprintId === sprintId ? { ...item, sprintId: undefined, sprint: '' } : item));
+            } else if (itemAction === 'move' && targetSprintId) {
+                const targetSprint = sprints.find(s => s.id === targetSprintId);
+                if (targetSprint) {
+                    setWorkItems(prev => prev.map(item => item.sprintId === sprintId ? { ...item, sprintId: targetSprint.id, sprint: targetSprint.name } : item));
+                }
             }
-        }
-        // 2. Soft delete the sprint
-        setSprints(prev => prev.map(s => s.id === sprintId ? { ...s, state: SprintState.DELETED, deletedAt: new Date().toISOString() } : s));
-        // 3. Close modal
-        setDeletingSprint(null);
-        // 4. Show Undo toast
-         setToastQueue(prev => [{
-            id: `undo-sprint-${sprintId}-${Date.now()}`,
-            itemId: sprintId,
-            title: `Sprint "${sprints.find(s => s.id === sprintId)?.name}" deleted.`,
-            changes: [],
-            undoAction: () => handleRestoreSprint(sprintId),
-        }, ...prev]);
+            // 2. Soft delete the sprint
+            setSprints(prev => prev.map(s => s.id === sprintId ? { ...s, state: SprintState.DELETED, deletedAt: new Date().toISOString() } : s));
+            // 3. Close modal
+            setDeletingSprint(null);
+            // 4. Show Undo toast
+             setToastQueue(prev => [{
+                id: `undo-sprint-${sprintId}-${Date.now()}`,
+                itemId: sprintId,
+                title: `Sprint "${sprints.find(s => s.id === sprintId)?.name}" deleted.`,
+                changes: [],
+                undoAction: () => handleRestoreSprint(sprintId),
+            }, ...prev]);
+        });
     };
 
     const handleRestoreSprint = (sprintId: string) => {
@@ -656,6 +700,16 @@ const App: React.FC = () => {
                 onDismiss={handleDismissToast}
                 onOpen={handleOpenItemForView}
             />
+
+            {isReAuthModalOpen && (
+                <ReAuthModal
+                    onClose={() => {
+                        setIsReAuthModalOpen(false);
+                        setActionToReAuth(null);
+                    }}
+                    onSuccess={handleReAuthSuccess}
+                />
+            )}
             
              {isIdle && (
                 <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 py-2 px-4 rounded-md shadow-lg text-sm z-[100] flex items-center gap-4">

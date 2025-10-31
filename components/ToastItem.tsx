@@ -22,7 +22,9 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
     };
     
     const handleOpen = () => {
-        onOpen(toast.itemId, toast.highlightSection);
+        if (toast.itemId) {
+            onOpen(toast.itemId, toast.highlightSection);
+        }
         handleDismiss();
     };
 
@@ -35,7 +37,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key.toLowerCase() === 'o') {
+            if (e.key.toLowerCase() === 'o' && toast.itemId) {
                 handleOpen();
             } else if (e.key === 'Escape') {
                 handleDismiss();
@@ -64,8 +66,6 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
         };
     }, [toast.id, isHovered]);
 
-    const isUndoToast = !!toast.undoAction;
-
     return (
         <div
             id={toast.id}
@@ -83,7 +83,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
                 >
                     {toast.title}
                 </p>
-                {!isUndoToast && toast.changes.length > 0 && (
+                {toast.changes.length > 0 && (
                     <ul className="text-sm text-gray-600 mt-1 list-disc list-inside">
                         {toast.changes.map((change, index) => (
                             <li key={index}>{change}</li>
@@ -91,21 +91,21 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
                     </ul>
                 )}
                 <div className="mt-3 flex gap-2">
-                    {isUndoToast ? (
+                    {toast.undoAction ? (
                         <button
                             onClick={handleUndo}
                             className="text-xs font-bold text-white bg-[#486966] hover:bg-[#3a5a58] px-3 py-1 rounded-md"
                         >
                             Undo
                         </button>
-                    ) : (
+                    ) : toast.itemId ? (
                         <button
                             onClick={handleOpen}
                             className="text-xs font-bold text-white bg-[#486966] hover:bg-[#3a5a58] px-3 py-1 rounded-md"
                         >
                             {t('toast_open')} (O)
                         </button>
-                    )}
+                    ) : null}
                     <button
                         onClick={handleDismiss}
                         className="text-xs font-semibold text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md"

@@ -1,24 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleIcon, ScrumOwlLogo } from './icons';
 
 const LoginScreen: React.FC = () => {
   const { signInWithGoogle } = useAuth();
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleGoogleSignIn = () => {
-    signInWithGoogle();
+    signInWithGoogle(rememberMe);
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#F0F4F4]">
-      <div className="w-full max-w-sm p-8 space-y-8 bg-white/70 rounded-2xl shadow-lg backdrop-blur-sm text-center">
+      <div className="w-full max-w-sm p-8 space-y-6 bg-white/70 rounded-2xl shadow-lg backdrop-blur-sm text-center">
         <div className="flex items-center justify-center gap-2">
           <ScrumOwlLogo className="text-3xl" />
         </div>
         <div>
           <p className="mt-2 text-sm text-[#889C9B]">Unified Backlog for modern teams</p>
         </div>
-        <div className="pt-4">
+        <div>
           <button
             type="button"
             onClick={handleGoogleSignIn}
@@ -27,6 +28,19 @@ const LoginScreen: React.FC = () => {
             <GoogleIcon className="w-5 h-5" />
             Continue with Google
           </button>
+        </div>
+        <div className="flex items-center justify-center">
+            <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+            </label>
         </div>
         <div className="text-xs text-gray-400">
            <p>Only <span className="font-semibold">@gmail.com</span> accounts are supported.</p>
