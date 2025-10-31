@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
-import { WorkItem, Status, Epic, Sprint } from '../types';
+import React, { useMemo, useState, useEffect } from 'react';
+import { WorkItem, Status, Epic, Sprint, FilterSet, WorkItemType } from '../types';
 import { WorkItemCard } from './WorkItemCard';
 import { KANBAN_COLUMNS, WORKFLOW_RULES } from '../constants';
 import { useLocale } from '../context/LocaleContext';
 import { useNavigation } from '../context/NavigationContext';
 import { MountainIcon, ChevronRightIcon } from './icons';
+import { BugPoolSection } from './BugPoolSection';
 
 interface KanbanBoardProps {
   workItems: WorkItem[];
@@ -15,6 +16,7 @@ interface KanbanBoardProps {
   collapsedEpics: Set<string>;
   onToggleEpic: (epicId: string) => void;
   activeSprint: Sprint | null;
+  filterSet: FilterSet;
 }
 
 const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed: boolean, itemsCount: number }> = ({ epic, onToggle, isCollapsed, itemsCount }) => {
@@ -32,10 +34,69 @@ const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed
 };
 
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({ workItems, setWorkItems, onSelectWorkItem, groupBy, epics, collapsedEpics, onToggleEpic, activeSprint }) => {
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({ 
+    workItems, 
+    setWorkItems, 
+    onSelectWorkItem, 
+    groupBy, 
+    epics, 
+    collapsedEpics, 
+    onToggleEpic, 
+    activeSprint,
+    filterSet
+}) => {
   const { t } = useLocale();
   const { setCurrentView } = useNavigation();
 
+  // All hooks must be called at the top of the component, before any conditional returns.
+  const [isBugPoolCollapsed, setIsBugPoolCollapsed] = useState(() => {
+    try {
+        const storedValue = localStorage.getItem('bugPoolCollapsed');
+        return storedValue ? JSON.parse(storedValue) : true;
+    } catch {
+        return true;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('bugPoolCollapsed', JSON.stringify(isBugPoolCollapsed));
+  }, [isBugPoolCollapsed]);
+
+  const bugItems = useMemo(() =>
+    workItems.filter(item => item.type === WorkItemType.BUG_MINOR || item.type === WorkItemType.BUG_URGENT),
+  [workItems]);
+
+  const showBugPool = useMemo(() => {
+    if (filterSet.type !== 'ALL' && filterSet.type !== WorkItemType.BUG_MINOR && filterSet.type !== WorkItemType.BUG_URGENT) {
+        return false;
+    }
+    if (bugItems.length === 0) {
+        return false;
+    }
+    return true;
+  }, [filterSet.type, bugItems.length]);
+
+  const itemsByEpic = useMemo(() => {
+        const grouped: Record<string, WorkItem[]> = { 'no-epic': [] };
+        epics.forEach(e => grouped[e.id] = []);
+        
+        workItems.forEach(item => {
+            if (item.epicId && grouped.hasOwnProperty(item.epicId)) {
+                grouped[item.epicId].push(item);
+            } else {
+                grouped['no-epic'].push(item);
+            }
+        });
+        return grouped;
+    }, [workItems, epics]);
+
+    const epicsWithItems = useMemo(() => {
+        return epics
+            .filter(e => itemsByEpic[e.id]?.length > 0)
+            .sort((a,b) => b.iceScore - a.iceScore);
+    }, [epics, itemsByEpic]);
+
+  // Conditional returns are now safe after all hooks have been called.
   if (!activeSprint) {
         return (
              <div className="flex-1 flex items-center justify-center">
@@ -77,61 +138,64 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ workItems, setWorkItem
         console.warn("Invalid status transition attempted.");
     }
   };
-
+  
   if (groupBy === 'status') {
     return (
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-        {KANBAN_COLUMNS.map((column) => (
-            <div
-                key={column.status}
-                className="bg-slate-100/70 rounded-lg p-2 flex flex-col"
-                onDragOver={onDragOver}
-                onDrop={(e) => onDrop(e, column.status)}
-            >
-                <h2 className="text-base font-semibold text-slate-700 mb-3 px-1">{column.title} <span className="text-sm font-normal text-slate-500">({workItems.filter(item => item.status === column.status).length})</span></h2>
-                <div className="flex-1 space-y-2 overflow-y-auto h-full pr-1">
-                    {workItems
-                    .filter((item) => item.status === column.status)
-                    .map((item) => (
-                        <div key={item.id} draggable onDragStart={(e) => onDragStart(e, item.id)}>
-                            <WorkItemCard 
-                                workItem={item} 
-                                onSelect={() => onSelectWorkItem(item)}
-                            />
-                        </div>
-                    ))}
+        <div className="flex-1 flex flex-col gap-3">
+            {showBugPool && (
+                 <BugPoolSection
+                    isCollapsed={isBugPoolCollapsed}
+                    onToggle={() => setIsBugPoolCollapsed(prev => !prev)}
+                    bugItems={bugItems}
+                    onSelectWorkItem={onSelectWorkItem}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                />
+            )}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            {KANBAN_COLUMNS.map((column) => (
+                <div
+                    key={column.status}
+                    className="bg-slate-100/70 rounded-lg p-2 flex flex-col"
+                    onDragOver={onDragOver}
+                    onDrop={(e) => onDrop(e, column.status)}
+                >
+                    <h2 className="text-base font-semibold text-slate-700 mb-3 px-1">{column.title} <span className="text-sm font-normal text-slate-500">({workItems.filter(item => item.status === column.status).length})</span></h2>
+                    <div className="flex-1 space-y-2 overflow-y-auto h-full pr-1">
+                        {workItems
+                        .filter((item) => item.status === column.status)
+                        .map((item) => (
+                            <div key={item.id} draggable onDragStart={(e) => onDragStart(e, item.id)}>
+                                <WorkItemCard 
+                                    workItem={item} 
+                                    onSelect={() => onSelectWorkItem(item)}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
+            ))}
             </div>
-        ))}
         </div>
     );
   }
 
-  const itemsByEpic = useMemo(() => {
-        const grouped: Record<string, WorkItem[]> = { 'no-epic': [] };
-        epics.forEach(e => grouped[e.id] = []);
-        
-        workItems.forEach(item => {
-            if (item.epicId && grouped.hasOwnProperty(item.epicId)) {
-                grouped[item.epicId].push(item);
-            } else {
-                grouped['no-epic'].push(item);
-            }
-        });
-        return grouped;
-    }, [workItems, epics]);
-
-    const epicsWithItems = useMemo(() => {
-        return epics
-            .filter(e => itemsByEpic[e.id]?.length > 0)
-            .sort((a,b) => b.iceScore - a.iceScore);
-    }, [epics, itemsByEpic]);
-
-    const noEpicItems = itemsByEpic['no-epic'];
-
+  const noEpicItems = itemsByEpic['no-epic'];
 
   return (
     <div className="flex-1 flex flex-col gap-3">
+        {showBugPool && (
+            <BugPoolSection
+                isCollapsed={isBugPoolCollapsed}
+                onToggle={() => setIsBugPoolCollapsed(prev => !prev)}
+                bugItems={bugItems}
+                onSelectWorkItem={onSelectWorkItem}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+            />
+        )}
         {epicsWithItems.map(epic => {
             const isCollapsed = collapsedEpics.has(epic.id);
             return (

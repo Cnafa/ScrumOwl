@@ -304,6 +304,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         collapsedEpics={collapsedEpics}
                         onToggleEpic={handleToggleEpic}
                         activeSprint={selectedSprint}
+                        filterSet={filterSet}
                     />
                 );
             case 'SPRINTS':

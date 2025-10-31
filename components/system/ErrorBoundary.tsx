@@ -1,10 +1,9 @@
 import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
-// FIX: Correctly typed the component's props using `React.PropsWithChildren<{}>`.
-// The generic type `PropsWithChildren` requires a type argument. Using `{}` for components that only have children props.
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
-  // FIX: Re-instated the constructor to explicitly call `super(props)`. This ensures `this.props` is correctly initialized on the component instance, resolving the "Property 'props' does not exist" error.
+  // FIX: Added a constructor to call super(props) and initialize state.
+  // This resolves TypeScript errors about 'props' and 'state' not existing on the component instance.
   constructor(props: React.PropsWithChildren<{}>) {
     super(props);
     this.state = { hasError: false };
