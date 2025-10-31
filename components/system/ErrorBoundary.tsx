@@ -2,12 +2,9 @@ import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
-  // FIX: Added a constructor to call super(props) and initialize state.
-  // This resolves TypeScript errors about 'props' and 'state' not existing on the component instance.
-  constructor(props: React.PropsWithChildren<{}>) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // FIX: Initialize state as a class property to resolve errors about 'state'
+  // and 'props' not being available on the component instance.
+  state = { hasError: false };
 
   static getDerivedStateFromError() { return { hasError: true }; }
 
