@@ -340,6 +340,15 @@ const App: React.FC = () => {
         }));
     };
 
+    const handleDeleteEpic = useCallback((epicId: string) => {
+        setEpics(prev => prev.filter(e => e.id !== epicId));
+        setWorkItems(prev => prev.map(item => 
+            item.epicId === epicId 
+                ? { ...item, epicId: undefined, epicInfo: undefined } 
+                : item
+        ));
+    }, []);
+
     // FIX-07: Handle saving sprints and automatically assigning work items.
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
         const sprintName = sprintToSave.name || (sprintToSave.id ? sprints.find(s => s.id === sprintToSave.id)?.name : '');
@@ -384,6 +393,17 @@ const App: React.FC = () => {
         }
     };
 
+    const handleDeleteSprint = useCallback((sprintId: string) => {
+        const sprintToDelete = sprints.find(s => s.id === sprintId);
+        if (!sprintToDelete) return;
+
+        setSprints(prev => prev.filter(s => s.id !== sprintId));
+        setWorkItems(prev => prev.map(item => 
+            item.sprint === sprintToDelete.name 
+                ? { ...item, sprint: '' } 
+                : item
+        ));
+    }, [sprints]);
 
     const handleMarkAllNotificationsRead = () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -482,6 +502,7 @@ const App: React.FC = () => {
                 setTeams={setTeams}
                 sprints={sprints}
                 onSaveSprint={handleSaveSprint}
+                onDeleteSprint={handleDeleteSprint}
                 onSelectWorkItem={handleSelectWorkItem}
                 notifications={notifications}
                 onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
@@ -491,6 +512,7 @@ const App: React.FC = () => {
                 onNewEpic={handleNewEpic}
                 onEditEpic={handleEditEpic}
                 onUpdateEpicStatus={handleUpdateEpicStatus}
+                onDeleteEpic={handleDeleteEpic}
                 onEditWorkItem={handleEditWorkItem}
                 realtimeStatus={connectionStatus}
                 selectedSprint={selectedSprint}

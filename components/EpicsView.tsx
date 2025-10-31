@@ -13,6 +13,7 @@ interface EpicsViewProps {
     onNewItem: (options: { epicId: string }) => void;
     onSelectWorkItem: (workItem: WorkItem) => void;
     onUpdateStatus: (epicId: string, newStatus: EpicStatus) => void;
+    onDeleteEpic: (epicId: string) => void;
 }
 
 const BlockActionModal: React.FC<{ epicName: string, openItems: WorkItem[], onClose: () => void }> = ({ epicName, openItems, onClose }) => {
@@ -39,7 +40,7 @@ const BlockActionModal: React.FC<{ epicName: string, openItems: WorkItem[], onCl
     );
 }
 
-const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: EpicStatus) => void, onEdit: () => void, setBlockModalOpen: (items: WorkItem[]) => void, workItems: WorkItem[] }> = ({ epic, onUpdateStatus, onEdit, setBlockModalOpen, workItems }) => {
+const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: EpicStatus) => void, onEdit: () => void, setBlockModalOpen: (items: WorkItem[]) => void, workItems: WorkItem[], onDelete: () => void }> = ({ epic, onUpdateStatus, onEdit, setBlockModalOpen, workItems, onDelete }) => {
     const { t } = useLocale();
     const [isOpen, setIsOpen] = useState(false);
     
@@ -49,6 +50,13 @@ const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: E
             setBlockModalOpen(openItems);
         } else {
             onUpdateStatus(epic.id, newStatus);
+        }
+        setIsOpen(false);
+    };
+
+    const handleDelete = () => {
+        if (window.confirm(`Are you sure you want to delete the epic "${epic.name}"? This action cannot be undone.`)) {
+            onDelete();
         }
         setIsOpen(false);
     };
@@ -85,12 +93,21 @@ const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: E
             {isOpen && (
                 <div onMouseLeave={() => setIsOpen(false)} className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
                     <ul className="py-1">
-                        <li><button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Details</button></li>
+                        <li><button onClick={(e) => { e.stopPropagation(); onEdit(); setIsOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Details</button></li>
                         {getActions().map(action => (
                             <li key={action.label}>
                                 <button onClick={(e) => { e.stopPropagation(); action.action(); }} disabled={action.disabled} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">{action.label}</button>
                             </li>
                         ))}
+                        <div className="my-1 h-px bg-gray-200" />
+                        <li>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); handleDelete(); }} 
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                            >
+                                Delete
+                            </button>
+                        </li>
                     </ul>
                 </div>
             )}
@@ -156,7 +173,7 @@ const EpicDrawerContent: React.FC<{
     );
 }
 
-export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus }) => {
+export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus, onDeleteEpic }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const canManage = can('epic.manage');
@@ -243,7 +260,7 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(epic.updatedAt).toLocaleDateString()}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                         {canManage && (
-                                            <ActionsMenu epic={epic} onEdit={() => onEditEpic(epic)} onUpdateStatus={onUpdateStatus} setBlockModalOpen={setBlockModalInfo} workItems={workItems} />
+                                            <ActionsMenu epic={epic} onEdit={() => onEditEpic(epic)} onUpdateStatus={onUpdateStatus} setBlockModalOpen={setBlockModalInfo} workItems={workItems} onDelete={() => onDeleteEpic(epic.id)} />
                                         )}
                                     </td>
                                 </tr>

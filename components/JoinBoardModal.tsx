@@ -42,7 +42,7 @@ const JoinBoardModal: React.FC<JoinBoardModalProps> = ({ onClose, onJoinRequest 
                     </div>
                 </main>
                  <footer className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-                    <button onClick={onClose} className="py-2 px-4 border rounded-md">Cancel</button>
+                    <button onClick={onClose} className="py-2 px-4 border border-slate-400 rounded-md text-slate-800 hover:bg-slate-100">Cancel</button>
                     <button onClick={handleJoin} disabled={!inviteCode.trim()} className="py-2 px-4 bg-[#486966] text-white rounded-md disabled:bg-gray-400">Join</button>
                  </footer>
             </div>

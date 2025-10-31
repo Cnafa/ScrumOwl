@@ -32,6 +32,7 @@ interface AppShellProps {
     setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
     sprints: Sprint[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
+    onDeleteSprint: (sprintId: string) => void;
     onSelectWorkItem: (workItem: WorkItem) => void;
     notifications: Notification[];
     onMarkAllNotificationsRead: () => void;
@@ -41,6 +42,7 @@ interface AppShellProps {
     onNewEpic: () => void;
     onEditEpic: (epic: Epic) => void;
     onUpdateEpicStatus: (epicId: string, newStatus: EpicStatus) => void;
+    onDeleteEpic: (epicId: string) => void;
     onEditWorkItem: (workItem: WorkItem) => void;
     realtimeStatus: any; // ConnectionStatus
     // FIX: Add sprint state props from App
@@ -312,6 +314,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     <SprintsView 
                         sprints={props.sprints}
                         onSaveSprint={props.onSaveSprint}
+                        onDeleteSprint={props.onDeleteSprint}
                         epics={enrichedEpics}
                     />
                 );
@@ -325,6 +328,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         onNewItem={props.onNewItem}
                         onSelectWorkItem={props.onSelectWorkItem}
                         onUpdateStatus={props.onUpdateEpicStatus}
+                        onDeleteEpic={props.onDeleteEpic}
                     />
                  );
             case 'EVENTS':

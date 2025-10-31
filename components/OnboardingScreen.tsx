@@ -19,7 +19,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onShowCreate, onSho
                     <button onClick={onShowCreate} className="py-2.5 px-6 bg-[#486966] text-white rounded-md hover:bg-[#3a5a58] font-semibold">
                         Create a new Board
                     </button>
-                    <button onClick={onShowJoin} className="py-2.5 px-6 border border-[#486966] text-[#486966] rounded-md hover:bg-gray-100 font-semibold">
+                    <button onClick={onShowJoin} className="py-2.5 px-6 bg-white border border-[#486966] text-[#486966] rounded-md hover:bg-primarySoft font-semibold">
                         Join an existing Board
                     </button>
                 </div>

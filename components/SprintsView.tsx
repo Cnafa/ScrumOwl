@@ -8,12 +8,13 @@ import { SprintEditorModal } from './SprintEditorModal';
 interface SprintsViewProps {
     sprints: Sprint[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
+    onDeleteSprint: (sprintId: string) => void;
     epics: Epic[];
 }
 
 type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST';
 
-export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint, epics }) => {
+export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint, onDeleteSprint, epics }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const [activeTab, setActiveTab] = useState<Tab>('ACTIVE');
@@ -51,6 +52,12 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
         onSaveSprint(sprintToSave);
         setEditingSprint(null);
+    };
+
+    const handleDelete = (sprintId: string) => {
+        if (window.confirm('Are you sure you want to delete this sprint? Work items will be unassigned from it.')) {
+            onDeleteSprint(sprintId);
+        }
     };
 
     const TabButton: React.FC<{ tab: Tab, label: string }> = ({ tab, label }) => (
@@ -101,10 +108,15 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
                                </td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sprint.epicIds.length}</td>
                                <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{sprint.goal}</td>
-                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-3">
                                    {canManage && (
                                        <button onClick={() => setEditingSprint(sprint)} className="text-indigo-600 hover:text-indigo-900">
                                            Edit
+                                       </button>
+                                   )}
+                                   {canManage && (sprint.state === SprintState.ACTIVE || sprint.state === SprintState.PLANNED) && (
+                                       <button onClick={() => handleDelete(sprint.id)} className="text-red-600 hover:text-red-900">
+                                           Delete
                                        </button>
                                    )}
                                </td>
