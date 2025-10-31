@@ -1,10 +1,12 @@
 
 
 
+
 import React from 'react';
 import { Notification, NotificationType, DisplayUser } from '../types';
 import { useLocale } from '../context/LocaleContext';
-import { UserIcon } from './icons';
+// FIX: Replace non-existent UserIcon with UserRoundIcon.
+import { UserRoundIcon } from './icons';
 
 interface NotificationPanelProps {
     notifications: Notification[];
@@ -50,7 +52,8 @@ const NotificationItem: React.FC<{ notification: Notification; onShow: (notifica
                         <img src={notification.actor.avatarUrl} alt={notification.actor.name} className="w-8 h-8 rounded-full" />
                     ) : (
                         <div className="w-8 h-8 rounded-full bg-[#B2BEBF] flex items-center justify-center">
-                            <UserIcon className="w-5 h-5 text-[#889C9B]" />
+                            {/* FIX: Use UserRoundIcon instead of UserIcon. */}
+                            <UserRoundIcon className="w-5 h-5 text-[#889C9B]" />
                         </div>
                     )}
                 </div>

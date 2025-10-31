@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityItem, Comment, TransitionLog, DisplayUser } from '../types';
-import { ArrowRightIcon, ChatBubbleLeftIcon, UserIcon } from './icons';
+// FIX: Replaced non-existent icons with available ones: ArrowRightIcon -> ChevronRightIcon, ChatBubbleLeftIcon -> FileTextIcon, UserIcon -> UserRoundIcon.
+import { ChevronRightIcon, FileTextIcon, UserRoundIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,7 +17,8 @@ const UserDisplay: React.FC<{ user: DisplayUser }> = ({ user }) => (
             <img src={user.avatarUrl} alt={user.name} className="w-6 h-6 rounded-full" />
         ) : (
             <div className="w-6 h-6 rounded-full bg-[#B2BEBF] flex items-center justify-center">
-                <UserIcon className="w-4 h-4 text-[#889C9B]" />
+                {/* FIX: Use UserRoundIcon instead of UserIcon. */}
+                <UserRoundIcon className="w-4 h-4 text-[#889C9B]" />
             </div>
         )}
         <span className="font-semibold text-[#3B3936]">{user.name}</span>
@@ -87,7 +89,8 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, onUpdate
                     return (
                         <div key={key} className="flex gap-3">
                             <div className="flex-shrink-0 mt-1">
-                                <ChatBubbleLeftIcon className="w-5 h-5 text-[#889C9B]" />
+                                {/* FIX: Use FileTextIcon instead of ChatBubbleLeftIcon. */}
+                                <FileTextIcon className="w-5 h-5 text-[#889C9B]" />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
@@ -131,12 +134,14 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, onUpdate
                     return (
                         <div key={key} className="flex gap-3 items-center">
                             <div className="flex-shrink-0">
-                                <UserIcon className="w-5 h-5 text-[#889C9B]" />
+                                {/* FIX: Use UserRoundIcon instead of UserIcon. */}
+                                <UserRoundIcon className="w-5 h-5 text-[#889C9B]" />
                             </div>
                             <div className="flex-1 text-sm text-[#486966]">
                                 <span className="font-semibold text-[#3B3936]">{transition.user.name}</span> {t('transitioned')}
                                 <span className="font-semibold mx-1">{transition.fromStatus}</span>
-                                <ArrowRightIcon className="inline w-3 h-3 mx-1" />
+                                {/* FIX: Use ChevronRightIcon instead of ArrowRightIcon. */}
+                                <ChevronRightIcon className="inline w-3 h-3 mx-1" />
                                 <span className="font-semibold mx-1">{transition.toStatus}</span>
                                 <time className="text-xs text-[#889C9B] ml-2">{timeAgo(transition.timestamp, locale)}</time>
                             </div>

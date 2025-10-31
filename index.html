@@ -17,7 +17,10 @@
               sans: ['Hack', 'monospace'],
               vazir: ['Vazirmatn', 'sans-serif'],
             },
-            // US-09: Add animation for real-time updates
+            colors: {
+              primary: '#2563EB',
+              primarySoft: '#E8F0FF',
+            },
             animation: {
               'fade-in-out': 'fadeInOut 3s ease-in-out forwards',
               'pulse-once': 'pulse-once 1.5s cubic-bezier(0.4, 0, 0.6, 1)',
@@ -33,9 +36,9 @@
                 '50%': { opacity: .7 },
               },
               highlightPulse: {
-                '0%': { outline: '2px solid rgba(59, 130, 246, 0.7)', outlineOffset: '2px' },
-                '70%': { outline: '2px solid rgba(59, 130, 246, 0.2)', outlineOffset: '2px' },
-                '100%': { outline: '2px solid rgba(59, 130, 246, 0)', outlineOffset: '2px' },
+                '0%': { outline: '2px solid rgba(37, 99, 235, 0.7)', outlineOffset: '2px' },
+                '70%': { outline: '2px solid rgba(37, 99, 235, 0.2)', outlineOffset: '2px' },
+                '100%': { outline: '2px solid rgba(37, 99, 235, 0)', outlineOffset: '2px' },
               }
             }
           },
@@ -43,20 +46,59 @@
       }
     </script>
     <style>
-      /* Custom scrollbar updated to the new Big-Machine color palette */
+      /* Base font size */
+      body {
+        font-size: 14px;
+      }
+      /* Custom scrollbar updated to new palette */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #B2BEBF; /* Big-Machine-3 */
+        background: #E5E7EB;
       }
       ::-webkit-scrollbar-thumb {
-        background: #889C9B; /* Big-Machine-4 */
+        background: #CBD5E1;
         border-radius: 10px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #486966; /* Big-Machine-5 */
+        background: #9CA3AF;
+      }
+      /* FE-UI-08: Readable Checkboxes */
+      input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background-color: #FFFFFF;
+        border: 1px solid #CBD5E1;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+        transition: all 150ms;
+      }
+      input[type="checkbox"]:checked {
+        background-color: #2563EB;
+        border-color: #2563EB;
+      }
+      input[type="checkbox"]:checked::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 4px;
+        height: 8px;
+        border: solid #FFFFFF;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      input[type="checkbox"]:focus-visible {
+        outline: 2px solid #BFDBFE;
+        outline-offset: 2px;
+      }
+      input[type="checkbox"]:hover {
+        border-color: #94a3b8;
       }
     </style>
   <script type="importmap">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { WorkItem, ActivityItem, User, ChecklistItem } from '../types';
-import { XMarkIcon, UserIcon } from './icons';
+// FIX: Removed unused and non-existent 'UserIcon' import.
+import { XMarkIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { ActivityFeed } from './ActivityFeed';

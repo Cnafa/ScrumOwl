@@ -287,9 +287,9 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 if (!can('sprint.manage') && props.availableActiveSprints.length === 0) {
                      return (
                         <div className="flex-1 flex items-center justify-center">
-                            <div className="text-center p-10 bg-white/60 rounded-lg">
-                                <h3 className="text-lg font-semibold text-[#3B3936]">No Active Sprints</h3>
-                                <p className="mt-2 text-sm text-gray-600">You do not have any items assigned to you in currently active sprints.</p>
+                            <div className="text-center p-8 bg-white/60 rounded-lg">
+                                <h3 className="text-base font-semibold text-slate-800">No Active Sprints</h3>
+                                <p className="mt-2 text-sm text-slate-600">You do not have any items assigned to you in currently active sprints.</p>
                             </div>
                         </div>
                     );
@@ -347,7 +347,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     };
 
     return (
-        <div className="flex h-screen w-screen bg-[#F0F4F4]">
+        <div className="flex h-screen w-screen bg-slate-100">
             <Sidebar 
                 isCollapsed={isSidebarCollapsed} 
                 onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -384,7 +384,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     />
                 )}
 
-                <main className="flex-1 p-4 overflow-auto flex flex-col">
+                <main className="flex-1 p-3 overflow-auto flex flex-col">
                     {currentView === 'KANBAN' && todaysEvents.length > 0 && (
                         <TodaysMeetingsBanner
                             events={todaysEvents}
