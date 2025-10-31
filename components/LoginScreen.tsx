@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { GoogleIcon, ScrumOwlLogoIcon } from './icons';
+import { GoogleIcon, ScrumOwlLogo } from './icons';
 
 const LoginScreen: React.FC = () => {
   const { signInWithGoogle } = useAuth();
@@ -13,10 +13,7 @@ const LoginScreen: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-[#F0F4F4]">
       <div className="w-full max-w-sm p-8 space-y-8 bg-white/70 rounded-2xl shadow-lg backdrop-blur-sm text-center">
         <div className="flex items-center justify-center gap-2">
-          <ScrumOwlLogoIcon className="h-10 w-auto" />
-          <h1 className="text-3xl font-bold text-[#3B3936]">
-             <span className="text-[#486966]">S</span>crumOw<span className="text-[#486966]">l</span>
-          </h1>
+          <ScrumOwlLogo className="text-3xl" />
         </div>
         <div>
           <p className="mt-2 text-sm text-[#889C9B]">Unified Backlog for modern teams</p>

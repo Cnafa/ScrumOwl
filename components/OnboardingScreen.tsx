@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrumOwlLogoIcon } from './icons';
+// FIX: Replaced ScrumOwlLogoIcon with ScrumOwlLogo to match the export from icons.tsx
+import { ScrumOwlLogo } from './icons';
 
 interface OnboardingScreenProps {
     onShowCreate: () => void;
@@ -11,7 +12,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onShowCreate, onSho
         <div className="flex items-center justify-center min-h-screen bg-[#F0F4F4]">
             <div className="text-center p-8 bg-white/70 rounded-2xl shadow-lg backdrop-blur-sm max-w-md">
                  <div className="flex items-center justify-center gap-2">
-                    <ScrumOwlLogoIcon className="h-10 w-auto" />
+                    <ScrumOwlLogo className="text-3xl" />
                     <h1 className="text-3xl font-bold text-[#3B3936]">Welcome to ScrumOwl!</h1>
                 </div>
                 <p className="text-gray-600 mt-2">Let's get you set up.</p>

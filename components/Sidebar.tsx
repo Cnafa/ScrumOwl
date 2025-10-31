@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import { useLocale } from '../context/LocaleContext';
 import { SavedView } from '../types';
-import { ScrumOwlLogoIcon, UsersIcon, LayoutKanbanIcon, RepeatIcon, MountainIcon, CalendarRangeIcon, BarChart3Icon, UsersRoundIcon, BookmarkCheckIcon, ChevronLeftIcon } from './icons';
+import { ScrumOwlLogo, UsersIcon, LayoutKanbanIcon, RepeatIcon, MountainIcon, CalendarRangeIcon, BarChart3Icon, UsersRoundIcon, BookmarkCheckIcon, ChevronLeftIcon } from './icons';
 import { useBoard } from '../context/BoardContext';
 import { BoardSwitcher } from './BoardSwitcher';
 
@@ -46,13 +46,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
     
     return (
         <aside className={`flex flex-col bg-slate-50/80 backdrop-blur-sm border-r border-slate-200/80 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-60'}`}>
-            <div className={`h-14 flex items-center border-b border-slate-200/80 ${isCollapsed ? 'justify-center' : 'justify-between'} px-3`}>
+            <div className={`h-14 flex items-center border-b border-slate-200/80 ${isCollapsed ? 'justify-center' : 'px-3'}`}>
                  <div className="flex items-center gap-2 overflow-hidden">
-                    <ScrumOwlLogoIcon className="w-8 h-8 flex-shrink-0" />
-                    {!isCollapsed && (
-                         <h1 className={`font-bold text-lg text-slate-800 transition-opacity duration-200 whitespace-nowrap`}>
-                             ScrumOwl
-                         </h1>
+                    {isCollapsed ? (
+                        <div className="font-sans font-bold text-2xl text-slate-800">
+                            <span className="text-primary">S</span>O
+                        </div>
+                    ) : (
+                        <ScrumOwlLogo className="text-lg whitespace-nowrap" />
                     )}
                 </div>
             </div>
