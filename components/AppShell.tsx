@@ -1,3 +1,4 @@
+
 // components/AppShell.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Sidebar } from './Sidebar';
@@ -22,6 +23,7 @@ import * as calendarService from '../services/calendarService';
 import { EventEditorModal } from './EventEditorModal';
 import { useBoard } from '../context/BoardContext';
 import { useLocale } from '../context/LocaleContext';
+import { EventDetailModal } from './EventDetailModal';
 
 interface AppShellProps {
     workItems: WorkItem[];
@@ -73,9 +75,10 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
     const [includeUnassignedEpicItems, setIncludeUnassignedEpicItems] = useState(false);
 
-    // FIX-08 State
+    // FIX-09 State
     const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
     const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
+    const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
     const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
 
 
@@ -236,9 +239,36 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
     const pinnedViews = useMemo(() => savedViews.filter(v => v.isPinned && v.ownerId === user?.id), [savedViews, user]);
     
-    // FIX-08: Event modal handlers
-    const handleOpenEventEditor = (event: Partial<CalendarEvent>) => {
+    // FIX-09: Event modal handlers
+    const handleOpenEventDetail = (event: CalendarEvent) => {
+        setViewingEvent(event);
+    };
+    
+    const handleEditEventFromDetail = (event: CalendarEvent) => {
+        setViewingEvent(null);
         setEditingEvent(event);
+    };
+
+    const handleOpenWorkItemFromEvent = (itemId: string) => {
+        setViewingEvent(null);
+        const item = props.workItems.find(w => w.id === itemId);
+        if (item) {
+            props.onEditWorkItem(item);
+        }
+    };
+    
+    const handleNewEvent = () => {
+        const start = new Date();
+        const end = new Date();
+        end.setHours(start.getHours() + 1);
+        setEditingEvent({
+            title: '',
+            start,
+            end,
+            allDay: false,
+            attendees: user ? [user] : [],
+            teamIds: []
+        });
     };
 
     const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
@@ -249,7 +279,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
             await calendarService.createEvent(eventData as any, user, props.teams);
         }
         setEditingEvent(null);
-        // Re-fetch today's events after save
+        // Re-fetch today's events after save to keep banner up-to-date
         calendarService.getTodaysEvents(user).then(setTodaysEvents);
     };
 
@@ -300,7 +330,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     />
                  );
             case 'EVENTS':
-                return <EventsView workItems={props.workItems} teams={props.teams} />;
+                return <EventsView workItems={props.workItems} teams={props.teams} onViewEvent={handleOpenEventDetail} onNewEvent={handleNewEvent} />;
             case 'REPORTS':
                 return (
                     <ReportsDashboard 
@@ -361,7 +391,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     {currentView === 'KANBAN' && todaysEvents.length > 0 && (
                         <TodaysMeetingsBanner
                             events={todaysEvents}
-                            onOpenEvent={handleOpenEventEditor}
+                            onOpenEvent={handleOpenEventDetail}
                         />
                     )}
                     {renderContent()}
@@ -388,6 +418,15 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 onSelectView={handleSelectView}
             />
 
+            {viewingEvent && (
+                <EventDetailModal
+                    event={viewingEvent}
+                    onClose={() => setViewingEvent(null)}
+                    onEdit={handleEditEventFromDetail}
+                    onOpenWorkItem={handleOpenWorkItemFromEvent}
+                />
+            )}
+            
             {editingEvent && (
                 <EventEditorModal
                     event={editingEvent}
@@ -400,3 +439,4 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
         </div>
     );
 };
+      

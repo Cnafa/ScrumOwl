@@ -1,3 +1,4 @@
+
 // components/TodaysMeetingsBanner.tsx
 import React, { useState } from 'react';
 import { CalendarEvent } from '../types';
@@ -5,10 +6,10 @@ import { useLocale } from '../context/LocaleContext';
 
 interface TodaysMeetingsBannerProps {
     events: CalendarEvent[];
-    onOpenEvent: (event: Partial<CalendarEvent>) => void;
+    onOpenEvent: (event: CalendarEvent) => void;
 }
 
-const EventItem: React.FC<{ event: CalendarEvent, onOpenEvent: (event: Partial<CalendarEvent>) => void, t: Function }> = ({ event, onOpenEvent, t }) => {
+const EventItem: React.FC<{ event: CalendarEvent, onOpenEvent: (event: CalendarEvent) => void, t: Function }> = ({ event, onOpenEvent, t }) => {
     const startTime = new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return (
@@ -82,3 +83,4 @@ export const TodaysMeetingsBanner: React.FC<TodaysMeetingsBannerProps> = ({ even
         </div>
     );
 };
+      

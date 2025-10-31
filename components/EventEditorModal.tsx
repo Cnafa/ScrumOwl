@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { CalendarEvent, WorkItem, User, Team, Conflict } from '../types';
 import { XMarkIcon } from './icons';
@@ -5,6 +6,7 @@ import { ALL_USERS } from '../constants';
 import * as calendarService from '../services/calendarService';
 import { debounce } from 'lodash-es';
 import { useLocale } from '../context/LocaleContext';
+import { DateTimePicker } from './DateTimePicker';
 
 interface EventEditorModalProps {
     event: Partial<CalendarEvent> | null;
@@ -68,8 +70,6 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
         if (type === 'checkbox') {
             const { checked } = e.target as HTMLInputElement;
             newEventData = { ...localEvent, [name]: checked };
-        } else if (type === 'datetime-local') {
-            newEventData = {...localEvent, [name]: new Date(value)};
         } else {
             newEventData = { ...localEvent, [name]: value };
         }
@@ -86,12 +86,6 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(localEvent);
-    };
-    
-    const formatDateForInput = (date?: Date): string => {
-        if (!date) return '';
-        const d = new Date(date);
-        return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
     };
 
     return (
@@ -119,11 +113,11 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label htmlFor="start" className="block text-sm font-medium text-[#486966] mb-1">Start Time</label>
-                                <input type="datetime-local" id="start" name="start" value={formatDateForInput(localEvent.start)} onChange={handleChange} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                                <DateTimePicker value={localEvent.start || new Date()} onChange={(date) => { const updated = {...localEvent, start: date }; setLocalEvent(updated); checkConflicts(updated); }} />
                             </div>
                             <div>
                                 <label htmlFor="end" className="block text-sm font-medium text-[#486966] mb-1">End Time</label>
-                                <input type="datetime-local" id="end" name="end" value={formatDateForInput(localEvent.end)} onChange={handleChange} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                                <DateTimePicker value={localEvent.end || new Date()} onChange={(date) => { const updated = {...localEvent, end: date }; setLocalEvent(updated); checkConflicts(updated); }} />
                             </div>
                         </div>
                          <div>
@@ -179,3 +173,4 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
         </div>
     );
 };
+      
