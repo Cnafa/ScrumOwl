@@ -20,6 +20,7 @@ import { ALL_USERS } from '../constants';
 import { TodaysMeetingsBanner } from './TodaysMeetingsBanner';
 import * as calendarService from '../services/calendarService';
 import { EventEditorModal } from './EventEditorModal';
+import { EventViewModal } from './EventViewModal';
 import { useBoard } from '../context/BoardContext';
 import { useLocale } from '../context/LocaleContext';
 
@@ -59,7 +60,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const { user } = useAuth();
     const { can } = useBoard();
     const { t } = useLocale();
-    const { currentView } = useNavigation();
+    const { currentView, setCurrentView } = useNavigation();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     
     // View Management State
@@ -73,11 +74,24 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
     const [includeUnassignedEpicItems, setIncludeUnassignedEpicItems] = useState(false);
 
-    // FIX-08 State
+    // FIX-08 & FE-EV-02 State Management
     const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
+    const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
     const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
+    const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
     const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
 
+
+    const fetchAllEvents = useCallback(async () => {
+        if (!user) return;
+        calendarService.initializeCalendarEvents(props.workItems);
+        const [fetchedAll, fetchedToday] = await Promise.all([
+            calendarService.getEvents('all', user),
+            calendarService.getTodaysEvents(user),
+        ]);
+        setAllEvents(fetchedAll);
+        setTodaysEvents(fetchedToday);
+    }, [user, props.workItems]);
 
      useEffect(() => {
         if (user) {
@@ -87,9 +101,9 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
             initialViews[0].isDefault = true;
             setSavedViews(initialViews);
             
-            calendarService.getTodaysEvents(user).then(setTodaysEvents);
+            fetchAllEvents();
         }
-    }, [user, props.workItems]); // Re-fetch on workItems change for event linking updates
+    }, [user, fetchAllEvents]);
 
     const activeSprints = useMemo(() => props.sprints.filter(s => s.state === SprintState.ACTIVE), [props.sprints]);
 
@@ -236,21 +250,41 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
     const pinnedViews = useMemo(() => savedViews.filter(v => v.isPinned && v.ownerId === user?.id), [savedViews, user]);
     
-    // FIX-08: Event modal handlers
-    const handleOpenEventEditor = (event: Partial<CalendarEvent>) => {
+    // FE-EV-02: Event modal handlers
+    const handleViewEvent = (event: CalendarEvent) => {
+        setViewingEvent(event);
+    };
+    
+    const handleEditEvent = (event: CalendarEvent) => {
+        setViewingEvent(null);
         setEditingEvent(event);
+    };
+    
+    const handleAddNewEvent = () => {
+        if (!user) return;
+        const start = new Date();
+        const end = new Date();
+        end.setHours(start.getHours() + 1);
+        setEditingEvent({
+            title: '',
+            start,
+            end,
+            allDay: false,
+            attendees: [user],
+            teamIds: []
+        });
     };
 
     const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
         if (!user) return;
         if (eventData.id) {
-            await calendarService.updateEvent(eventData as CalendarEvent, props.teams);
+            const originalEvent = allEvents.find(e => e.id === eventData.id)!;
+            await calendarService.updateEvent({ ...originalEvent, ...eventData } as CalendarEvent, props.teams);
         } else {
             await calendarService.createEvent(eventData as any, user, props.teams);
         }
         setEditingEvent(null);
-        // Re-fetch today's events after save
-        calendarService.getTodaysEvents(user).then(setTodaysEvents);
+        await fetchAllEvents();
     };
 
 
@@ -300,7 +334,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     />
                  );
             case 'EVENTS':
-                return <EventsView workItems={props.workItems} teams={props.teams} />;
+                return <EventsView workItems={props.workItems} teams={props.teams} events={allEvents} onViewEvent={handleViewEvent} onAddNewEvent={handleAddNewEvent} />;
             case 'REPORTS':
                 return (
                     <ReportsDashboard 
@@ -361,7 +395,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     {currentView === 'KANBAN' && todaysEvents.length > 0 && (
                         <TodaysMeetingsBanner
                             events={todaysEvents}
-                            onOpenEvent={handleOpenEventEditor}
+                            onOpenEvent={handleViewEvent}
                         />
                     )}
                     {renderContent()}
@@ -387,6 +421,19 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 onDuplicate={handleDuplicateView}
                 onSelectView={handleSelectView}
             />
+
+            {viewingEvent && (
+                <EventViewModal
+                    event={viewingEvent}
+                    workItems={props.workItems}
+                    onClose={() => setViewingEvent(null)}
+                    onEdit={handleEditEvent}
+                    onOpenWorkItem={(itemId) => {
+                        const item = props.workItems.find(wi => wi.id === itemId);
+                        if (item) props.onEditWorkItem(item);
+                    }}
+                />
+            )}
 
             {editingEvent && (
                 <EventEditorModal
