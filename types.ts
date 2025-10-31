@@ -149,6 +149,7 @@ export interface ToastNotification {
     title: string;
     changes: string[];
     highlightSection?: string;
+    undoAction?: () => void;
 }
 
 export type ItemUpdateEventType = 'item.status_changed' | 'item.assignee_changed' | 'item.due_changed' | 'item.field_updated' | 'item.comment_added';
@@ -205,6 +206,7 @@ export enum EpicStatus {
     ON_HOLD = 'ON_HOLD',
     DONE = 'DONE',
     ARCHIVED = 'ARCHIVED',
+    DELETED = 'DELETED',
 }
 
 export interface Epic {
@@ -224,6 +226,7 @@ export interface Epic {
     // FIX-06 & FIX-07: Add computed stats
     status: EpicStatus;
     archivedAt?: string;
+    deletedAt?: string; // EP-DEL-001
     openItems?: number;
     totalEstimation?: number;
     percentDoneWeighted?: number;
@@ -341,6 +344,7 @@ export enum SprintState {
     PLANNED = 'PLANNED',
     ACTIVE = 'ACTIVE',
     CLOSED = 'CLOSED',
+    DELETED = 'DELETED',
 }
 
 export interface Sprint {
@@ -353,4 +357,5 @@ export interface Sprint {
     endAt: string;
     state: SprintState;
     epicIds: string[];
+    deletedAt?: string; // EP-DEL-001
 }

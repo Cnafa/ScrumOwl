@@ -41,6 +41,10 @@ interface AppShellProps {
     onNewEpic: () => void;
     onEditEpic: (epic: Epic) => void;
     onUpdateEpicStatus: (epicId: string, newStatus: EpicStatus) => void;
+    onDeleteEpic: (epic: Epic) => void; // EP-DEL-001
+    onRestoreEpic: (epicId: string) => void; // EP-DEL-001
+    onDeleteSprint: (sprint: Sprint) => void; // EP-DEL-001
+    onRestoreSprint: (sprintId: string) => void; // EP-DEL-001
     onEditWorkItem: (workItem: WorkItem) => void;
     realtimeStatus: any; // ConnectionStatus
     // FIX: Add sprint state props from App
@@ -48,32 +52,6 @@ interface AppShellProps {
     setSelectedSprintId: (sprintId: string | null) => void;
     availableActiveSprints: Sprint[];
 }
-
-// Mock saved views
-const createMockSavedView = (id: number, ownerId: string): SavedView => {
-    const randomUser = faker.helpers.arrayElement(ALL_USERS);
-    // Exclude Epic from random types as it's not a filterable work item type in the dropdown
-    const randomType = faker.helpers.arrayElement(WORK_ITEM_TYPES.filter(t => t !== WorkItemType.EPIC));
-    const randomTeam = faker.helpers.arrayElement(ALL_TEAMS);
-
-    const filterOptions = [
-        { filterSet: { searchQuery: `PROJ-${faker.number.int({min: 1, max: 10})}`, assignee: 'ALL', type: 'ALL', team: 'ALL' }, name: 'View for a specific item' },
-        { filterSet: { searchQuery: '', assignee: randomUser.name, type: 'ALL', team: 'ALL' }, name: `${randomUser.name.split(' ')[0]}'s Tasks` },
-        { filterSet: { searchQuery: '', assignee: 'ALL', type: randomType, team: 'ALL' }, name: `All ${randomType} items` },
-        { filterSet: { searchQuery: '', assignee: 'ALL', type: 'ALL', team: randomTeam.id }, name: `Tasks for ${randomTeam.name}` },
-    ];
-    const chosenFilter = faker.helpers.arrayElement(filterOptions);
-
-    return {
-        id: `view-${id}`,
-        name: chosenFilter.name,
-        ownerId: ownerId,
-        visibility: faker.helpers.arrayElement([ViewVisibility.PRIVATE, ViewVisibility.GROUP]),
-        filterSet: chosenFilter.filterSet,
-        isDefault: false,
-        isPinned: faker.datatype.boolean(0.4),
-    };
-};
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
     const { user } = useAuth();
@@ -83,7 +61,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     
     // View Management State
-    const [savedViews, setSavedViews] = useState<SavedView[]>([]);
+    const [savedViews, setSavedViews] = useState<SavedView[]>([]); // US-43: Initialize as empty
     const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false);
     const [isManageViewsModalOpen, setIsManageViewsModalOpen] = useState(false);
 
@@ -113,12 +91,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
      useEffect(() => {
         if (user) {
-            const userViews = Array.from({ length: 3 }, (_, i) => createMockSavedView(i + 1, user.id));
-            const groupViews = Array.from({ length: 2 }, (_, i) => createMockSavedView(i + 4, 'user-2'));
-            const initialViews = [...userViews, ...groupViews];
-            initialViews[0].isDefault = true;
-            setSavedViews(initialViews);
-            
+            // US-43: Removed fake saved view generation.
             fetchAllEvents();
         }
     }, [user, fetchAllEvents]);
@@ -305,6 +278,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         onToggleEpic={handleToggleEpic}
                         activeSprint={selectedSprint}
                         filterSet={filterSet}
+                        onNewItem={props.onNewItem}
                     />
                 );
             case 'SPRINTS':
@@ -313,6 +287,8 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         sprints={props.sprints}
                         workItems={props.workItems}
                         onSaveSprint={props.onSaveSprint}
+                        onDeleteSprint={props.onDeleteSprint}
+                        onRestoreSprint={props.onRestoreSprint}
                         epics={enrichedEpics}
                     />
                 );
@@ -326,6 +302,8 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         onNewItem={props.onNewItem}
                         onSelectWorkItem={props.onSelectWorkItem}
                         onUpdateStatus={props.onUpdateEpicStatus}
+                        onDeleteEpic={props.onDeleteEpic}
+                        onRestoreEpic={props.onRestoreEpic}
                     />
                  );
             case 'EVENTS':

@@ -76,20 +76,30 @@ export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams, events
                      <CalendarGrid events={filteredEvents} onSelectEvent={handleSelectEvent} />
                 ) : (
                     <div className="overflow-y-auto h-full">
-                        <ul className="space-y-2">
-                            {filteredEvents.sort((a,b) => new Date(a.start).getTime() - new Date(b.start).getTime()).map(event => (
-                                <li key={event.id} onClick={() => handleSelectEvent(event)} className="p-3 border rounded cursor-pointer hover:bg-gray-50 flex justify-between items-center">
-                                    <div>
-                                        <p className="font-semibold text-sm text-[#3B3936] flex items-center gap-2">
-                                            {event.title}
-                                            {event.hasConflict && <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">{t('conflict_badge')}</span>}
-                                        </p>
-                                        <p className="text-xs text-gray-600">{new Date(event.start).toLocaleString()} - {new Date(event.end).toLocaleString()}</p>
-                                    </div>
-                                    <div className="text-xs text-gray-500">{event.attendees.length} attendees</div>
-                                </li>
-                            ))}
-                        </ul>
+                        {filteredEvents.length > 0 ? (
+                            <ul className="space-y-2">
+                                {filteredEvents.sort((a,b) => new Date(a.start).getTime() - new Date(b.start).getTime()).map(event => (
+                                    <li key={event.id} onClick={() => handleSelectEvent(event)} className="p-3 border rounded cursor-pointer hover:bg-gray-50 flex justify-between items-center">
+                                        <div>
+                                            <p className="font-semibold text-sm text-[#3B3936] flex items-center gap-2">
+                                                {event.title}
+                                                {event.hasConflict && <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">{t('conflict_badge')}</span>}
+                                            </p>
+                                            <p className="text-xs text-gray-600">{new Date(event.start).toLocaleString()} - {new Date(event.end).toLocaleString()}</p>
+                                        </div>
+                                        <div className="text-xs text-gray-500">{event.attendees.length} attendees</div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                                <h3 className="text-base font-semibold text-slate-800">No Events Scheduled</h3>
+                                <p className="mt-2 text-sm text-slate-600">Create an event to see it on your calendar or list.</p>
+                                <button onClick={onAddNewEvent} className="mt-4 py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
+                                    New Event
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

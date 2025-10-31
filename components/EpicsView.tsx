@@ -13,6 +13,8 @@ interface EpicsViewProps {
     onNewItem: (options: { epicId: string }) => void;
     onSelectWorkItem: (workItem: WorkItem) => void;
     onUpdateStatus: (epicId: string, newStatus: EpicStatus) => void;
+    onDeleteEpic: (epic: Epic) => void;
+    onRestoreEpic: (epicId: string) => void;
 }
 
 const BlockActionModal: React.FC<{ epicName: string, openItems: WorkItem[], onClose: () => void }> = ({ epicName, openItems, onClose }) => {
@@ -41,11 +43,12 @@ const BlockActionModal: React.FC<{ epicName: string, openItems: WorkItem[], onCl
 
 const ActionsMenu: React.FC<{ 
     epic: Epic, 
-    onUpdateStatus: (id: string, status: EpicStatus) => void, 
+    onUpdateStatus: (id: string, status: EpicStatus) => void,
+    onDelete: (epic: Epic) => void, 
     onEdit: () => void, 
     setBlockModalOpen: (items: WorkItem[]) => void, 
     workItems: WorkItem[], 
-}> = ({ epic, onUpdateStatus, onEdit, setBlockModalOpen, workItems }) => {
+}> = ({ epic, onUpdateStatus, onDelete, onEdit, setBlockModalOpen, workItems }) => {
     const { t } = useLocale();
     const [isOpen, setIsOpen] = useState(false);
     
@@ -69,14 +72,16 @@ const ActionsMenu: React.FC<{
                         ? [{ label: t('epic_action_hold'), action: () => handleStatusChange(EpicStatus.ON_HOLD) }] 
                         : [{ label: t('epic_action_activate'), action: () => handleStatusChange(EpicStatus.ACTIVE) }]),
                     { label: t('epic_action_mark_done'), action: () => handleStatusChange(EpicStatus.DONE), disabled: epic.openItemsCount !== 0 },
+                    { type: 'divider' as const },
+                    { label: t('delete'), action: () => onDelete(epic), isDestructive: true },
                 ];
             case EpicStatus.DONE:
                 return [
                     { label: t('edit'), action: onEdit },
                     { label: t('epic_action_reopen'), action: () => handleStatusChange(EpicStatus.ACTIVE) },
-                    // FIX: Add divider and destructive flag for archive action.
                     { type: 'divider' as const },
-                    { label: t('epic_action_archive'), action: () => handleStatusChange(EpicStatus.ARCHIVED), disabled: epic.openItemsCount !== 0, isDestructive: true }
+                    { label: t('epic_action_archive'), action: () => handleStatusChange(EpicStatus.ARCHIVED), disabled: epic.openItemsCount !== 0 },
+                    { label: t('delete'), action: () => onDelete(epic), isDestructive: true },
                 ];
             case EpicStatus.ARCHIVED:
                 return [
@@ -95,7 +100,6 @@ const ActionsMenu: React.FC<{
             {isOpen && (
                 <div onMouseLeave={() => setIsOpen(false)} className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
                     <ul className="py-1">
-                        {/* FIX: Use type guards with 'in' operator to safely handle different action types (regular, divider, destructive). */}
                         {getActions().map((action, index) => (
                              'type' in action && action.type === 'divider' ?
                              <div key={index} className="my-1 h-px bg-gray-200" /> :
@@ -171,11 +175,11 @@ const EpicDrawerContent: React.FC<{
     );
 }
 
-export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus }) => {
+export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus, onDeleteEpic, onRestoreEpic }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const canManage = can('epic.manage');
-    const [activeTab, setActiveTab] = useState<EpicStatus>(EpicStatus.ACTIVE);
+    const [activeTab, setActiveTab] = useState<EpicStatus | 'DELETED'>(EpicStatus.ACTIVE);
     const [blockModalInfo, setBlockModalInfo] = useState<WorkItem[] | null>(null);
     const [expandedEpicId, setExpandedEpicId] = useState<string | null>(null);
 
@@ -189,7 +193,7 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
         return sorted.filter(e => e.status === activeTab);
     }, [epics, activeTab]);
     
-    const TabButton: React.FC<{ tab: EpicStatus, label: string }> = ({ tab, label }) => (
+    const TabButton: React.FC<{ tab: EpicStatus | 'DELETED', label: string }> = ({ tab, label }) => (
          <button 
             onClick={() => setActiveTab(tab)}
             className={`px-3 py-2 text-sm font-medium rounded-md ${activeTab === tab ? 'bg-[#486966] text-white' : 'text-gray-600 hover:bg-gray-200'}`}
@@ -219,6 +223,7 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                 <TabButton tab={EpicStatus.ACTIVE} label={t('epic_tab_active')} />
                 <TabButton tab={EpicStatus.DONE} label={t('epic_tab_done')} />
                 <TabButton tab={EpicStatus.ARCHIVED} label={t('epic_tab_archive')} />
+                {canManage && <TabButton tab={EpicStatus.DELETED} label={t('delete')} />}
             </nav>
 
             <div className="overflow-x-auto">
@@ -230,7 +235,7 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                             <Th>{t('iceScore')}</Th>
                             <Th>Progress</Th>
                             <Th>Items</Th>
-                            <Th>Updated</Th>
+                            <Th>{activeTab === 'DELETED' ? 'Deleted At' : 'Updated'}</Th>
                             <Th>Actions</Th>
                         </tr>
                     </thead>
@@ -255,14 +260,17 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                                         {`${(epic.totalItemsCount || 0) - (epic.openItemsCount || 0)}/${epic.totalItemsCount || 0}`}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(epic.updatedAt).toLocaleDateString()}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(epic.deletedAt || epic.updatedAt).toLocaleDateString()}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                                        {canManage && (
-                                            <ActionsMenu epic={epic} onEdit={() => onEditEpic(epic)} onUpdateStatus={onUpdateStatus} setBlockModalOpen={setBlockModalInfo} workItems={workItems} />
+                                        {canManage && epic.status !== EpicStatus.DELETED && (
+                                            <ActionsMenu epic={epic} onEdit={() => onEditEpic(epic)} onDelete={onDeleteEpic} onUpdateStatus={onUpdateStatus} setBlockModalOpen={setBlockModalInfo} workItems={workItems} />
+                                        )}
+                                        {canManage && epic.status === EpicStatus.DELETED && (
+                                            <button onClick={(e) => { e.stopPropagation(); onRestoreEpic(epic.id); }} className="text-sm text-indigo-600 hover:underline">Restore</button>
                                         )}
                                     </td>
                                 </tr>
-                                {expandedEpicId === epic.id && (
+                                {expandedEpicId === epic.id && epic.status !== EpicStatus.DELETED && (
                                     <tr>
                                         <td colSpan={7} className="p-0 bg-gray-100 border-t-2 border-gray-200">
                                             <EpicDrawerContent

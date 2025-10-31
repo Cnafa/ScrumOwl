@@ -22,6 +22,8 @@ import OnboardingScreen from './components/OnboardingScreen';
 import CreateBoardModal from './components/CreateBoardModal';
 import JoinBoardModal from './components/JoinBoardModal';
 import PendingApprovalScreen from './components/PendingApprovalScreen';
+import { DeleteEpicModal } from './components/DeleteEpicModal';
+import { DeleteSprintModal } from './components/DeleteSprintModal';
 
 
 const App: React.FC = () => {
@@ -58,6 +60,11 @@ const App: React.FC = () => {
     // US-42: State for read-only view mode
     const [isReadOnlyView, setIsReadOnlyView] = useState(false);
 
+    // EP-DEL-001: State for delete modals
+    const [deletingEpic, setDeletingEpic] = useState<Epic | null>(null);
+    const [deletingSprint, setDeletingSprint] = useState<Sprint | null>(null);
+
+
     // Dev route state
     const [isDevRoute, setIsDevRoute] = useState(false);
 
@@ -90,20 +97,15 @@ const App: React.FC = () => {
     // Fetch initial data
     useEffect(() => {
         if (isAuthenticated && onboardingStatus === 'COMPLETED') {
-            const mockEpics = getMockEpics();
-            const mockTeams = getMockTeams();
-            const mockSprints = getMockSprints();
-            const mockWorkItems = getMockWorkItems(30);
-            const mockJoinRequests = getMockJoinRequests();
-            const mockInviteCodes = getMockInviteCodes();
-            
-            setEpics(mockEpics);
-            setTeams(mockTeams);
-            setSprints(mockSprints);
-            setWorkItems(mockWorkItems);
-            setNotifications(getMockNotifications(15, mockWorkItems));
-            setJoinRequests(mockJoinRequests);
-            setInviteCodes(mockInviteCodes);
+            // US-43: Disable fake data generators. Initialize with empty state.
+            // A real app would fetch data from an API here.
+            setEpics([]);
+            setTeams([]);
+            setSprints([]);
+            setWorkItems([]);
+            setNotifications([]);
+            setJoinRequests([]);
+            setInviteCodes([]);
 
             if (!activeBoard && boards.length > 0) {
                 setActiveBoard(boards[0].id);
@@ -186,7 +188,7 @@ const App: React.FC = () => {
     const { connectionStatus } = useRealtime(settings.enableRealtime, workItems, user, handleRealtimeMessage);
 
     // FIX: Moved sprint-related memos and effects from AppShell to App
-    const activeSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE), [sprints]);
+    const activeSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE && s.state !== SprintState.DELETED), [sprints]);
 
     const availableActiveSprints = useMemo(() => {
         if (!user) return [];
@@ -213,7 +215,7 @@ const App: React.FC = () => {
     }, [availableActiveSprints, selectedSprintId]);
     
     const selectedSprint = useMemo(() => sprints.find(s => s.id === selectedSprintId), [sprints, selectedSprintId]);
-    const activeEpics = useMemo(() => epics.filter(e => e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD), [epics]);
+    const activeEpics = useMemo(() => epics.filter(e => (e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD) && e.status !== EpicStatus.DELETED), [epics]);
 
     // US-42: Clear highlight states when modals are closed
     useEffect(() => {
@@ -342,11 +344,72 @@ const App: React.FC = () => {
                 if (newStatus === EpicStatus.ARCHIVED) {
                     updatedEpic.archivedAt = new Date().toISOString();
                 }
+                if (newStatus === EpicStatus.DELETED) { // EP-DEL-001
+                    updatedEpic.deletedAt = new Date().toISOString();
+                }
                 return updatedEpic;
             }
             return epic;
         }));
     };
+
+    // EP-DEL-001: Delete/Restore Handlers
+    const handleConfirmDeleteEpic = (epicId: string, itemAction: 'detach') => {
+        console.log(`TELEMETRY: epic.deleted`, { epicId, itemAction }); // Simulate telemetry
+        // 1. Update related work items
+        if (itemAction === 'detach') {
+            setWorkItems(prev => prev.map(item => item.epicId === epicId ? { ...item, epicId: undefined, epicInfo: undefined } : item));
+        }
+        // 2. Soft delete the epic
+        handleUpdateEpicStatus(epicId, EpicStatus.DELETED);
+        // 3. Close the modal
+        setDeletingEpic(null);
+        // 4. Show Undo toast
+        setToastQueue(prev => [{
+            id: `undo-epic-${epicId}-${Date.now()}`,
+            itemId: epicId,
+            title: `Epic "${epics.find(e => e.id === epicId)?.name}" deleted.`,
+            changes: [],
+            undoAction: () => handleRestoreEpic(epicId),
+        }, ...prev]);
+    };
+
+    const handleRestoreEpic = (epicId: string) => {
+        console.log(`TELEMETRY: epic.restored`, { epicId }); // Simulate telemetry
+        // Note: Restoring items is complex. This simple restore just brings back the epic.
+        handleUpdateEpicStatus(epicId, EpicStatus.ACTIVE);
+    };
+    
+    const handleConfirmDeleteSprint = (sprintId: string, itemAction: 'unassign' | 'move', targetSprintId?: string) => {
+        console.log(`TELEMETRY: sprint.deleted`, { sprintId, itemAction, targetSprintId }); // Simulate telemetry
+        // 1. Update related work items
+        if (itemAction === 'unassign') {
+            setWorkItems(prev => prev.map(item => item.sprintId === sprintId ? { ...item, sprintId: undefined, sprint: '' } : item));
+        } else if (itemAction === 'move' && targetSprintId) {
+            const targetSprint = sprints.find(s => s.id === targetSprintId);
+            if (targetSprint) {
+                setWorkItems(prev => prev.map(item => item.sprintId === sprintId ? { ...item, sprintId: targetSprint.id, sprint: targetSprint.name } : item));
+            }
+        }
+        // 2. Soft delete the sprint
+        setSprints(prev => prev.map(s => s.id === sprintId ? { ...s, state: SprintState.DELETED, deletedAt: new Date().toISOString() } : s));
+        // 3. Close modal
+        setDeletingSprint(null);
+        // 4. Show Undo toast
+         setToastQueue(prev => [{
+            id: `undo-sprint-${sprintId}-${Date.now()}`,
+            itemId: sprintId,
+            title: `Sprint "${sprints.find(s => s.id === sprintId)?.name}" deleted.`,
+            changes: [],
+            undoAction: () => handleRestoreSprint(sprintId),
+        }, ...prev]);
+    };
+
+    const handleRestoreSprint = (sprintId: string) => {
+        console.log(`TELEMETRY: sprint.restored`, { sprintId }); // Simulate telemetry
+        setSprints(prev => prev.map(s => s.id === sprintId ? { ...s, state: SprintState.PLANNED } : s));
+    };
+
 
     // FIX-07: Handle saving sprints and automatically assigning work items.
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
@@ -513,6 +576,10 @@ const App: React.FC = () => {
                 onNewEpic={handleNewEpic}
                 onEditEpic={handleEditEpic}
                 onUpdateEpicStatus={handleUpdateEpicStatus}
+                onDeleteEpic={(epic) => setDeletingEpic(epic)}
+                onRestoreEpic={handleRestoreEpic}
+                onDeleteSprint={(sprint) => setDeletingSprint(sprint)}
+                onRestoreSprint={handleRestoreSprint}
                 onEditWorkItem={handleEditWorkItem}
                 realtimeStatus={connectionStatus}
                 selectedSprint={selectedSprint}
@@ -535,7 +602,7 @@ const App: React.FC = () => {
                     workItem={editingWorkItem}
                     epics={activeEpics}
                     teams={teams}
-                    sprints={sprints}
+                    sprints={sprints.filter(s => s.state !== SprintState.DELETED)}
                     onSave={handleSaveWorkItem}
                     onCancel={() => setEditingWorkItem(null)}
                     isNew={isNewItem}
@@ -551,6 +618,24 @@ const App: React.FC = () => {
                     isNew={isNewEpic}
                     highlightSection={highlightSection}
                     readOnly={isReadOnlyView}
+                />
+            )}
+
+            {deletingEpic && (
+                <DeleteEpicModal
+                    epic={deletingEpic}
+                    workItems={workItems}
+                    onClose={() => setDeletingEpic(null)}
+                    onConfirm={handleConfirmDeleteEpic}
+                />
+            )}
+
+            {deletingSprint && (
+                <DeleteSprintModal
+                    sprint={deletingSprint}
+                    sprints={sprints}
+                    onClose={() => setDeletingSprint(null)}
+                    onConfirm={handleConfirmDeleteSprint}
                 />
             )}
 

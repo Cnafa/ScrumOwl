@@ -9,12 +9,14 @@ interface SprintsViewProps {
     sprints: Sprint[];
     workItems: WorkItem[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
+    onDeleteSprint: (sprint: Sprint) => void;
+    onRestoreSprint: (sprintId: string) => void;
     epics: Epic[];
 }
 
-type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST';
+type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST' | 'DELETED';
 
-export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, onSaveSprint, epics }) => {
+export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, onSaveSprint, onDeleteSprint, onRestoreSprint, epics }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const [activeTab, setActiveTab] = useState<Tab>('ACTIVE');
@@ -29,6 +31,8 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                 return sprints.filter(s => s.state === SprintState.PLANNED).sort((a,b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
             case 'PAST':
                  return sprints.filter(s => s.state === SprintState.CLOSED).sort((a,b) => new Date(b.endAt).getTime() - new Date(a.endAt).getTime());
+            case 'DELETED':
+                 return sprints.filter(s => s.state === SprintState.DELETED).sort((a,b) => new Date(b.deletedAt || 0).getTime() - new Date(a.deletedAt || 0).getTime());
             default:
                 return [];
         }
@@ -78,6 +82,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                     <TabButton tab="ACTIVE" label="Active" />
                     <TabButton tab="UPCOMING" label="Upcoming" />
                     <TabButton tab="PAST" label="Past" />
+                    {canManage && <TabButton tab="DELETED" label="Deleted" />}
                 </nav>
             </div>
             
@@ -97,7 +102,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                            <tr 
                                 key={sprint.id} 
                                 onClick={() => { if (sprint.state === SprintState.CLOSED || canManage) setEditingSprint(sprint); }}
-                                className={`${sprint.state === SprintState.CLOSED || canManage ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                                className={`${sprint.state === SprintState.CLOSED || (canManage && sprint.state !== SprintState.DELETED) ? 'cursor-pointer hover:bg-gray-50' : ''}`}
                             >
                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{sprint.name}</td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -105,11 +110,21 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                                </td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sprint.epicIds.length}</td>
                                <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{sprint.goal}</td>
-                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right">
-                                   {canManage && activeTab !== 'PAST' && (
+                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2 text-right">
+                                   {canManage && activeTab !== 'PAST' && activeTab !== 'DELETED' && (
+                                    <>
                                        <button onClick={(e) => { e.stopPropagation(); setEditingSprint(sprint); }} className="text-indigo-600 hover:text-indigo-900 px-2">
                                            Edit
                                        </button>
+                                       <button onClick={(e) => { e.stopPropagation(); onDeleteSprint(sprint); }} className="text-red-600 hover:text-red-900 px-2">
+                                           Delete
+                                       </button>
+                                    </>
+                                   )}
+                                   {canManage && activeTab === 'DELETED' && (
+                                     <button onClick={(e) => { e.stopPropagation(); onRestoreSprint(sprint.id); }} className="text-indigo-600 hover:text-indigo-900 px-2">
+                                       Restore
+                                     </button>
                                    )}
                                </td>
                            </tr>

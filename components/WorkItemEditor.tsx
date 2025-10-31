@@ -112,7 +112,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
-  const selectableSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE || s.state === SprintState.PLANNED), [sprints]);
+  const selectableSprints = useMemo(() => sprints.filter(s => (s.state === SprintState.ACTIVE || s.state === SprintState.PLANNED) && s.state !== SprintState.DELETED), [sprints]);
 
   useEffect(() => {
     setLocalWorkItem(workItem);

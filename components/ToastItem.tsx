@@ -26,6 +26,13 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
         handleDismiss();
     };
 
+    const handleUndo = () => {
+        if(toast.undoAction) {
+            toast.undoAction();
+        }
+        handleDismiss();
+    };
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key.toLowerCase() === 'o') {
@@ -47,7 +54,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
         if (!isHovered) {
             timerRef.current = window.setTimeout(() => {
                 handleDismiss();
-            }, 5000);
+            }, 8000); // EP-DEL-001: Increased to 8 seconds for Undo
         }
 
         return () => {
@@ -56,6 +63,8 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
             }
         };
     }, [toast.id, isHovered]);
+
+    const isUndoToast = !!toast.undoAction;
 
     return (
         <div
@@ -68,25 +77,35 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
             aria-atomic="true"
         >
             <div className="flex-1 min-w-0">
-                <button 
-                    onClick={handleOpen}
-                    className="font-semibold text-gray-800 hover:underline text-left truncate w-full"
+                <p 
+                    className="font-semibold text-gray-800 text-left truncate w-full"
                     title={toast.title}
                 >
                     {toast.title}
-                </button>
-                <ul className="text-sm text-gray-600 mt-1 list-disc list-inside">
-                    {toast.changes.map((change, index) => (
-                        <li key={index}>{change}</li>
-                    ))}
-                </ul>
+                </p>
+                {!isUndoToast && toast.changes.length > 0 && (
+                    <ul className="text-sm text-gray-600 mt-1 list-disc list-inside">
+                        {toast.changes.map((change, index) => (
+                            <li key={index}>{change}</li>
+                        ))}
+                    </ul>
+                )}
                 <div className="mt-3 flex gap-2">
-                     <button
-                        onClick={handleOpen}
-                        className="text-xs font-bold text-white bg-[#486966] hover:bg-[#3a5a58] px-3 py-1 rounded-md"
-                    >
-                        {t('toast_open')} (O)
-                    </button>
+                    {isUndoToast ? (
+                        <button
+                            onClick={handleUndo}
+                            className="text-xs font-bold text-white bg-[#486966] hover:bg-[#3a5a58] px-3 py-1 rounded-md"
+                        >
+                            Undo
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleOpen}
+                            className="text-xs font-bold text-white bg-[#486966] hover:bg-[#3a5a58] px-3 py-1 rounded-md"
+                        >
+                            {t('toast_open')} (O)
+                        </button>
+                    )}
                     <button
                         onClick={handleDismiss}
                         className="text-xs font-semibold text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md"

@@ -5,13 +5,10 @@ export class ErrorBoundary extends React.Component<
   React.PropsWithChildren<{}>,
   { hasError: boolean }
 > {
-  // FIX: Using a constructor is a more robust way to initialize state and ensures
-  // `this.props` is available, which may resolve obscure 'this' context issues that
-  // can arise with some tooling configurations when using class properties.
-  constructor(props: React.PropsWithChildren<{}>) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // FIX: Replaced the constructor with a class property to initialize state.
+  // The constructor-based approach was causing TypeScript errors where `this.state`
+  // and `this.props` were not being correctly resolved on the component instance.
+  state = { hasError: false };
 
   static getDerivedStateFromError(_error: any) {
     return { hasError: true };
@@ -24,7 +21,8 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  render(): React.ReactNode {
+  // FIX: The original `render()` method was a standard class method. In some misconfigured environments or with specific TypeScript settings, the `this` context within such methods can be lost, causing `this.props` to be undefined. By converting `render` to a class property assigned to an arrow function (`render = () => { ... }`), we lexically bind `this` to the component instance. This ensures that `this.props` is always correctly resolved, fixing the "Property 'props' does not exist" error without reintroducing a constructor, which was noted to cause other issues.
+  render = (): React.ReactNode => {
     if (this.state.hasError) {
       return (
         <div
@@ -47,5 +45,5 @@ export class ErrorBoundary extends React.Component<
       );
     }
     return this.props.children;
-  }
+  };
 }

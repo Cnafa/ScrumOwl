@@ -17,6 +17,7 @@ interface KanbanBoardProps {
   onToggleEpic: (epicId: string) => void;
   activeSprint: Sprint | null;
   filterSet: FilterSet;
+  onNewItem: (options?: { epicId?: string; }) => void;
 }
 
 const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed: boolean, itemsCount: number }> = ({ epic, onToggle, isCollapsed, itemsCount }) => {
@@ -43,7 +44,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     collapsedEpics, 
     onToggleEpic, 
     activeSprint,
-    filterSet
+    filterSet,
+    onNewItem
 }) => {
   const { t } = useLocale();
   const { setCurrentView } = useNavigation();
@@ -105,6 +107,21 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     <p className="mt-2 text-sm text-slate-600">Select an active sprint to view its items.</p>
                     <button onClick={() => setCurrentView('SPRINTS')} className="mt-2 text-sm text-primary hover:underline">
                         {t('no_active_sprint_cta')}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+    
+    // US-43: Zero state for empty sprint. The workItems prop is already filtered.
+    if (workItems.length === 0) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center p-8 bg-white/60 rounded-lg">
+                    <h3 className="text-base font-semibold text-slate-800">This sprint is empty</h3>
+                    <p className="mt-2 text-sm text-slate-600">Get started by creating a new work item.</p>
+                    <button onClick={() => onNewItem()} className="mt-4 py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
+                        {t('newItem')}
                     </button>
                 </div>
             </div>

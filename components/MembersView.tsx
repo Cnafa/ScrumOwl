@@ -28,8 +28,7 @@ export const MembersView: React.FC<MembersViewProps> = ({ teams, setTeams }) => 
     const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
 
     useEffect(() => {
-        setJoinRequests(getMockJoinRequests());
-        setInviteCodes(getMockInviteCodes());
+        // US-43: remove mock data fetching
         setBoardMembers(initialMembers);
     }, [initialMembers]);
 
