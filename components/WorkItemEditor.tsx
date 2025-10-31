@@ -344,7 +344,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                     onChange={e => setAssigneeSearch(e.target.value)}
                     onFocus={() => setIsAssigneeDropdownOpen(true)}
                     placeholder={t('searchOrAddAssignee')}
-                    className="flex-grow text-sm focus:outline-none min-w-[100px] p-1"
+                    className="flex-grow text-sm focus:outline-none min-w-[100px] p-1 placeholder-slate-400"
                   />
                 </div>
                 {isAssigneeDropdownOpen && (

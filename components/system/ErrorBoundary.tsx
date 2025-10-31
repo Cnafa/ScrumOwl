@@ -1,25 +1,30 @@
-import React from "react";
+import React, { ErrorInfo, ReactNode } from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
-export class ErrorBoundary extends React.Component<
-  { children?: React.ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
+// FIX: Added explicit interfaces for props and state to ensure correct type inference within the class component.
+interface Props {
+  children?: ReactNode;
+}
 
-  static getDerivedStateFromError(_error: any) {
+interface State {
+  hasError: boolean;
+}
+
+export class ErrorBoundary extends React.Component<Props, State> {
+  public state: State = { hasError: false };
+
+  public static getDerivedStateFromError(_error: Error): State {
     return { hasError: true };
   }
 
-  componentDidCatch(error: any, info: { componentStack: string }) {
+  public componentDidCatch(error: Error, info: ErrorInfo) {
     try {
       (window as any).__lastReactComponentStack = info?.componentStack;
     } catch {}
     logCrash(error);
   }
 
-  // FIX: Converted `render` from an arrow function to a standard class method. React automatically binds `this` for lifecycle methods, and this standard syntax avoids potential TypeScript inference issues with `this.props`.
-  render() {
+  public render() {
     if (this.state.hasError) {
       return (
         <div
