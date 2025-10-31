@@ -5,13 +5,10 @@ export class ErrorBoundary extends React.Component<
   React.PropsWithChildren<{}>,
   { hasError: boolean }
 > {
-  // FIX: Replaced the class property state initializer with a constructor. The previous implementation caused a typing error where `this.props` was not recognized. Using a constructor with `super(props)` ensures the component's props are correctly initialized.
-  constructor(props: React.PropsWithChildren<{}>) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // FIX: Reverted to using a class property for state initialization instead of a constructor.
+  // This is a more modern and concise syntax and resolves the reported typing errors.
+  state = { hasError: false };
 
-  // FIX: Corrected the signature of getDerivedStateFromError. It must accept an argument.
   static getDerivedStateFromError(_error: any) {
     return { hasError: true };
   }

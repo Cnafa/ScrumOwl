@@ -1,12 +1,13 @@
 // components/SprintsView.tsx
 import React, { useState, useMemo } from 'react';
-import { Sprint, SprintState, Epic } from '../types';
+import { Sprint, SprintState, Epic, WorkItem } from '../types';
 import { useLocale } from '../context/LocaleContext';
 import { useBoard } from '../context/BoardContext';
 import { SprintEditorModal } from './SprintEditorModal';
 
 interface SprintsViewProps {
     sprints: Sprint[];
+    workItems: WorkItem[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
     onDeleteSprint: (sprintId: string) => void;
     onRestoreSprint: (sprintId: string) => void;
@@ -15,7 +16,7 @@ interface SprintsViewProps {
 
 type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST' | 'DELETED';
 
-export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint, onDeleteSprint, onRestoreSprint, epics }) => {
+export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, onSaveSprint, onDeleteSprint, onRestoreSprint, epics }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const [activeTab, setActiveTab] = useState<Tab>('ACTIVE');
@@ -56,9 +57,11 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
         setEditingSprint(null);
     };
 
-    const handleDelete = (sprintId: string) => {
-        if (window.confirm('Are you sure you want to delete this sprint? Work items will remain, but will be unassigned from it.')) {
-            onDeleteSprint(sprintId);
+    const handleDelete = (sprint: Sprint) => {
+        const itemCount = workItems.filter(item => item.sprint === sprint.name).length;
+        const confirmMessage = `Are you sure you want to delete "${sprint.name}"?\n\nThis will unassign ${itemCount} work item(s).\n\nThis action can be undone from the Deleted tab.`;
+        if (window.confirm(confirmMessage)) {
+            onDeleteSprint(sprint.id);
         }
     };
 
@@ -122,7 +125,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
                                        </button>
                                    )}
                                    {canManage && (activeTab === 'ACTIVE' || activeTab === 'UPCOMING') && (
-                                       <button onClick={() => handleDelete(sprint.id)} className="text-red-600 hover:text-red-900">
+                                       <button onClick={() => handleDelete(sprint)} className="text-red-600 hover:text-red-900">
                                            Delete
                                        </button>
                                    )}

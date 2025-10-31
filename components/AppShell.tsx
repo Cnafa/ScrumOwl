@@ -315,6 +315,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 return (
                     <SprintsView 
                         sprints={props.sprints}
+                        workItems={props.workItems}
                         onSaveSprint={props.onSaveSprint}
                         onDeleteSprint={props.onDeleteSprint}
                         onRestoreSprint={props.onRestoreSprint}

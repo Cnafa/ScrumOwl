@@ -64,7 +64,9 @@ const ActionsMenu: React.FC<{
     };
 
     const handleDelete = () => {
-        if (window.confirm(`Are you sure you want to delete the epic "${epic.name}"? This action can be undone from the Deleted tab.`)) {
+        const itemCount = workItems.filter(item => item.epicId === epic.id).length;
+        const confirmMessage = `Are you sure you want to delete the epic "${epic.name}"?\n\nThis will detach ${itemCount} work item(s).\n\nThis action can be undone from the Deleted tab.`;
+        if (window.confirm(confirmMessage)) {
             onDelete();
         }
         setIsOpen(false);
