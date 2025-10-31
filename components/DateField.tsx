@@ -160,6 +160,7 @@ interface DateFieldProps {
     maxDate?: Date;
     showTime?: boolean;
     className?: string;
+    disabled?: boolean;
 }
 
 export const DateField: React.FC<Omit<DateFieldProps, 'showTime'>> = (props) => (
@@ -170,7 +171,7 @@ export const DateTimeField: React.FC<Omit<DateFieldProps, 'showTime'>> = (props)
     <BaseDatePicker {...props} showTime={true} />
 );
 
-const BaseDatePicker: React.FC<DateFieldProps> = ({ value, onChange, minDate, maxDate, showTime = false, className }) => {
+const BaseDatePicker: React.FC<DateFieldProps> = ({ value, onChange, minDate, maxDate, showTime = false, className, disabled = false }) => {
     const [selectedDate, setSelectedDate] = useState<Date | null>(value ? new Date(value) : null);
     const [displayDate, setDisplayDate] = useState<Date>(value ? new Date(value) : new Date());
     const [isOpen, setIsOpen] = useState(false);
@@ -204,16 +205,17 @@ const BaseDatePicker: React.FC<DateFieldProps> = ({ value, onChange, minDate, ma
                     type="text"
                     value={displayValue}
                     readOnly
-                    onClick={() => setIsOpen(true)}
+                    onClick={() => !disabled && setIsOpen(true)}
+                    disabled={disabled}
                     placeholder={`Select a ${showTime ? 'date and time' : 'date'}`}
-                    className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black focus:outline-none focus:ring-2 focus:ring-[#486966] cursor-pointer"
+                    className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black focus:outline-none focus:ring-2 focus:ring-[#486966] cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <CalendarIcon className="h-5 w-5 text-gray-400" />
                 </div>
             </div>
 
-            {isOpen && (
+            {isOpen && !disabled && (
                 <CalendarPopover
                     displayDate={displayDate}
                     setDisplayDate={setDisplayDate}

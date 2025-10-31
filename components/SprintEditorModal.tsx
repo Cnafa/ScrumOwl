@@ -10,6 +10,7 @@ interface SprintEditorModalProps {
     allEpics: Epic[];
     onSave: (sprint: Partial<Sprint>) => void;
     onClose: () => void;
+    readOnly?: boolean;
 }
 
 const EpicListItem: React.FC<{ epic: Epic, onAction: () => void, actionIcon: React.ReactNode, disabled?: boolean }> = ({ epic, onAction, actionIcon, disabled }) => {
@@ -38,7 +39,7 @@ const EpicListItem: React.FC<{ epic: Epic, onAction: () => void, actionIcon: Rea
     );
 };
 
-export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, allEpics, onSave, onClose }) => {
+export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, allEpics, onSave, onClose, readOnly = false }) => {
     const { t } = useLocale();
     const [localSprint, setLocalSprint] = useState<Partial<Sprint>>(sprint);
     const [assignedEpicIds, setAssignedEpicIds] = useState<Set<string>>(new Set(sprint.epicIds || []));
@@ -120,7 +121,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-xl font-bold text-[#3B3936]">{sprint.id ? `Edit ${sprint.name}` : t('newSprint')}</h2>
+                    <h2 className="text-xl font-bold text-[#3B3936]">{sprint.id ? (readOnly ? `View: ${sprint.name}` : `Edit ${sprint.name}`) : t('newSprint')}</h2>
                     <button type="button" onClick={onClose}><XMarkIcon className="w-5 h-5" /></button>
                 </header>
                 <main className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
@@ -128,21 +129,21 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                     <div className="space-y-4 overflow-y-auto pr-2">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-[#486966] mb-1">Sprint Name</label>
-                            <input type="text" id="name" name="name" value={localSprint.name || ''} onChange={handleChange} required className={`w-full px-3 py-2 h-10 bg-white border rounded-md ${nameError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#B2BEBF] focus:ring-2 focus:ring-[#486966]'}`} />
+                            <input type="text" id="name" name="name" value={localSprint.name || ''} onChange={handleChange} required disabled={readOnly} className={`w-full px-3 py-2 h-10 bg-white border rounded-md ${nameError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#B2BEBF] focus:ring-2 focus:ring-[#486966]'} disabled:bg-gray-100 disabled:cursor-not-allowed`} />
                             {nameError && <p className="text-red-600 text-xs mt-1">{nameError}</p>}
                         </div>
                         <div>
                             <label htmlFor="goal" className="block text-sm font-medium text-[#486966] mb-1">{t('goal')} (Optional)</label>
-                            <textarea id="goal" name="goal" value={localSprint.goal || ''} onChange={handleChange} rows={3} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md" />
+                            <textarea id="goal" name="goal" value={localSprint.goal || ''} onChange={handleChange} rows={3} disabled={readOnly} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="startAt" className="block text-sm font-medium text-[#486966] mb-1">{t('startDate')}</label>
-                                <DateField value={localSprint.startAt!} onChange={(date) => handleDateChange('startAt', date)} />
+                                <DateField value={localSprint.startAt!} onChange={(date) => handleDateChange('startAt', date)} disabled={readOnly} />
                             </div>
                             <div>
                                 <label htmlFor="endAt" className="block text-sm font-medium text-[#486966] mb-1">{t('endDate')}</label>
-                                <DateField value={localSprint.endAt!} onChange={(date) => handleDateChange('endAt', date)} minDate={minEndDate} />
+                                <DateField value={localSprint.endAt!} onChange={(date) => handleDateChange('endAt', date)} minDate={minEndDate} disabled={readOnly} />
                             </div>
                         </div>
                         {dateError && <p className="text-red-600 text-xs -mt-2 col-span-2">{dateError}</p>}
@@ -154,9 +155,9 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                     {/* Epic Assignment */}
                     <div className="flex flex-col border rounded-md overflow-hidden">
                         <div className="p-2 border-b flex items-center gap-4">
-                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search epics..." className="w-full px-2 py-1 border rounded" />
+                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search epics..." disabled={readOnly} className="w-full px-2 py-1 border rounded disabled:bg-gray-100" />
                              <label className="flex items-center gap-2 text-sm whitespace-nowrap">
-                                <input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
+                                <input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} disabled={readOnly} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                                 {t('show_completed_epics')}
                             </label>
                         </div>
@@ -166,7 +167,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                                 <ul className="flex-1 overflow-y-auto p-2">
                                     {availableEpics.map(epic => (
                                         <EpicListItem key={epic.id} epic={epic} onAction={() => addEpic(epic.id)} 
-                                            disabled={epic.status === EpicStatus.DONE}
+                                            disabled={epic.status === EpicStatus.DONE || readOnly}
                                             actionIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                                         />
                                     ))}
@@ -177,6 +178,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                                 <ul className="flex-1 overflow-y-auto p-2">
                                     {assignedEpics.map(epic => (
                                          <EpicListItem key={epic.id} epic={epic} onAction={() => removeEpic(epic.id)}
+                                            disabled={readOnly}
                                             actionIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                                         />
                                     ))}
@@ -186,8 +188,14 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                     </div>
                 </main>
                 <footer className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-                    <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">{t('cancel')}</button>
-                    <button type="button" onClick={handleSave} disabled={!!dateError || !!nameError} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58] disabled:bg-gray-400">{t('save')}</button>
+                    {readOnly ? (
+                         <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">{t('close')}</button>
+                    ) : (
+                        <>
+                            <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">{t('cancel')}</button>
+                            <button type="button" onClick={handleSave} disabled={!!dateError || !!nameError} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58] disabled:bg-gray-400">{t('save')}</button>
+                        </>
+                    )}
                 </footer>
             </div>
         </div>

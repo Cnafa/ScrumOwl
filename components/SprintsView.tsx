@@ -111,26 +111,30 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                        {filteredSprints.map(sprint => (
-                           <tr key={sprint.id} className={sprint.state === SprintState.DELETED ? 'bg-red-50' : ''}>
+                           <tr 
+                                key={sprint.id} 
+                                onClick={() => { if (sprint.state === SprintState.CLOSED) setEditingSprint(sprint); }}
+                                className={`${sprint.state === SprintState.DELETED ? 'bg-red-50' : ''} ${sprint.state === SprintState.CLOSED ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                            >
                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{sprint.name}</td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                    {new Date(sprint.startAt).toLocaleDateString()} - {new Date(sprint.endAt).toLocaleDateString()}
                                </td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sprint.epicIds.length}</td>
                                <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{sprint.goal}</td>
-                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-3">
-                                   {canManage && activeTab !== 'DELETED' && (
-                                       <button onClick={() => setEditingSprint(sprint)} className="text-indigo-600 hover:text-indigo-900">
+                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right">
+                                   {canManage && activeTab !== 'DELETED' && activeTab !== 'PAST' && (
+                                       <button onClick={(e) => { e.stopPropagation(); setEditingSprint(sprint); }} className="text-indigo-600 hover:text-indigo-900 px-2">
                                            Edit
                                        </button>
                                    )}
                                    {canManage && (activeTab === 'ACTIVE' || activeTab === 'UPCOMING') && (
-                                       <button onClick={() => handleDelete(sprint)} className="text-red-600 hover:text-red-900">
+                                       <button onClick={(e) => { e.stopPropagation(); handleDelete(sprint); }} className="text-red-600 hover:text-red-900 px-2">
                                            Delete
                                        </button>
                                    )}
                                    {canManage && activeTab === 'DELETED' && (
-                                       <button onClick={() => handleRestore(sprint.id)} className="text-green-600 hover:text-green-900">
+                                       <button onClick={(e) => { e.stopPropagation(); handleRestore(sprint.id); }} className="text-green-600 hover:text-green-900 px-2">
                                             Restore
                                        </button>
                                    )}
@@ -150,6 +154,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                     allEpics={epics}
                     onSave={handleSaveSprint}
                     onClose={() => setEditingSprint(null)}
+                    readOnly={editingSprint.state === SprintState.CLOSED}
                 />
             )}
         </div>
