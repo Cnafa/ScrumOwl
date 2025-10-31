@@ -2,11 +2,12 @@ import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
 export class ErrorBoundary extends React.Component<
-  React.PropsWithChildren<{}>,
+  // FIX: Replaced React.PropsWithChildren with an explicit inline type to resolve a potential type inference issue with `this.props`.
+  { children?: React.ReactNode },
   { hasError: boolean }
 > {
   // FIX: Replaced the constructor with a class property to initialize state.
-  // The constructor-based approach was causing TypeScript errors where `this.state`
+  // The constructor-based approach was causing a TypeScript error where `this.state`
   // and `this.props` were not being correctly resolved on the component instance.
   state = { hasError: false };
 
@@ -21,7 +22,7 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  // FIX: Reverted `render` to a standard class method. The arrow function syntax was causing a TypeScript error where 'this.props' was not recognized.
+  // FIX: Changed `render` from an arrow function to a standard class method to fix a TypeScript error where `this.props` was not recognized. React correctly binds `this` for the `render` method, making this change safe and correct.
   render() {
     if (this.state.hasError) {
       return (

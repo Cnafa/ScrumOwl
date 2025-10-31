@@ -273,9 +273,19 @@ const ViewDetails: React.FC<any> = ({ view, isOwner, editingName, setEditingName
             <h4 className="font-semibold text-sm mb-2 text-slate-700">{t('filters_applied')}</h4>
             <div className="flex flex-wrap gap-2 p-2 bg-slate-100 rounded-md">
                 <FilterChipDisplay label="Search" value={view.filterSet.searchQuery} />
-                <FilterChipDisplay label="Assignee" value={view.filterSet.assignee} avatar={ALL_USERS.find(u=>u.name === view.filterSet.assignee)?.avatarUrl} />
-                <FilterChipDisplay label="Type" value={view.filterSet.type} />
-                <FilterChipDisplay label="Team" value={ALL_TEAMS.find(t=>t.id === view.filterSet.team)?.name} />
+                {(view.filterSet.typeIds || (view.filterSet.type ? [view.filterSet.type] : [])).map((typeId: string) => 
+                    <FilterChipDisplay key={typeId} label="Type" value={typeId} />
+                )}
+                {(view.filterSet.teamIds || []).map((teamId: string) => 
+                    <FilterChipDisplay key={teamId} label="Team" value={ALL_TEAMS.find(t=>t.id === teamId)?.name} />
+                )}
+                {(view.filterSet.assigneeIds || []).map((assigneeId: string) => {
+                    const user = ALL_USERS.find(u => u.id === assigneeId);
+                    return <FilterChipDisplay key={assigneeId} label="Assignee" value={user?.name} avatar={user?.avatarUrl} />
+                })}
+                 {view.filterSet.assigneeIds && view.filterSet.assigneeIds.length > 0 && (
+                    <FilterChipDisplay label="Match" value={view.filterSet.assigneeMatch} />
+                 )}
             </div>
 
             {/* Actions */}

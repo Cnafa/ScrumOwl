@@ -265,12 +265,15 @@ export interface InviteCode {
 }
 
 
+// US-45: Updated FilterSet for multi-select
 export interface FilterSet {
     searchQuery: string;
-    assignee: string; // User name or 'ALL'
-    type: string; // WorkItemType or 'ALL'
-    team: string; // Team ID or 'ALL'
+    assigneeIds: string[]; // User IDs
+    assigneeMatch: 'any' | 'all';
+    typeIds: string[]; // WorkItemType IDs
+    teamIds: string[]; // Team IDs
 }
+
 
 export enum ViewVisibility {
     PRIVATE = 'PRIVATE',

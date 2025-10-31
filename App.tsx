@@ -242,7 +242,8 @@ const App: React.FC = () => {
     }, [user, t]);
     
     // FIX: Destructure connectionStatus from the useRealtime hook.
-    const { connectionStatus } = useRealtime(settings.enableRealtime, workItems, user, handleRealtimeMessage);
+    // BUG-FIX: Disabled mock real-time generator to prevent fake notifications.
+    const { connectionStatus } = useRealtime(false, workItems, user, handleRealtimeMessage);
 
     // FIX: Moved sprint-related memos and effects from AppShell to App
     const activeSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE && s.state !== SprintState.DELETED), [sprints]);

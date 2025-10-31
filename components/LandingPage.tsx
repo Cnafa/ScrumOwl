@@ -16,10 +16,14 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onStart }: LandingPageProps) {
-  const { locale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   React.useEffect(() => {
     document.title = "ScrumOwl — Home";
   }, []);
+
+  const handleLanguageToggle = () => {
+    setLocale(locale === 'en-US' ? 'fa-IR' : 'en-US');
+  };
 
   return (
     <div dir={locale === 'fa-IR' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900 ${locale === 'fa-IR' ? 'font-vazir' : 'font-sans'}`}>
@@ -31,17 +35,21 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-slate-700">
-            <a href="#features" className="hover:text-slate-900">Features</a>
-            <a href="#reports" className="hover:text-slate-900">Reports</a>
-            <a href="#how" className="hover:text-slate-900">How it Works</a>
+            <a href="#features" className="hover:text-slate-900">{t('landing_header_features')}</a>
+            <a href="#reports" className="hover:text-slate-900">{t('landing_header_reports')}</a>
+            <a href="#how" className="hover:text-slate-900">{t('landing_header_how')}</a>
           </nav>
 
           <div className="flex items-center gap-3">
+             <button onClick={handleLanguageToggle} title="Switch language / تغییر زبان" className="text-sm font-semibold text-slate-600 hover:bg-slate-200/80 px-2 py-1 rounded-md">
+                {locale === 'en-US' ? 'fa' : 'en'}
+             </button>
+             <div className="h-5 w-px bg-slate-200" />
              <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-white text-label-neutral-text px-4 py-2 hover:bg-slate-50">
-              Login
+              {t('landing_header_login')}
             </button>
             <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-primary text-white px-4 py-2 shadow-[4px_4px_0_0_#1F2937] hover:translate-y-0.5 transition-transform">
-              Get Started
+              {t('landing_header_getStarted')}
             </button>
           </div>
         </div>
@@ -58,23 +66,23 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="text-start">
               <h1 className="text-3xl sm:text-5xl font-bold leading-tight">
-                Pure Scrum, very simple and functional.
+                {t('landing_hero_title')}
               </h1>
               <p className="mt-4 text-slate-600 text-base sm:text-lg">
-                Parallel Sprints, Epics, Saved Views, Burndown/CFD charts, Events, and Google SSO—all in one. Lightweight, minimal, with a neo‑brutalist twist.
+                {t('landing_hero_subtitle')}
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <button onClick={onStart} className="inline-flex items-center gap-2 rounded-2xl border-2 border-label-neutral-text bg-primary text-white px-5 py-2.5 text-sm font-semibold shadow-[6px_6px_0_0_#1F2937] hover:-translate-y-0.5 transition-transform">
-                  Start for free
+                  {t('landing_hero_cta_free')}
                 </button>
                 <button onClick={onStart} className="inline-flex items-center gap-2 rounded-2xl border-2 border-label-neutral-text bg-white text-label-neutral-text px-5 py-2.5 text-sm font-semibold hover:bg-slate-50">
-                  View Demo
+                  {t('landing_hero_cta_demo')}
                 </button>
               </div>
 
               <div className="mt-6 text-xs text-slate-500">
-                No credit card required • Sign in with Google • Scales from small teams to enterprises.
+                {t('landing_hero_subtext')}
               </div>
             </div>
 
@@ -114,16 +122,16 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
       {/* Features */}
       <section id="features" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 text-start">
-        <h2 className="text-2xl sm:text-3xl font-bold">Key Features</h2>
-        <p className="mt-2 text-slate-600">Everything you need for daily and sprint planning.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold">{t('landing_features_title')}</h2>
+        <p className="mt-2 text-slate-600">{t('landing_features_subtitle')}</p>
 
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <Feature icon={<LayoutKanbanIcon className="w-5 h-5" />} title="Advanced Scrum Board" desc="Group by epic/team, pinned Bug Pool, compact cards with colored due-badges." />
-          <Feature icon={<MountainIcon className="w-5 h-5" />} title="Epics & ICE Scoring" desc="ICE scoring, item drawers, synced with board, and auto-archive." />
-          <Feature icon={<BarChart3Icon className="w-5 h-5" />} title="Reports" desc="Burndown/Burnup, CFD, Velocity, Lead/Cycle, Workload, Distribution." />
-          <Feature icon={<CalendarRangeIcon className="w-5 h-5" />} title="Events & Calendar" desc="Calendar View with day-labels, conflict-detection, and online meeting links." />
-          <Feature icon={<BookmarkCheckIcon className="w-5 h-5" />} title="Saved/Manage Views" desc="Save, share, preview, and set defaults for any user/team/board." />
-          <Feature icon={<UsersIcon className="w-5 h-5" />} title="Google SSO & Roles" desc="Sign in with Google, Invite Codes, join requests, teams, and RBAC." />
+          <Feature icon={<LayoutKanbanIcon className="w-5 h-5" />} title={t('landing_feature_board_title')} desc={t('landing_feature_board_desc')} />
+          <Feature icon={<MountainIcon className="w-5 h-5" />} title={t('landing_feature_epics_title')} desc={t('landing_feature_epics_desc')} />
+          <Feature icon={<BarChart3Icon className="w-5 h-5" />} title={t('landing_feature_reports_title')} desc={t('landing_feature_reports_desc')} />
+          <Feature icon={<CalendarRangeIcon className="w-5 h-5" />} title={t('landing_feature_events_title')} desc={t('landing_feature_events_desc')} />
+          <Feature icon={<BookmarkCheckIcon className="w-5 h-5" />} title={t('landing_feature_views_title')} desc={t('landing_feature_views_desc')} />
+          <Feature icon={<UsersIcon className="w-5 h-5" />} title={t('landing_feature_sso_title')} desc={t('landing_feature_sso_desc')} />
         </div>
       </section>
 
@@ -132,17 +140,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div className="text-start">
-              <h3 className="text-xl sm:text-2xl font-bold">Reliable insights for daily decisions.</h3>
-              <p className="mt-2 text-slate-600 text-sm sm:text-base">Reports are cached and optimized; turn them into Saved Reports and share with your team in a few clicks.</p>
+              <h3 className="text-xl sm:text-2xl font-bold">{t('landing_reports_title')}</h3>
+              <p className="mt-2 text-slate-600 text-sm sm:text-base">{t('landing_reports_subtitle')}</p>
               <ul className="mt-4 space-y-2 text-slate-700 text-sm">
-                <li>• Burndown/Burnup with scope change indicators</li>
-                <li>• Daily CFD of statuses</li>
-                <li>• Average velocity of recent sprints</li>
-                <li>• Lead/Cycle percentiles and weekly Throughput.</li>
+                <li>{t('landing_reports_bullet1')}</li>
+                <li>{t('landing_reports_bullet2')}</li>
+                <li>{t('landing_reports_bullet3')}</li>
+                <li>{t('landing_reports_bullet4')}</li>
               </ul>
               <div className="mt-6">
                 <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-primary text-white px-4 py-2 shadow-[4px_4px_0_0_#1F2937]">
-                  Start now
+                  {t('landing_reports_cta')}
                 </button>
               </div>
             </div>
@@ -162,22 +170,22 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 text-start">
-        <h2 className="text-2xl sm:text-3xl font-bold">How does it work?</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold">{t('landing_how_title')}</h2>
         <ol className="mt-6 grid md:grid-cols-3 gap-5 text-sm">
-          <Step n={1} title="Sign in with Google" desc="No long forms; name and avatar are set up automatically." />
-          <Step n={2} title="Create or Join" desc="Create a new board or join a team with an Invite Code (with SM approval)." />
-          <Step n={3} title="Start Sprinting" desc="Plan epics, create cards, save views, and get reports." />
+          <Step n={1} title={t('landing_how_step1_title')} desc={t('landing_how_step1_desc')} />
+          <Step n={2} title={t('landing_how_step2_title')} desc={t('landing_how_step2_desc')} />
+          <Step n={3} title={t('landing_how_step3_title')} desc={t('landing_how_step3_desc')} />
         </ol>
       </section>
 
       {/* Final CTA */}
       <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-20">
         <div className="rounded-3xl border-2 border-label-neutral-text bg-primary text-white p-8 sm:p-10 shadow-[8px_8px_0_0_#1F2937] text-center">
-          <h3 className="text-2xl font-bold">Ready to build your next sprint better?</h3>
-          <p className="mt-2 opacity-90">Start for free, no credit card required.</p>
+          <h3 className="text-2xl font-bold">{t('landing_final_cta_title')}</h3>
+          <p className="mt-2 opacity-90">{t('landing_final_cta_subtitle')}</p>
           <div className="mt-6">
             <button onClick={onStart} className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/90 bg-white text-slate-900 px-6 py-2.5 font-semibold">
-              Get Started
+              {t('landing_header_getStarted')}
             </button>
           </div>
         </div>
@@ -188,11 +196,11 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between text-sm text-slate-600">
           <div className="flex items-center gap-2">
             <GitBranchIcon className="w-4 h-4" />
-            <span>v0.9 • © {new Date().getFullYear()} ScrumOwl</span>
+            <span>{t('landing_footer_copyright').replace('{year}', new Date().getFullYear().toString())}</span>
           </div>
           <div className="flex items-center gap-4">
-            <a className="hover:text-slate-900" href="#">Privacy Policy</a>
-            <a className="hover:text-slate-900" href="#">Terms of Use</a>
+            <a className="hover:text-slate-900" href="#">{t('landing_footer_privacy')}</a>
+            <a className="hover:text-slate-900" href="#">{t('landing_footer_terms')}</a>
           </div>
         </div>
       </footer>

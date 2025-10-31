@@ -67,7 +67,8 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [isManageViewsModalOpen, setIsManageViewsModalOpen] = useState(false);
 
     // Filter and Grouping State
-    const [filterSet, setFilterSet] = useState<FilterSet>({ searchQuery: '', assignee: 'ALL', type: 'ALL', team: 'ALL' });
+    // US-45: Updated filter state for multi-type select
+    const [filterSet, setFilterSet] = useState<FilterSet>({ searchQuery: '', assigneeIds: [], assigneeMatch: 'any', typeIds: [], teamIds: [] });
     const [groupBy, setGroupBy] = useState<'status' | 'epic'>('epic');
     const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
     const [includeUnassignedEpicItems, setIncludeUnassignedEpicItems] = useState(false);
@@ -139,9 +140,15 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
             const searchMatch = !filterSet.searchQuery ||
                 item.title.toLowerCase().includes(filterSet.searchQuery.toLowerCase()) ||
                 item.id.toLowerCase().includes(filterSet.searchQuery.toLowerCase());
-            const assigneeMatch = filterSet.assignee === 'ALL' || item.assignee.name === filterSet.assignee;
-            const typeMatch = filterSet.type === 'ALL' || item.type === filterSet.type;
-            const teamMatch = filterSet.team === 'ALL' || item.teamId === filterSet.team;
+            
+            // US-45: Multi-assignee match. 'all' behaves like 'any' for single-assignee model.
+            const assigneeMatch = filterSet.assigneeIds.length === 0 || filterSet.assigneeIds.includes(item.assignee.id);
+
+            const typeMatch = filterSet.typeIds.length === 0 || filterSet.typeIds.includes(item.type);
+
+            // US-45: Multi-team match.
+            const teamMatch = filterSet.teamIds.length === 0 || (item.teamId ? filterSet.teamIds.includes(item.teamId) : false);
+
             return searchMatch && assigneeMatch && typeMatch && teamMatch;
         });
     }, [sprintAndEpicFilteredItems, filterSet]);
@@ -151,7 +158,8 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     };
 
     const handleResetFilters = () => {
-        setFilterSet({ searchQuery: '', assignee: 'ALL', type: 'ALL', team: 'ALL' });
+        // US-45: Reset new filter structure with multi-type
+        setFilterSet({ searchQuery: '', assigneeIds: [], assigneeMatch: 'any', typeIds: [], teamIds: [] });
         setIncludeUnassignedEpicItems(false);
     };
 
