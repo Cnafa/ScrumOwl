@@ -6,7 +6,6 @@ import {
   UsersIcon,
   MountainIcon,
   BookmarkCheckIcon,
-  TimerIcon,
   GitBranchIcon,
   StarIcon,
 } from "./icons";
@@ -17,11 +16,11 @@ interface LandingPageProps {
 
 export default function LandingPage({ onStart }: LandingPageProps) {
   React.useEffect(() => {
-    document.title = "ScrumOwl — خانه";
+    document.title = "ScrumOwl — Home";
   }, []);
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900 font-vazir">
+    <div dir="ltr" className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900 font-sans">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -32,18 +31,18 @@ export default function LandingPage({ onStart }: LandingPageProps) {
               </div>
             </div>
             <span className="font-bold tracking-tight text-lg">ScrumOwl</span>
-            <span className="text-xs text-slate-500 border border-slate-200 rounded px-1.5 py-0.5 ml-1">Beta</span>
+            <span className="text-xs text-slate-500 border border-slate-200 rounded px-1.5 py-0.5">Beta</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-slate-700">
-            <a href="#features" className="hover:text-slate-900">ویژگی‌ها</a>
-            <a href="#reports" className="hover:text-slate-900">گزارش‌ها</a>
-            <a href="#how" className="hover:text-slate-900">چطور کار می‌کند</a>
+            <a href="#features" className="hover:text-slate-900">Features</a>
+            <a href="#reports" className="hover:text-slate-900">Reports</a>
+            <a href="#how" className="hover:text-slate-900">How it Works</a>
           </nav>
 
           <div className="flex items-center gap-3">
             <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-primary text-white px-4 py-2 shadow-[4px_4px_0_0_#1F2937] hover:translate-y-0.5 transition-transform">
-              شروع
+              Get Started
             </button>
           </div>
         </div>
@@ -52,31 +51,31 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute right-[-6rem] top-[-6rem] w-72 h-72 bg-primarySoft rounded-3xl rotate-12 border-2 border-label-neutral-text" />
-          <div className="absolute left-[-4rem] bottom-[-4rem] w-64 h-64 bg-label-amber-bg rounded-3xl -rotate-6 border-2 border-label-neutral-text" />
+          <div className="absolute left-[-6rem] top-[-6rem] w-72 h-72 bg-primarySoft rounded-3xl rotate-12 border-2 border-label-neutral-text" />
+          <div className="absolute right-[-4rem] bottom-[-4rem] w-64 h-64 bg-label-amber-bg rounded-3xl -rotate-6 border-2 border-label-neutral-text" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
               <h1 className="text-3xl sm:text-5xl font-bold leading-tight">
-                اسکرام‌بورد هوشمند برای تیم‌های چابک
+                The smart scrum board for agile teams.
               </h1>
               <p className="mt-4 text-slate-600 text-base sm:text-lg">
-                Sprintهای موازی، اپیک‌ها، ویوهای ذخیره‌شده، گزارش‌های برن‌داون/CFD، ایونت‌ها و Google SSO—all in one. کم‌حجم، مینیمال، با چاشنی نئو‑بروتال.
+                Parallel Sprints, Epics, Saved Views, Burndown/CFD charts, Events, and Google SSO—all in one. Lightweight, minimal, with a neo‑brutalist twist.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <button onClick={onStart} className="inline-flex items-center gap-2 rounded-2xl border-2 border-label-neutral-text bg-primary text-white px-5 py-2.5 text-sm font-semibold shadow-[6px_6px_0_0_#1F2937] hover:-translate-y-0.5 transition-transform">
-                  شروع رایگان
+                  Start for free
                 </button>
                 <button onClick={onStart} className="inline-flex items-center gap-2 rounded-2xl border-2 border-label-neutral-text bg-white text-label-neutral-text px-5 py-2.5 text-sm font-semibold hover:bg-slate-50">
-                  مشاهده دمو
+                  View Demo
                 </button>
               </div>
 
               <div className="mt-6 text-xs text-slate-500">
-                بدون نیاز به کارت بانکی • ورود سریع با Google • قابل استفاده در تیم‌های کوچک تا سازمانی
+                No credit card required • Sign in with Google • Scales from small teams to enterprises.
               </div>
             </div>
 
@@ -116,16 +115,16 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
       {/* Features */}
       <section id="features" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
-        <h2 className="text-2xl sm:text-3xl font-bold">ویژگی‌های کلیدی</h2>
-        <p className="mt-2 text-slate-600">هرآنچه برای برنامه‌ریزی روزانه و اسپرینت نیاز دارید.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold">Key Features</h2>
+        <p className="mt-2 text-slate-600">Everything you need for daily and sprint planning.</p>
 
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <Feature icon={<LayoutKanbanIcon className="w-5 h-5" />} title="بورد اسکرام پیشرفته" desc="گروه‌بندی بر اساس اپیک/تیم، Bug Pool پین‌شده، کارت‌های فشرده با Due‑badge رنگی." />
-          <Feature icon={<MountainIcon className="w-5 h-5" />} title="اپیک‌ها و ICE" desc="امتیازدهی ICE، دراور آیتم‌ها، همگام با بورد و آرشیو خودکار." />
-          <Feature icon={<BarChart3Icon className="w-5 h-5" />} title="گزارش‌ها" desc="Burndown/Burnup، CFD، Velocity، Lead/Cycle، Workload، Distribution." />
-          <Feature icon={<CalendarRangeIcon className="w-5 h-5" />} title="ایونت‌ها و کلندر" desc="Calendar View با Day‑labels، Conflict‑detect و لینک جلسهٔ آنلاین." />
-          <Feature icon={<BookmarkCheckIcon className="w-5 h-5" />} title="Saved/Manage Views" desc="ذخیره، اشتراک، پیش‌نمایش و پیش‌فرض برای هر کاربر/تیم/بورد." />
-          <Feature icon={<UsersIcon className="w-5 h-5" />} title="Google SSO و نقش‌ها" desc="ورود با گوگل، Invite Code، درخواست عضویت، تیم‌ها و RBAC." />
+          <Feature icon={<LayoutKanbanIcon className="w-5 h-5" />} title="Advanced Scrum Board" desc="Group by epic/team, pinned Bug Pool, compact cards with colored due-badges." />
+          <Feature icon={<MountainIcon className="w-5 h-5" />} title="Epics & ICE Scoring" desc="ICE scoring, item drawers, synced with board, and auto-archive." />
+          <Feature icon={<BarChart3Icon className="w-5 h-5" />} title="Reports" desc="Burndown/Burnup, CFD, Velocity, Lead/Cycle, Workload, Distribution." />
+          <Feature icon={<CalendarRangeIcon className="w-5 h-5" />} title="Events & Calendar" desc="Calendar View with day-labels, conflict-detection, and online meeting links." />
+          <Feature icon={<BookmarkCheckIcon className="w-5 h-5" />} title="Saved/Manage Views" desc="Save, share, preview, and set defaults for any user/team/board." />
+          <Feature icon={<UsersIcon className="w-5 h-5" />} title="Google SSO & Roles" desc="Sign in with Google, Invite Codes, join requests, teams, and RBAC." />
         </div>
       </section>
 
@@ -134,17 +133,17 @@ export default function LandingPage({ onStart }: LandingPageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold">بینش‌های قابل اتکا برای تصمیم‌های روزانه</h3>
-              <p className="mt-2 text-slate-600 text-sm sm:text-base">گزارش‌ها کش و بهینه شده‌اند؛ با چند کلیک به Saved Report تبدیل و با تیم به‌اشتراک بگذارید.</p>
+              <h3 className="text-xl sm:text-2xl font-bold">Reliable insights for daily decisions.</h3>
+              <p className="mt-2 text-slate-600 text-sm sm:text-base">Reports are cached and optimized; turn them into Saved Reports and share with your team in a few clicks.</p>
               <ul className="mt-4 space-y-2 text-slate-700 text-sm">
-                <li>• Burndown/Burnup با نمایش تغییرات اسکوپ</li>
-                <li>• CFD روزانه از وضعیت‌ها</li>
-                <li>• Velocity میانگین آخرین اسپرینت‌ها</li>
-                <li>• Lead/Cycle percentiles و Throughput هفتگی</li>
+                <li>• Burndown/Burnup with scope change indicators</li>
+                <li>• Daily CFD of statuses</li>
+                <li>• Average velocity of recent sprints</li>
+                <li>• Lead/Cycle percentiles and weekly Throughput.</li>
               </ul>
               <div className="mt-6">
                 <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-primary text-white px-4 py-2 shadow-[4px_4px_0_0_#1F2937]">
-                  همین حالا شروع کن
+                  Start now
                 </button>
               </div>
             </div>
@@ -164,22 +163,22 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
-        <h2 className="text-2xl sm:text-3xl font-bold">چطور کار می‌کند؟</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold">How does it work?</h2>
         <ol className="mt-6 grid md:grid-cols-3 gap-5 text-sm">
-          <Step n={1} title="ورود با گوگل" desc="بدون فرم‌ طولانی؛ نام و آواتار به‌صورت خودکار." />
-          <Step n={2} title="ساخت یا پیوستن" desc="بورد جدید بساز یا با Invite Code به تیم ملحق شو (با تأیید SM)." />
-          <Step n={3} title="شروع اسپرینت" desc="اپیک‌ها را بچین، کارت‌ها را بساز، ویوها را ذخیره و گزارش بگیر." />
+          <Step n={1} title="Sign in with Google" desc="No long forms; name and avatar are set up automatically." />
+          <Step n={2} title="Create or Join" desc="Create a new board or join a team with an Invite Code (with SM approval)." />
+          <Step n={3} title="Start Sprinting" desc="Plan epics, create cards, save views, and get reports." />
         </ol>
       </section>
 
       {/* Final CTA */}
       <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-20">
         <div className="rounded-3xl border-2 border-label-neutral-text bg-primary text-white p-8 sm:p-10 shadow-[8px_8px_0_0_#1F2937] text-center">
-          <h3 className="text-2xl font-bold">آماده‌ای اسپرینت بعدی را بهتر بسازی؟</h3>
-          <p className="mt-2 opacity-90">شروع رایگان، بدون نیاز به کارت بانکی.</p>
+          <h3 className="text-2xl font-bold">Ready to build your next sprint better?</h3>
+          <p className="mt-2 opacity-90">Start for free, no credit card required.</p>
           <div className="mt-6">
             <button onClick={onStart} className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/90 bg-white text-slate-900 px-6 py-2.5 font-semibold">
-              شروع
+              Get Started
             </button>
           </div>
         </div>
@@ -193,8 +192,8 @@ export default function LandingPage({ onStart }: LandingPageProps) {
             <span>v0.9 • © {new Date().getFullYear()} ScrumOwl</span>
           </div>
           <div className="flex items-center gap-4">
-            <a className="hover:text-slate-900" href="#">حریم خصوصی</a>
-            <a className="hover:text-slate-900" href="#">شرایط استفاده</a>
+            <a className="hover:text-slate-900" href="#">Privacy Policy</a>
+            <a className="hover:text-slate-900" href="#">Terms of Use</a>
           </div>
         </div>
       </footer>
@@ -242,7 +241,7 @@ function CardStub({ title, badge, color }: { title: string; badge: string; color
         <div className="text-sm font-semibold truncate max-w-[70%]">{title}</div>
         <span className="text-[11px] px-2 py-0.5 rounded-lg border border-slate-300 bg-white">{badge}</span>
       </div>
-      <div className="mt-1 text-[11px] text-slate-600">Due: Nov 03 • Assignee: شما</div>
+      <div className="mt-1 text-[11px] text-slate-600">Due: Nov 03 • Assignee: You</div>
     </div>
   );
 }

@@ -21,8 +21,10 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  // FIX: Changed render from a class property arrow function to a standard class method. The 'this' context for React lifecycle methods like render() is correctly bound by React itself. Using a standard method is the conventional approach and avoids potential TypeScript type inference issues that may have caused the "Property 'props' does not exist" error.
-  render(): React.ReactNode {
+  // FIX: Changed render to a class property arrow function. A standard class method was causing
+  // a TypeScript error where `this.props` was not being resolved. Using an arrow function
+  // ensures `this` is correctly bound and resolves the type inference issue.
+  render = (): React.ReactNode => {
     if (this.state.hasError) {
       return (
         <div
@@ -45,5 +47,5 @@ export class ErrorBoundary extends React.Component<
       );
     }
     return this.props.children;
-  }
+  };
 }
