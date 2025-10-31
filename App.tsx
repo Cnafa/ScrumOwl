@@ -340,17 +340,20 @@ const App: React.FC = () => {
         }));
     };
 
+    // TECH-DBG: Fix stale state bug by updating states sequentially
     const handleDeleteEpic = useCallback((epicId: string) => {
-        setEpics(prevEpics => {
-            // Unassign work items from this epic before deleting it
-            setWorkItems(prevWorkItems => prevWorkItems.map(item =>
+        // First, update work items to detach them from the epic being deleted.
+        setWorkItems(prevWorkItems =>
+            prevWorkItems.map(item =>
                 item.epicId === epicId
                     ? { ...item, epicId: undefined, epicInfo: undefined }
                     : item
-            ));
-            // Soft-delete the epic
-            return prevEpics.map(e => e.id === epicId ? { ...e, status: EpicStatus.DELETED } : e);
-        });
+            )
+        );
+        // Then, soft-delete the epic itself.
+        setEpics(prevEpics =>
+            prevEpics.map(e => e.id === epicId ? { ...e, status: EpicStatus.DELETED } : e)
+        );
     }, []);
 
     const handleRestoreEpic = useCallback((epicId: string) => {
@@ -401,22 +404,22 @@ const App: React.FC = () => {
         }
     };
 
-    const handleDeleteSprint = useCallback((sprintId: string) => {
-        setSprints(prevSprints => {
-            const sprintToDelete = prevSprints.find(s => s.id === sprintId);
-            if (sprintToDelete) {
-                // Unassign work items from the deleted sprint
-                setWorkItems(prevWorkItems => prevWorkItems.map(item =>
-                    item.sprint === sprintToDelete.name
-                        ? { ...item, sprint: '' }
-                        : item
-                ));
-            }
-            // Soft-delete the sprint
-            return prevSprints.map(s => 
+    // Refactored to accept sprintName directly, removing the dependency on the 'sprints' array.
+    // This makes the handler more performant and robust.
+    const handleDeleteSprint = useCallback((sprintId: string, sprintName: string) => {
+        // First, update work items to unassign them from the deleted sprint
+        setWorkItems(prevWorkItems => prevWorkItems.map(item =>
+            item.sprint === sprintName
+                ? { ...item, sprint: '' }
+                : item
+        ));
+        
+        // Then, soft-delete the sprint
+        setSprints(prevSprints =>
+            prevSprints.map(s => 
                 s.id === sprintId ? { ...s, state: SprintState.DELETED } : s
-            );
-        });
+            )
+        );
     }, []);
 
     const handleRestoreSprint = useCallback((sprintId: string) => {

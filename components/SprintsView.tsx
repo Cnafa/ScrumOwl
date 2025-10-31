@@ -9,7 +9,7 @@ interface SprintsViewProps {
     sprints: Sprint[];
     workItems: WorkItem[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
-    onDeleteSprint: (sprintId: string) => void;
+    onDeleteSprint: (sprintId: string, sprintName: string) => void;
     onRestoreSprint: (sprintId: string) => void;
     epics: Epic[];
 }
@@ -61,7 +61,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
         const itemCount = workItems.filter(item => item.sprint === sprint.name).length;
         const confirmMessage = `Are you sure you want to delete "${sprint.name}"?\n\nThis will unassign ${itemCount} work item(s).\n\nThis action can be undone from the Deleted tab.`;
         if (window.confirm(confirmMessage)) {
-            onDeleteSprint(sprint.id);
+            onDeleteSprint(sprint.id, sprint.name);
         }
     };
 

@@ -32,7 +32,7 @@ interface AppShellProps {
     setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
     sprints: Sprint[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
-    onDeleteSprint: (sprintId: string) => void;
+    onDeleteSprint: (sprintId: string, sprintName: string) => void;
     onRestoreSprint: (sprintId: string) => void;
     onSelectWorkItem: (workItem: WorkItem) => void;
     notifications: Notification[];
