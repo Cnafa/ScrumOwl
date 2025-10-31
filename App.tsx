@@ -1,10 +1,10 @@
 // FIX: Create the App component which was missing.
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from './context/AuthContext';
 import LoginScreen from './components/LoginScreen';
 import { AppShell } from './components/AppShell';
 // FIX: Import Status, Priority, and WorkItemType enums to fix type errors.
-import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus } from './types';
+import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState } from './types';
 import { getMockWorkItems, getMockNotifications, getMockEpics, getMockTeams, getMockSprints } from './services/mockDataService';
 import { WorkItemDetailModal } from './components/WorkItemDetailModal';
 import { WorkItemEditor } from './components/WorkItemEditor';
@@ -21,7 +21,7 @@ import { ALL_USERS } from './constants';
 const App: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
     const { settings } = useSettings();
-    const { activeBoard } = useBoard();
+    const { activeBoard, can } = useBoard();
     const { t, locale } = useLocale();
 
     // Main data state
@@ -41,6 +41,9 @@ const App: React.FC = () => {
     const [toastQueue, setToastQueue] = useState<ToastNotification[]>([]);
     const [highlightSection, setHighlightSection] = useState<string | undefined>(undefined);
     const coalescingRef = useRef<Map<string, { data: ToastNotification, timer: number }>>(new Map());
+
+    // FIX: Move sprint selection state up from AppShell to App
+    const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
 
     // Fetch initial data
     useEffect(() => {
@@ -127,8 +130,39 @@ const App: React.FC = () => {
     // FIX: Destructure connectionStatus from the useRealtime hook.
     const { connectionStatus } = useRealtime(settings.enableRealtime, workItems, user, handleRealtimeMessage);
 
+    // FIX: Moved sprint-related memos and effects from AppShell to App
+    const activeSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE), [sprints]);
+
+    const availableActiveSprints = useMemo(() => {
+        if (!user) return [];
+        if (can('sprint.manage')) {
+            return activeSprints;
+        }
+        const sprintsWithUserItems = new Set(
+            workItems
+                .filter(item => item.assignee.id === user.id && item.sprint)
+                .map(item => item.sprint)
+        );
+        return activeSprints.filter(s => sprintsWithUserItems.has(s.name));
+    }, [activeSprints, workItems, user, can]);
+
+    useEffect(() => {
+        const currentSelectionStillAvailable = availableActiveSprints.some(s => s.id === selectedSprintId);
+
+        if (availableActiveSprints.length > 0 && !currentSelectionStillAvailable) {
+            const mostRecent = [...availableActiveSprints].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())[0];
+            setSelectedSprintId(mostRecent.id);
+        } else if (availableActiveSprints.length === 0) {
+            setSelectedSprintId(null);
+        }
+    }, [availableActiveSprints, selectedSprintId]);
+    
+    const selectedSprint = useMemo(() => sprints.find(s => s.id === selectedSprintId), [sprints, selectedSprintId]);
+
     // Handlers for modals and actions
     const handleSelectWorkItem = (item: WorkItem) => {
+        // FIX: Explicitly clear editing state to prevent modal conflicts.
+        setEditingWorkItem(null);
         setSelectedWorkItem(item);
     };
 
@@ -170,7 +204,10 @@ const App: React.FC = () => {
             attachments: [],
             checklist: [],
             labels: [],
-            watchers: [user.id] // Creator watches by default
+            watchers: [user.id], // Creator watches by default
+            description: '', // FIX: Initialize description to prevent .replace on undefined error
+            // FIX: Assign the new item to the currently selected sprint
+            sprint: selectedSprint ? selectedSprint.name : '',
         });
         setIsNewItem(true);
     };
@@ -358,6 +395,9 @@ const App: React.FC = () => {
                 onUpdateEpicStatus={handleUpdateEpicStatus}
                 onEditWorkItem={handleEditWorkItem}
                 realtimeStatus={connectionStatus}
+                selectedSprint={selectedSprint}
+                setSelectedSprintId={setSelectedSprintId}
+                availableActiveSprints={availableActiveSprints}
             />
             
             {selectedWorkItem && (

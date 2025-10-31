@@ -43,6 +43,10 @@ interface AppShellProps {
     onUpdateEpicStatus: (epicId: string, newStatus: EpicStatus) => void;
     onEditWorkItem: (workItem: WorkItem) => void;
     realtimeStatus: any; // ConnectionStatus
+    // FIX: Add sprint state props from App
+    selectedSprint: Sprint | null | undefined;
+    setSelectedSprintId: (sprintId: string | null) => void;
+    availableActiveSprints: Sprint[];
 }
 
 // Mock saved views
@@ -90,7 +94,6 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [includeUnassignedEpicItems, setIncludeUnassignedEpicItems] = useState(false);
 
     // FIX-08 & FE-EV-02 State Management
-    const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
     const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
     const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
     const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
@@ -120,33 +123,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
         }
     }, [user, fetchAllEvents]);
 
-    const activeSprints = useMemo(() => props.sprints.filter(s => s.state === SprintState.ACTIVE), [props.sprints]);
-
-    const availableActiveSprints = useMemo(() => {
-        if (!user) return [];
-        if (can('sprint.manage')) {
-            return activeSprints;
-        }
-        const sprintsWithUserItems = new Set(
-            props.workItems
-                .filter(item => item.assignee.id === user.id && item.sprint)
-                .map(item => item.sprint)
-        );
-        return activeSprints.filter(s => sprintsWithUserItems.has(s.name));
-    }, [activeSprints, props.workItems, user, can]);
-
-    useEffect(() => {
-        const currentSelectionStillAvailable = availableActiveSprints.some(s => s.id === selectedSprintId);
-
-        if (availableActiveSprints.length > 0 && !currentSelectionStillAvailable) {
-            const mostRecent = [...availableActiveSprints].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())[0];
-            setSelectedSprintId(mostRecent.id);
-        } else if (availableActiveSprints.length === 0) {
-            setSelectedSprintId(null);
-        }
-    }, [availableActiveSprints, selectedSprintId]);
-    
-    const selectedSprint = useMemo(() => props.sprints.find(s => s.id === selectedSprintId), [props.sprints, selectedSprintId]);
+    const { selectedSprint } = props;
 
     const enrichedEpics = useMemo(() => {
         return props.epics.map(epic => {
@@ -159,6 +136,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
             return { 
                 ...epic, 
                 openItemsCount: openItems.length, 
+                totalItemsCount: childItems.length,
                 totalEstimation,
                 percentDoneWeighted
             };
@@ -306,7 +284,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const renderContent = () => {
         switch (currentView) {
             case 'KANBAN':
-                if (!can('sprint.manage') && availableActiveSprints.length === 0) {
+                if (!can('sprint.manage') && props.availableActiveSprints.length === 0) {
                      return (
                         <div className="flex-1 flex items-center justify-center">
                             <div className="text-center p-10 bg-white/60 rounded-lg">
@@ -344,7 +322,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         onNewEpic={props.onNewEpic}
                         onEditEpic={props.onEditEpic}
                         onNewItem={props.onNewItem}
-                        onEditWorkItem={props.onEditWorkItem}
+                        onSelectWorkItem={props.onSelectWorkItem}
                         onUpdateStatus={props.onUpdateEpicStatus}
                     />
                  );
@@ -385,9 +363,9 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     onLogout={() => { /* Implement logout logic */ }}
                     realtimeStatus={props.realtimeStatus}
                     onNewItem={() => props.onNewItem()}
-                    availableSprints={availableActiveSprints}
+                    availableSprints={props.availableActiveSprints}
                     selectedSprint={selectedSprint}
-                    onSelectSprint={setSelectedSprintId}
+                    onSelectSprint={props.setSelectedSprintId}
                 />
                 
                 {currentView === 'KANBAN' && (

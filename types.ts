@@ -227,6 +227,7 @@ export interface Epic {
     totalEstimation?: number;
     percentDoneWeighted?: number;
     openItemsCount?: number;
+    totalItemsCount?: number;
 }
 
 export interface Team {

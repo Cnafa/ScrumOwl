@@ -280,7 +280,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             <div className="grid grid-cols-2 gap-4">
               <label className="text-sm font-medium text-[#3B3936] my-auto">{t('type')}</label>
               <select name="type" value={localWorkItem.type || ''} onChange={handleChange} className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black focus:outline-none focus:ring-2 focus:ring-[#486966]" data-highlight-key="type">
-                {WORK_ITEM_TYPES.filter(t => t !== WorkItemType.EPIC).map(type => <option key={type} value={type}>{type}</option>)}
+                {WORK_ITEM_TYPES.filter(t => t !== WorkItemType.EPIC && t !== WorkItemType.TICKET).map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">

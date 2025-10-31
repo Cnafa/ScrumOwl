@@ -11,7 +11,7 @@ interface EpicsViewProps {
     onNewEpic: () => void;
     onEditEpic: (epic: Epic) => void;
     onNewItem: (options: { epicId: string }) => void;
-    onEditWorkItem: (workItem: WorkItem) => void;
+    onSelectWorkItem: (workItem: WorkItem) => void;
     onUpdateStatus: (epicId: string, newStatus: EpicStatus) => void;
 }
 
@@ -42,7 +42,6 @@ const BlockActionModal: React.FC<{ epicName: string, openItems: WorkItem[], onCl
 const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: EpicStatus) => void, onEdit: () => void, setBlockModalOpen: (items: WorkItem[]) => void, workItems: WorkItem[] }> = ({ epic, onUpdateStatus, onEdit, setBlockModalOpen, workItems }) => {
     const { t } = useLocale();
     const [isOpen, setIsOpen] = useState(false);
-    const isDone = epic.percentDoneWeighted === 100;
     
     const handleStatusChange = (newStatus: EpicStatus) => {
         if ((newStatus === EpicStatus.DONE || newStatus === EpicStatus.ARCHIVED) && epic.openItemsCount && epic.openItemsCount > 0) {
@@ -58,18 +57,18 @@ const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: E
         switch (epic.status) {
             case EpicStatus.ACTIVE:
                 return [
-                    { label: t('epic_action_mark_done'), action: () => handleStatusChange(EpicStatus.DONE), disabled: !isDone },
+                    { label: t('epic_action_mark_done'), action: () => handleStatusChange(EpicStatus.DONE), disabled: epic.openItemsCount !== 0 },
                     { label: t('epic_action_hold'), action: () => handleStatusChange(EpicStatus.ON_HOLD) }
                 ];
             case EpicStatus.ON_HOLD:
                 return [
                     { label: t('epic_action_activate'), action: () => handleStatusChange(EpicStatus.ACTIVE) },
-                    { label: t('epic_action_mark_done'), action: () => handleStatusChange(EpicStatus.DONE), disabled: !isDone },
+                    { label: t('epic_action_mark_done'), action: () => handleStatusChange(EpicStatus.DONE), disabled: epic.openItemsCount !== 0 },
                 ];
             case EpicStatus.DONE:
                 return [
                     { label: t('epic_action_reopen'), action: () => handleStatusChange(EpicStatus.ACTIVE) },
-                    { label: t('epic_action_archive'), action: () => handleStatusChange(EpicStatus.ARCHIVED), disabled: !isDone }
+                    { label: t('epic_action_archive'), action: () => handleStatusChange(EpicStatus.ARCHIVED), disabled: epic.openItemsCount !== 0 }
                 ];
             case EpicStatus.ARCHIVED:
                 return [{ label: t('epic_action_reopen'), action: () => handleStatusChange(EpicStatus.ACTIVE) }];
@@ -80,16 +79,16 @@ const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: E
 
     return (
         <div className="relative">
-            <button onClick={() => setIsOpen(!isOpen)} className="px-2 py-1 rounded hover:bg-gray-200">
+            <button onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }} className="px-2 py-1 rounded hover:bg-gray-200">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
             </button>
             {isOpen && (
                 <div onMouseLeave={() => setIsOpen(false)} className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
                     <ul className="py-1">
-                        <li><button onClick={onEdit} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Details</button></li>
+                        <li><button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Details</button></li>
                         {getActions().map(action => (
                             <li key={action.label}>
-                                <button onClick={action.action} disabled={action.disabled} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">{action.label}</button>
+                                <button onClick={(e) => { e.stopPropagation(); action.action(); }} disabled={action.disabled} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">{action.label}</button>
                             </li>
                         ))}
                     </ul>
@@ -99,15 +98,78 @@ const ActionsMenu: React.FC<{ epic: Epic, onUpdateStatus: (id: string, status: E
     );
 };
 
-export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onEditWorkItem, onUpdateStatus }) => {
+const EpicDrawerContent: React.FC<{
+    epic: Epic;
+    childItems: WorkItem[];
+    onNewItem: (options: { epicId: string }) => void;
+    onSelectWorkItem: (workItem: WorkItem) => void;
+    canManage: boolean;
+}> = ({ epic, childItems, onNewItem, onSelectWorkItem, canManage }) => {
+    const { t } = useLocale();
+    return (
+        <div className="p-4 bg-gray-50">
+            <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span>{t('open_items_stat').replace('{count}', (epic.openItemsCount || 0).toString())}</span>
+                    <span className="w-px h-4 bg-gray-300" />
+                    <span>{t('total_est_stat').replace('{sum}', (epic.totalEstimation || 0).toString())}</span>
+                </div>
+                {canManage && (epic.status === EpicStatus.ACTIVE || epic.status === EpicStatus.ON_HOLD) && (
+                    <button onClick={() => onNewItem({ epicId: epic.id })} className="py-1.5 px-3 text-xs font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
+                        Add Item to this Epic
+                    </button>
+                )}
+            </div>
+            <div className="max-h-96 overflow-y-auto border rounded-lg bg-white">
+                 <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assignee</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Est.</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {childItems.length > 0 ? childItems.map(item => (
+                            <tr key={item.id} className="hover:bg-gray-50">
+                                <td className="px-3 py-2 text-xs text-gray-500">{item.id}</td>
+                                <td className="px-3 py-2 text-sm font-medium">
+                                    <button onClick={() => onSelectWorkItem(item)} className="text-gray-900 hover:underline text-left">
+                                        {item.title}
+                                    </button>
+                                </td>
+                                <td className="px-3 py-2 text-xs"><span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-800">{item.status}</span></td>
+                                <td className="px-3 py-2 text-sm text-gray-700">{item.assignee.name}</td>
+                                <td className="px-3 py-2 text-sm text-gray-700">{item.dueDate ? new Date(item.dueDate).toLocaleDateString() : '–'}</td>
+                                <td className="px-3 py-2 text-sm text-gray-700">{item.estimationPoints || '–'}</td>
+                            </tr>
+                        )) : (
+                            <tr><td colSpan={6} className="text-center py-4 text-sm text-gray-500">No items in this epic yet.</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const canManage = can('epic.manage');
     const [activeTab, setActiveTab] = useState<EpicStatus.ACTIVE | EpicStatus.DONE | EpicStatus.ARCHIVED>(EpicStatus.ACTIVE);
     const [blockModalInfo, setBlockModalInfo] = useState<WorkItem[] | null>(null);
+    const [expandedEpicId, setExpandedEpicId] = useState<string | null>(null);
+
+    const handleToggleEpic = (epicId: string) => {
+        setExpandedEpicId(prevId => (prevId === epicId ? null : epicId));
+    };
 
     const filteredEpics = useMemo(() => {
-        const sorted = [...epics].sort((a, b) => b.iceScore - a.iceScore);
+        const sorted = [...epics].sort((a, b) => (b.iceScore || 0) - (a.iceScore || 0));
         if (activeTab === EpicStatus.ACTIVE) return sorted.filter(e => e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD);
         return sorted.filter(e => e.status === activeTab);
     }, [epics, activeTab]);
@@ -150,8 +212,9 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                         <tr>
                             <Th>{t('epic')}</Th>
                             <Th>{t('status')}</Th>
-                            <Th>Progress</Th>
                             <Th>{t('iceScore')}</Th>
+                            <Th>Progress</Th>
+                            <Th>Items</Th>
                             <Th>Updated</Th>
                             <Th>Actions</Th>
                         </tr>
@@ -159,20 +222,24 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                     <tbody className="bg-white divide-y divide-gray-200">
                         {filteredEpics.map(epic => (
                             <React.Fragment key={epic.id}>
-                                <tr>
+                                <tr onClick={() => handleToggleEpic(epic.id)} className="cursor-pointer hover:bg-gray-50">
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 transition-transform text-gray-500 ${expandedEpicId === epic.id ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                                             <div className="w-2 h-6 rounded-full mr-3" style={{backgroundColor: epic.color}}></div>
                                             <div className="text-sm font-medium text-gray-900">{epic.name}</div>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm"><span className="px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-800">{epic.status}</span></td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-800">{epic.iceScore}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm" style={{ minWidth: '120px' }}>
                                         <div className="w-full bg-gray-200 rounded-full h-2.5">
                                             <div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${epic.percentDoneWeighted || 0}%` }}></div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-800">{epic.iceScore}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        {`${(epic.totalItemsCount || 0) - (epic.openItemsCount || 0)}/${epic.totalItemsCount || 0}`}
+                                    </td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(epic.updatedAt).toLocaleDateString()}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                         {canManage && (
@@ -180,8 +247,26 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                                         )}
                                     </td>
                                 </tr>
+                                {expandedEpicId === epic.id && (
+                                    <tr>
+                                        <td colSpan={7} className="p-0 bg-gray-100 border-t-2 border-gray-200">
+                                            <EpicDrawerContent
+                                                epic={epic}
+                                                childItems={workItems.filter(wi => wi.epicId === epic.id)}
+                                                onNewItem={onNewItem}
+                                                onSelectWorkItem={onSelectWorkItem}
+                                                canManage={canManage}
+                                            />
+                                        </td>
+                                    </tr>
+                                )}
                             </React.Fragment>
                         ))}
+                         {filteredEpics.length === 0 && (
+                            <tr>
+                                <td colSpan={7} className="text-center py-10 text-sm text-gray-500">No epics in this category.</td>
+                            </tr>
+                         )}
                     </tbody>
                 </table>
             </div>

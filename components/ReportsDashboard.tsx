@@ -17,7 +17,7 @@ interface ReportsDashboardProps {
 // --- Chart Components ---
 const SimpleLineChart: React.FC<{ data: { labels: string[], datasets: { label: string, data: number[], color: string }[] } }> = ({ data }) => {
     const { t } = useLocale();
-    if (!data || !Array.isArray(data.datasets) || !data.datasets.some(ds => ds && ds.data && ds.data.length > 0)) {
+    if (!data || !Array.isArray(data.datasets) || !data.labels || data.labels.length === 0 || !data.datasets.some(ds => ds && ds.data && ds.data.length > 0)) {
         return <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex items-center justify-center text-gray-500">{t('report_no_data')}</div>;
     }
 
@@ -59,7 +59,7 @@ const SimpleLineChart: React.FC<{ data: { labels: string[], datasets: { label: s
 
 const SimpleBarChart: React.FC<{ data: { labels: string[], datasets: { label: string, data: number[], color: string }[] }, average?: number }> = ({ data, average }) => {
     const { t } = useLocale();
-    if (!data || !Array.isArray(data.datasets) || !data.datasets.some(ds => ds && ds.data && ds.data.length > 0)) {
+    if (!data || !Array.isArray(data.datasets) || !data.labels || data.labels.length === 0 || !data.datasets.some(ds => ds && ds.data && ds.data.length > 0)) {
         return <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex items-center justify-center text-gray-500">{t('report_no_data')}</div>;
     }
 
