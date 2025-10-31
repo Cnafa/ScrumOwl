@@ -7,7 +7,7 @@ import {
   MountainIcon,
   BookmarkCheckIcon,
   GitBranchIcon,
-  StarIcon,
+  ScrumOwlLogo,
 } from "./icons";
 
 interface LandingPageProps {
@@ -25,13 +25,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="relative -rotate-2">
-              <div className="w-9 h-9 rounded-xl bg-label-neutral-text text-white flex items-center justify-center border-2 border-label-neutral-text shadow-[4px_4px_0_0_#1F2937]">
-                <StarIcon className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="font-bold tracking-tight text-lg">ScrumOwl</span>
-            <span className="text-xs text-slate-500 border border-slate-200 rounded px-1.5 py-0.5">Beta</span>
+            <ScrumOwlLogo className="text-xl" />
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-slate-700">
@@ -41,6 +35,9 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           </nav>
 
           <div className="flex items-center gap-3">
+             <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-white text-label-neutral-text px-4 py-2 hover:bg-slate-50">
+              Login
+            </button>
             <button onClick={onStart} className="inline-flex items-center gap-2 rounded-xl border-2 border-label-neutral-text bg-primary text-white px-4 py-2 shadow-[4px_4px_0_0_#1F2937] hover:translate-y-0.5 transition-transform">
               Get Started
             </button>
@@ -59,7 +56,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
               <h1 className="text-3xl sm:text-5xl font-bold leading-tight">
-                The smart scrum board for agile teams.
+                Pure Scrum, very simple and functional.
               </h1>
               <p className="mt-4 text-slate-600 text-base sm:text-lg">
                 Parallel Sprints, Epics, Saved Views, Burndown/CFD charts, Events, and Google SSO—all in one. Lightweight, minimal, with a neo‑brutalist twist.
