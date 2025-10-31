@@ -47,6 +47,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
     const [assignedEpicIds, setAssignedEpicIds] = useState<Set<string>>(new Set(sprint.epicIds || []));
     const [search, setSearch] = useState('');
     const [showCompleted, setShowCompleted] = useState(false);
+    const [nameError, setNameError] = useState('');
 
     const { availableEpics, assignedEpics } = useMemo(() => {
         const lowercasedSearch = search.toLowerCase();
@@ -80,6 +81,9 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        if (name === 'name') {
+            setNameError('');
+        }
         setLocalSprint(prev => ({ ...prev, [name]: value }));
     };
 
@@ -89,6 +93,10 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
     }
 
     const handleSave = () => {
+        if (!localSprint.name?.trim()) {
+            setNameError("Sprint name cannot be empty.");
+            return;
+        }
         onSave({ ...localSprint, epicIds: Array.from(assignedEpicIds) });
     };
 
@@ -104,7 +112,8 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                     <div className="space-y-4 overflow-y-auto pr-2">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-[#486966] mb-1">Sprint Name</label>
-                            <input type="text" id="name" name="name" value={localSprint.name || ''} onChange={handleChange} required className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md" />
+                            <input type="text" id="name" name="name" value={localSprint.name || ''} onChange={handleChange} required className={`w-full px-3 py-2 h-10 bg-white border rounded-md ${nameError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#B2BEBF] focus:ring-2 focus:ring-[#486966]'}`} />
+                            {nameError && <p className="text-red-600 text-xs mt-1">{nameError}</p>}
                         </div>
                         <div>
                             <label htmlFor="goal" className="block text-sm font-medium text-[#486966] mb-1">{t('goal')} (Optional)</label>

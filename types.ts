@@ -195,6 +195,7 @@ export interface CalendarEvent {
     createdBy: User;
     hasConflict?: boolean;
     conflicts?: Conflict[];
+    onlineLink?: string;
 }
 
 // FIX-07: Add EpicStatus enum

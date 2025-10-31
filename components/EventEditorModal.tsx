@@ -130,6 +130,10 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                             <label htmlFor="description" className="block text-sm font-medium text-[#486966] mb-1">{t('description')}</label>
                             <textarea id="description" name="description" value={localEvent.description || ''} onChange={handleChange} rows={3} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                         </div>
+                        <div>
+                           <label htmlFor="onlineLink" className="block text-sm font-medium text-[#486966] mb-1">{t('online_meeting_link')}</label>
+                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={handleChange} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                        </div>
                         <div ref={workItemDropdownRef}>
                            <label htmlFor="linkedWorkItemId" className="block text-sm font-medium text-[#486966] mb-1">Link to Work Item</label>
                            <div className="relative">

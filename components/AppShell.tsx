@@ -12,11 +12,16 @@ import { ReportsDashboard } from './ReportsDashboard';
 import { SettingsPlaceholder } from './SettingsPlaceholder';
 import { useNavigation } from '../context/NavigationContext';
 import { useAuth } from '../context/AuthContext';
-import { WorkItem, Notification, Epic, FilterSet, SavedView, ViewVisibility, Team, Sprint, SprintState, Status, EpicStatus } from '../types';
+import { WorkItem, Notification, Epic, FilterSet, SavedView, ViewVisibility, Team, Sprint, SprintState, Status, EpicStatus, CalendarEvent } from '../types';
 import { SaveViewModal } from './SaveViewModal';
 import { ManageViewsModal } from './ManageViewsModal';
 import { faker } from 'https://cdn.skypack.dev/@faker-js/faker';
 import { ALL_USERS } from '../constants';
+import { TodaysMeetingsBanner } from './TodaysMeetingsBanner';
+import * as calendarService from '../services/calendarService';
+import { EventEditorModal } from './EventEditorModal';
+import { useBoard } from '../context/BoardContext';
+import { useLocale } from '../context/LocaleContext';
 
 interface AppShellProps {
     workItems: WorkItem[];
@@ -52,6 +57,8 @@ const createMockSavedView = (id: number, ownerId: string): SavedView => ({
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
     const { user } = useAuth();
+    const { can } = useBoard();
+    const { t } = useLocale();
     const { currentView } = useNavigation();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     
@@ -66,6 +73,12 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
     const [includeUnassignedEpicItems, setIncludeUnassignedEpicItems] = useState(false);
 
+    // FIX-08 State
+    const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
+    const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
+    const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
+
+
      useEffect(() => {
         if (user) {
             const userViews = Array.from({ length: 3 }, (_, i) => createMockSavedView(i + 1, user.id));
@@ -73,10 +86,38 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
             const initialViews = [...userViews, ...groupViews];
             initialViews[0].isDefault = true;
             setSavedViews(initialViews);
+            
+            calendarService.getTodaysEvents(user).then(setTodaysEvents);
         }
-    }, [user]);
+    }, [user, props.workItems]); // Re-fetch on workItems change for event linking updates
 
-    const activeSprint = useMemo(() => props.sprints.find(s => s.state === SprintState.ACTIVE), [props.sprints]);
+    const activeSprints = useMemo(() => props.sprints.filter(s => s.state === SprintState.ACTIVE), [props.sprints]);
+
+    const availableActiveSprints = useMemo(() => {
+        if (!user) return [];
+        if (can('sprint.manage')) {
+            return activeSprints;
+        }
+        const sprintsWithUserItems = new Set(
+            props.workItems
+                .filter(item => item.assignee.id === user.id && item.sprint)
+                .map(item => item.sprint)
+        );
+        return activeSprints.filter(s => sprintsWithUserItems.has(s.name));
+    }, [activeSprints, props.workItems, user, can]);
+
+    useEffect(() => {
+        const currentSelectionStillAvailable = availableActiveSprints.some(s => s.id === selectedSprintId);
+
+        if (availableActiveSprints.length > 0 && !currentSelectionStillAvailable) {
+            const mostRecent = [...availableActiveSprints].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())[0];
+            setSelectedSprintId(mostRecent.id);
+        } else if (availableActiveSprints.length === 0) {
+            setSelectedSprintId(null);
+        }
+    }, [availableActiveSprints, selectedSprintId]);
+    
+    const selectedSprint = useMemo(() => props.sprints.find(s => s.id === selectedSprintId), [props.sprints, selectedSprintId]);
 
     const enrichedEpics = useMemo(() => {
         return props.epics.map(epic => {
@@ -96,21 +137,21 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     }, [props.epics, props.workItems]);
 
     const sprintAndEpicFilteredItems = useMemo(() => {
-        if (currentView !== 'KANBAN' || !activeSprint) {
+        if (currentView !== 'KANBAN' || !selectedSprint) {
             return props.workItems;
         }
 
-        const sprintEpicIds = new Set(activeSprint.epicIds);
+        const sprintEpicIds = new Set(selectedSprint.epicIds);
         
         return props.workItems.filter(item => {
-            if (item.sprint !== activeSprint.name) return false;
+            if (item.sprint !== selectedSprint.name) return false;
 
             const hasAssignedEpic = item.epicId && sprintEpicIds.has(item.epicId);
             const isUnassignedAndIncluded = includeUnassignedEpicItems && !item.epicId;
 
             return hasAssignedEpic || isUnassignedAndIncluded;
         });
-    }, [props.workItems, activeSprint, currentView, includeUnassignedEpicItems]);
+    }, [props.workItems, selectedSprint, currentView, includeUnassignedEpicItems]);
 
     const filteredWorkItems = useMemo(() => {
         return sprintAndEpicFilteredItems.filter(item => {
@@ -193,12 +234,39 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
         setFilterSet(view.filterSet);
     };
 
-
     const pinnedViews = useMemo(() => savedViews.filter(v => v.isPinned && v.ownerId === user?.id), [savedViews, user]);
+    
+    // FIX-08: Event modal handlers
+    const handleOpenEventEditor = (event: Partial<CalendarEvent>) => {
+        setEditingEvent(event);
+    };
+
+    const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
+        if (!user) return;
+        if (eventData.id) {
+            await calendarService.updateEvent(eventData as CalendarEvent, props.teams);
+        } else {
+            await calendarService.createEvent(eventData as any, user, props.teams);
+        }
+        setEditingEvent(null);
+        // Re-fetch today's events after save
+        calendarService.getTodaysEvents(user).then(setTodaysEvents);
+    };
+
 
     const renderContent = () => {
         switch (currentView) {
             case 'KANBAN':
+                if (!can('sprint.manage') && availableActiveSprints.length === 0) {
+                     return (
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="text-center p-10 bg-white/60 rounded-lg">
+                                <h3 className="text-lg font-semibold text-[#3B3936]">No Active Sprints</h3>
+                                <p className="mt-2 text-sm text-gray-600">You do not have any items assigned to you in currently active sprints.</p>
+                            </div>
+                        </div>
+                    );
+                }
                 return (
                     <KanbanBoard
                         workItems={filteredWorkItems}
@@ -208,7 +276,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         epics={enrichedEpics}
                         collapsedEpics={collapsedEpics}
                         onToggleEpic={handleToggleEpic}
-                        activeSprint={activeSprint}
+                        activeSprint={selectedSprint}
                     />
                 );
             case 'SPRINTS':
@@ -268,7 +336,9 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     onLogout={() => { /* Implement logout logic */ }}
                     realtimeStatus={props.realtimeStatus}
                     onNewItem={() => props.onNewItem()}
-                    activeSprint={activeSprint}
+                    availableSprints={availableActiveSprints}
+                    selectedSprint={selectedSprint}
+                    onSelectSprint={setSelectedSprintId}
                 />
                 
                 {currentView === 'KANBAN' && (
@@ -281,13 +351,19 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         teams={props.teams}
                         groupBy={groupBy}
                         onGroupByChange={setGroupBy}
-                        activeSprint={activeSprint}
+                        activeSprint={selectedSprint}
                         includeUnassignedEpicItems={includeUnassignedEpicItems}
                         onIncludeUnassignedEpicItemsChange={setIncludeUnassignedEpicItems}
                     />
                 )}
 
-                <main className="flex-1 p-4 overflow-auto">
+                <main className="flex-1 p-4 overflow-auto flex flex-col">
+                    {currentView === 'KANBAN' && todaysEvents.length > 0 && (
+                        <TodaysMeetingsBanner
+                            events={todaysEvents}
+                            onOpenEvent={handleOpenEventEditor}
+                        />
+                    )}
                     {renderContent()}
                 </main>
             </div>
@@ -311,6 +387,16 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 onDuplicate={handleDuplicateView}
                 onSelectView={handleSelectView}
             />
+
+            {editingEvent && (
+                <EventEditorModal
+                    event={editingEvent}
+                    workItems={props.workItems}
+                    teams={props.teams}
+                    onSave={handleSaveEvent}
+                    onClose={() => setEditingEvent(null)}
+                />
+            )}
         </div>
     );
 };

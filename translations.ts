@@ -188,8 +188,16 @@ export const translations = {
     attendees: 'Attendees',
     users: 'Users',
     conflict_badge: 'Conflict',
-    // FIX: Add missing 'teams' key to fix type error in EventEditorModal.
     teams: 'Teams',
+
+    // FIX-08: Parallel Sprints & Events
+    sprint_days_left: 'Days left: {days}',
+    sprint_ends_today: 'Ends today',
+    sprint_ended_ago: 'Ended {days} days ago',
+    todays_meetings: "Today's Meetings",
+    join_meeting: 'Join',
+    more_meetings: '+{count} more',
+    online_meeting_link: 'Online meeting link',
   },
   'fa-IR': {
     // Farsi translations
@@ -356,7 +364,15 @@ export const translations = {
     attendees: 'شرکت‌کنندگان',
     users: 'کاربران',
     conflict_badge: 'تداخل',
-    // FIX: Add missing 'teams' key to fix type error in EventEditorModal.
     teams: 'تیم‌ها',
+    
+    // FIX-08: Parallel Sprints & Events (Farsi)
+    sprint_days_left: '{days} روز باقی‌مانده',
+    sprint_ends_today: 'امروز تمام می‌شود',
+    sprint_ended_ago: '{days} روز پیش تمام شد',
+    todays_meetings: 'جلسات امروز',
+    join_meeting: 'پیوستن',
+    more_meetings: '+{count} جلسه دیگر',
+    online_meeting_link: 'لینک جلسه آنلاین',
   },
 };

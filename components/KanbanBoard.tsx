@@ -1,4 +1,5 @@
 
+
 import React, { useMemo } from 'react';
 import { WorkItem, Status, Epic, Sprint } from '../types';
 import { WorkItemCard } from './WorkItemCard';
@@ -14,7 +15,7 @@ interface KanbanBoardProps {
   epics: Epic[];
   collapsedEpics: Set<string>;
   onToggleEpic: (epicId: string) => void;
-  activeSprint: Sprint | null | undefined;
+  activeSprint: Sprint | null;
 }
 
 const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed: boolean, itemsCount: number }> = ({ epic, onToggle, isCollapsed, itemsCount }) => {
@@ -41,6 +42,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ workItems, setWorkItem
              <div className="flex-1 flex items-center justify-center">
                 <div className="text-center p-10 bg-white/60 rounded-lg">
                     <h3 className="text-lg font-semibold text-[#3B3936]">{t('no_active_sprint_title')}</h3>
+                    <p className="mt-2 text-sm text-gray-600">Select an active sprint to view its items.</p>
                     <button onClick={() => setCurrentView('SPRINTS')} className="mt-2 text-sm text-[#486966] hover:underline">
                         {t('no_active_sprint_cta')}
                     </button>

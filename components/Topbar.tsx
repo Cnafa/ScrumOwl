@@ -16,7 +16,9 @@ interface TopbarProps {
     onLogout: () => void;
     realtimeStatus: ConnectionStatus;
     onNewItem: () => void;
-    activeSprint: Sprint | null | undefined;
+    availableSprints: Sprint[];
+    selectedSprint: Sprint | null;
+    onSelectSprint: (sprintId: string) => void;
 }
 
 const ConnectionIndicator: React.FC<{ status: ConnectionStatus }> = ({ status }) => {
@@ -29,7 +31,95 @@ const ConnectionIndicator: React.FC<{ status: ConnectionStatus }> = ({ status })
     return <span className={`w-2.5 h-2.5 rounded-full ${colorMap[status]}`} title={`Real-time: ${status}`}></span>;
 };
 
-export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotificationsRead, onShowNotification, onOpenSettings, onLogout, realtimeStatus, onNewItem, activeSprint }) => {
+const calculateDaysLeft = (endDateString: string, t: Function): string => {
+    const end = new Date(endDateString);
+    const now = new Date();
+    // Compare against the very end of the sprint day
+    end.setHours(23, 59, 59, 999);
+    
+    const diffTime = end.getTime() - now.getTime();
+    
+    // Check if the current time is past the end date
+    if (diffTime < 0) {
+        const pastDiffDays = Math.ceil(-diffTime / (1000 * 60 * 60 * 24));
+        return t('sprint_ended_ago').replace('{days}', pastDiffDays.toString());
+    }
+    
+    // It's today or in the future
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (new Date().toDateString() === end.toDateString()) {
+        return t('sprint_ends_today');
+    }
+
+    return t('sprint_days_left').replace('{days}', diffDays.toString());
+};
+
+
+const SprintSwitcher: React.FC<{
+    sprints: Sprint[];
+    selected: Sprint;
+    onSelect: (id: string) => void;
+    locale: string;
+    t: Function;
+}> = ({ sprints, selected, onSelect, locale, t }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const daysLeftText = calculateDaysLeft(selected.endAt, t);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [wrapperRef]);
+    
+    const localeCode = locale.startsWith('fa') ? 'fa-IR' : 'en-US';
+    const startDate = new Date(selected.startAt).toLocaleDateString(localeCode, { month: 'short', day: 'numeric' });
+    const endDate = new Date(selected.endAt).toLocaleDateString(localeCode, { month: 'short', day: 'numeric' });
+    const sprintDateRange = `${startDate} – ${endDate}`;
+
+    return (
+        <div className="relative" ref={wrapperRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-2 text-sm text-gray-700 font-semibold ml-4 border-l pl-4"
+            >
+                <span>{selected.name}</span>
+                <span className="font-normal text-gray-500">•</span>
+                <span className="font-normal text-gray-500">{sprintDateRange}</span>
+                 <span className="font-normal text-gray-500">•</span>
+                 <span className="font-semibold text-[#486966]">{daysLeftText}</span>
+                 {sprints.length > 1 && (
+                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                 )}
+            </button>
+            {isOpen && sprints.length > 1 && (
+                <div className="absolute top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
+                    <ul className="py-1">
+                        {sprints.map(sprint => (
+                            <li key={sprint.id}>
+                                <a
+                                    href="#"
+                                    onClick={(e) => { e.preventDefault(); onSelect(sprint.id); setIsOpen(false); }}
+                                    className={`block px-4 py-2 text-sm ${selected.id === sprint.id ? 'font-bold text-[#486966]' : 'text-gray-700 hover:bg-gray-100'}`}
+                                >
+                                    {sprint.name}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotificationsRead, onShowNotification, onOpenSettings, onLogout, realtimeStatus, onNewItem, availableSprints, selectedSprint, onSelectSprint }) => {
     const { user } = useAuth();
     const { t, locale, setLocale } = useLocale();
     const { can } = useBoard();
@@ -68,19 +158,15 @@ export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotifica
     };
 
     const renderSprintHeader = () => {
-        if (!activeSprint || currentView !== 'KANBAN') return null;
-        const localeCode = locale.startsWith('fa') ? 'fa-IR' : 'en-US';
-        const startDate = new Date(activeSprint.startAt).toLocaleDateString(localeCode, { month: 'short', day: 'numeric' });
-        const endDate = new Date(activeSprint.endAt).toLocaleDateString(localeCode, { month: 'short', day: 'numeric' });
-
+        if (!selectedSprint || currentView !== 'KANBAN') return null;
         return (
-            <div className="text-sm text-gray-700 font-semibold ml-4 border-l pl-4">
-                {t('sprint_header_template')
-                    .replace('{number}', activeSprint.number.toString())
-                    .replace('{startDate}', startDate)
-                    .replace('{endDate}', endDate)
-                }
-            </div>
+            <SprintSwitcher 
+                sprints={availableSprints}
+                selected={selectedSprint}
+                onSelect={onSelectSprint}
+                locale={locale}
+                t={t}
+            />
         );
     };
 
@@ -118,7 +204,6 @@ export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotifica
                         {unreadCount > 0 && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />}
                     </button>
                     {isNotificationsOpen && (
-                        // FIX: Corrected prop name to match the one received by Topbar.
                         <NotificationPanel notifications={notifications} onClose={closeNotifications} onMarkAllAsRead={onMarkAllNotificationsRead} onShow={onShowNotification} />
                     )}
                 </div>

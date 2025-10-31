@@ -58,6 +58,26 @@ export const getEvents = async (scope: 'my' | 'all', currentUser: User): Promise
     return events; // for 'all' scope (SMs)
 };
 
+// FIX-08: Get today's events for the banner
+export const getTodaysEvents = async (currentUser: User): Promise<CalendarEvent[]> => {
+    await new Promise(res => setTimeout(res, 100));
+    const now = new Date();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    return events
+        .filter(e => {
+            const eventStart = new Date(e.start);
+            const isToday = eventStart >= todayStart && eventStart <= todayEnd;
+            const isAttendee = e.attendees.some(a => a.id === currentUser.id);
+            const isUpcoming = eventStart > now;
+            return isToday && isAttendee && isUpcoming;
+        })
+        .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+};
+
 const expandTeamsToAttendees = (attendees: User[], teamIds: string[] = [], allTeams: Team[]): User[] => {
     const teamMemberIds = teamIds.flatMap(tid => allTeams.find(t => t.id === tid)?.members || []);
     const attendeeIds = new Set([...(attendees || []).map(u => u.id), ...teamMemberIds]);

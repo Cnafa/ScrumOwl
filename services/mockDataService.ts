@@ -51,12 +51,13 @@ export const getMockEpics = (count: number = 10): Epic[] => {
 
 const createMockSprint = (index: number): Sprint => {
     const isPast = index < 2;
-    const isActive = index === 2;
+    const isActive = index === 2 || index === 3;
+    
     const startAt = isPast 
         ? faker.date.past({ years: 0.2 }) 
         : isActive 
         ? faker.date.recent({ days: 5 })
-        : faker.date.soon({ days: 10 });
+        : faker.date.soon({ days: (index - 3) * 15 });
     
     const endAt = new Date(startAt);
     endAt.setDate(endAt.getDate() + 14);
@@ -74,7 +75,7 @@ const createMockSprint = (index: number): Sprint => {
     };
 };
 
-export const getMockSprints = (count: number = 4): Sprint[] => {
+export const getMockSprints = (count: number = 6): Sprint[] => {
     if (MOCK_SPRINTS.length === 0) {
         if (MOCK_EPICS.length === 0) getMockEpics();
         MOCK_SPRINTS = Array.from({ length: count }, (_, i) => createMockSprint(i));
@@ -137,6 +138,22 @@ const createMockWorkItem = (id: number): WorkItem => {
     
     const potentialWatchers = ALL_USERS.filter(u => u.id !== assignee.id && u.id !== reporter.id);
 
+    // FIX-08: Logic to assign items to specific sprints/users for visibility testing
+    const activeSprint1 = MOCK_SPRINTS.find(s => s.number === 3); // Sprint 24.03
+    const activeSprint2 = MOCK_SPRINTS.find(s => s.number === 4); // Sprint 24.04
+
+    let sprintName = faker.helpers.arrayElement(SPRINTS);
+    let itemAssignee = assignee;
+
+    if (id <= 5 && activeSprint1) {
+        sprintName = activeSprint1.name;
+        itemAssignee = ALL_USERS[0]; // Alice
+    } else if (id > 5 && id <= 10 && activeSprint2) {
+        sprintName = activeSprint2.name;
+        itemAssignee = ALL_USERS[1]; // Bob
+    }
+
+
     return {
         id: `PROJ-${id}`,
         boardId: faker.helpers.arrayElement(BOARDS).id, // US-23: Assign to a board
@@ -145,10 +162,10 @@ const createMockWorkItem = (id: number): WorkItem => {
         description: faker.lorem.paragraphs(3),
         type,
         status,
-        assignee,
+        assignee: itemAssignee,
         reporter,
         priority: faker.helpers.arrayElement(PRIORITIES),
-        sprint: faker.helpers.arrayElement(SPRINTS),
+        sprint: sprintName,
         group: faker.helpers.arrayElement(GROUPS),
         stack: faker.helpers.arrayElement(STACKS),
         estimationPoints: faker.helpers.arrayElement([1, 2, 3, 5, 8, 13]),
@@ -236,12 +253,16 @@ const createMockEvent = (id: number, workItem?: WorkItem): CalendarEvent => ({
     linkedWorkItemId: workItem?.id,
     attendees: faker.helpers.arrayElements(ALL_USERS, 3),
     createdBy: faker.helpers.arrayElement(ALL_USERS),
+    onlineLink: faker.datatype.boolean(0.7) ? 'https://meet.google.com/mock-link' : undefined,
 });
 
 export const getMockWorkItems = (count: number = 30): WorkItem[] => {
-    // Ensure epics are created first so work items can link to them
+    // Ensure epics and sprints are created first so work items can link to them
     if (MOCK_EPICS.length === 0) {
         getMockEpics();
+    }
+     if (MOCK_SPRINTS.length === 0) {
+        getMockSprints();
     }
     return Array.from({ length: count }, (_, i) => createMockWorkItem(i + 1));
 };
