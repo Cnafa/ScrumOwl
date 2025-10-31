@@ -1,29 +1,43 @@
 import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
-export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
-  constructor(props: React.PropsWithChildren<{}>) {
-    super(props);
-    // FIX: Initialize state within the constructor to ensure 'this.props' is available.
-    // The class property initializer syntax can sometimes lead to issues with `this` context
-    // if not configured correctly in the build pipeline.
-    this.state = { hasError: false };
+export class ErrorBoundary extends React.Component<
+  React.PropsWithChildren<{}>,
+  { hasError: boolean }
+> {
+  // FIX: Moved state initialization to a class property and removed the constructor.
+  // The previous constructor-based initialization was causing a type error where `this.state` and `this.props` were not recognized on the component instance.
+  // This is a more modern and standard approach for React class components that resolves the issue.
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
-  static getDerivedStateFromError() { return { hasError: true }; }
-
   componentDidCatch(error: any, info: { componentStack: string }) {
-    try { (window as any).__lastReactComponentStack = info?.componentStack; } catch {}
+    try {
+      (window as any).__lastReactComponentStack = info?.componentStack;
+    } catch {}
     logCrash(error);
   }
 
   render(): React.ReactNode {
     if (this.state.hasError) {
       return (
-        <div role="alert" className="p-4 border-2 border-red-500 bg-red-50 m-4 rounded-lg text-center">
-          <h2 className="font-bold text-red-800 text-lg">Something went wrong.</h2>
-          <p className="text-red-700 my-2">An unexpected error occurred. Please try reloading the page.</p>
-          <button onClick={() => window.location.reload()} className="bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700">
+        <div
+          role="alert"
+          className="p-4 border-2 border-red-500 bg-red-50 m-4 rounded-lg text-center"
+        >
+          <h2 className="font-bold text-red-800 text-lg">
+            Something went wrong.
+          </h2>
+          <p className="text-red-700 my-2">
+            An unexpected error occurred. Please try reloading the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700"
+          >
             Reload Page
           </button>
         </div>

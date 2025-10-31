@@ -12,25 +12,25 @@ const GooglePickerModal: React.FC<{ files: any[], onSelect: (file: any) => void,
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-[60]">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-lg font-bold">{t('googlePickerTitle')}</h2>
-                    <button onClick={onClose}><XMarkIcon className="w-5 h-5" /></button>
+                    <h2 className="text-lg font-bold text-gray-900">{t('googlePickerTitle')}</h2>
+                    <button onClick={onClose}><XMarkIcon className="w-5 h-5 text-gray-500" /></button>
                 </header>
                 <main className="p-4">
                     <table className="w-full text-left text-sm">
                         <thead>
                             <tr className="border-b">
-                                <th className="p-2">{t('fileName')}</th>
-                                <th className="p-2">{t('fileType')}</th>
-                                <th className="p-2">{t('lastModified')}</th>
+                                <th className="p-2 font-medium text-gray-600">{t('fileName')}</th>
+                                <th className="p-2 font-medium text-gray-600">{t('fileType')}</th>
+                                <th className="p-2 font-medium text-gray-600">{t('lastModified')}</th>
                                 <th className="p-2"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {files.map(file => (
                                 <tr key={file.id} className="hover:bg-gray-50">
-                                    <td className="p-2">{file.name}</td>
-                                    <td className="p-2">{file.type}</td>
-                                    <td className="p-2">{file.lastModified}</td>
+                                    <td className="p-2 text-gray-800">{file.name}</td>
+                                    <td className="p-2 text-gray-800">{file.type}</td>
+                                    <td className="p-2 text-gray-800">{file.lastModified}</td>
                                     <td className="p-2">
                                         <button onClick={() => onSelect(file)} className="text-sm text-white bg-[#486966] px-3 py-1 rounded hover:bg-[#3a5a58]">{t('select')}</button>
                                     </td>
