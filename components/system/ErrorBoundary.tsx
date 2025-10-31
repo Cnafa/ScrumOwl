@@ -2,13 +2,9 @@ import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
 export class ErrorBoundary extends React.Component<
-  // FIX: Replaced React.PropsWithChildren with an explicit inline type to resolve a potential type inference issue with `this.props`.
   { children?: React.ReactNode },
   { hasError: boolean }
 > {
-  // FIX: Replaced the constructor with a class property to initialize state.
-  // The constructor-based approach was causing a TypeScript error where `this.state`
-  // and `this.props` were not being correctly resolved on the component instance.
   state = { hasError: false };
 
   static getDerivedStateFromError(_error: any) {
@@ -22,9 +18,8 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  // FIX: Converted `render` to an arrow function property to ensure `this` is correctly bound.
-  // The standard class method was causing a TypeScript error where `this.props` was not being recognized.
-  render = () => {
+  // FIX: Converted `render` from an arrow function to a standard class method. React automatically binds `this` for lifecycle methods, and this standard syntax avoids potential TypeScript inference issues with `this.props`.
+  render() {
     if (this.state.hasError) {
       return (
         <div
@@ -47,5 +42,5 @@ export class ErrorBoundary extends React.Component<
       );
     }
     return this.props.children;
-  };
+  }
 }

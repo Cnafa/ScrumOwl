@@ -60,6 +60,7 @@ export const translations = {
     generateSummary: 'Generate with AI',
     addLabel: 'Add a label...',
     addChecklistItem: 'Add a checklist item...',
+    searchOrAddAssignee: 'Search or add assignee...',
 
     // Discard changes modal
     discardChangesTitle: 'Discard Changes?',
@@ -341,6 +342,7 @@ export const translations = {
     generateSummary: 'ایجاد با هوش مصنوعی',
     addLabel: 'افزودن برچسب...',
     addChecklistItem: 'افزودن آیتم چک‌لیست...',
+    searchOrAddAssignee: 'جستجو یا افزودن مسئول...',
     
     // Discard changes modal
     discardChangesTitle: 'لغو تغییرات؟',

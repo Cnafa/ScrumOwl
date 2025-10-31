@@ -107,7 +107,7 @@ const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange:
 const AssigneeChip: React.FC<{ user: User, isPrimary: boolean, onRemove: () => void, onSetPrimary: () => void }> = ({ user, isPrimary, onRemove, onSetPrimary }) => {
     const [isHovered, setIsHovered] = useState(false);
     return (
-        <div onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`relative flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 text-sm font-medium ${isPrimary ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-800'}`}>
+        <div onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`relative flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 text-sm font-medium ${isPrimary ? 'bg-amber-100 text-amber-800' : 'bg-primarySoft text-primary'}`}>
             <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
             <span>{user.name}</span>
             {isHovered && (
@@ -343,7 +343,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                     value={assigneeSearch}
                     onChange={e => setAssigneeSearch(e.target.value)}
                     onFocus={() => setIsAssigneeDropdownOpen(true)}
-                    placeholder="Add assignee..."
+                    placeholder={t('searchOrAddAssignee')}
                     className="flex-grow text-sm focus:outline-none min-w-[100px] p-1"
                   />
                 </div>
