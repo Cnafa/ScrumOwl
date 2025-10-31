@@ -245,6 +245,47 @@ const App: React.FC = () => {
     // BUG-FIX: Disabled mock real-time generator to prevent fake notifications.
     const { connectionStatus } = useRealtime(false, workItems, user, handleRealtimeMessage);
 
+    // Automatically update sprint states based on dates
+    useEffect(() => {
+        const updateSprintStates = () => {
+            setSprints(prevSprints => {
+                const now = new Date();
+                let hasChanged = false;
+
+                const updatedSprints = prevSprints.map(sprint => {
+                    if (sprint.state === SprintState.DELETED || sprint.state === SprintState.CLOSED) {
+                        return sprint;
+                    }
+
+                    const start = new Date(sprint.startAt);
+                    const end = new Date(sprint.endAt);
+                    end.setHours(23, 59, 59, 999); 
+
+                    let newState = sprint.state;
+                    if (sprint.state === SprintState.PLANNED && start <= now && end >= now) {
+                        newState = SprintState.ACTIVE;
+                    } else if (sprint.state === SprintState.ACTIVE && end < now) {
+                        newState = SprintState.CLOSED;
+                    }
+                    
+                    if (newState !== sprint.state) {
+                        hasChanged = true;
+                        return { ...sprint, state: newState };
+                    }
+                    return sprint;
+                });
+
+                return hasChanged ? updatedSprints : prevSprints;
+            });
+        };
+
+        updateSprintStates();
+        const intervalId = setInterval(updateSprintStates, 60000); // Check every minute
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+
     // FIX: Moved sprint-related memos and effects from AppShell to App
     const activeSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE && s.state !== SprintState.DELETED), [sprints]);
 

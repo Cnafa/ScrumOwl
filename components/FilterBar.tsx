@@ -91,6 +91,13 @@ const MultiSelectDropdown: React.FC<{
   );
 };
 
+const FILTERABLE_TYPES = [
+    WorkItemType.STORY,
+    WorkItemType.TASK,
+    WorkItemType.BUG_URGENT,
+    WorkItemType.BUG_MINOR,
+];
+
 
 export const FilterBar: React.FC<FilterBarProps> = ({ 
     filterSet, onFilterChange, onResetFilters, onOpenSaveViewModal, onOpenManageViewsModal, teams, groupBy, onGroupByChange,
@@ -171,7 +178,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
         <MultiSelectDropdown
             buttonContent={filterSet.typeIds.length > 0 ? `${filterSet.typeIds.length} Type(s)` : t('allTypes')}
-            items={WORK_ITEM_TYPES.map(type => ({id: type, name: type, content: type}))}
+            items={FILTERABLE_TYPES.map(type => ({id: type, name: type, content: type}))}
             selectedIds={filterSet.typeIds}
             onSelectionChange={(ids) => onFilterChange({...filterSet, typeIds: ids})}
         />

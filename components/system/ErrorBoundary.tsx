@@ -22,8 +22,10 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  // FIX: Changed `render` from an arrow function to a standard class method to fix a TypeScript error where `this.props` was not recognized. React correctly binds `this` for the `render` method, making this change safe and correct.
-  render() {
+  // FIX: The previous fix attempt (changing to a standard method) did not work.
+  // Reverting to an arrow function to ensure `this` is correctly bound lexically,
+  // which resolves the error where `this.props` is not recognized.
+  render = () => {
     if (this.state.hasError) {
       return (
         <div
@@ -46,5 +48,5 @@ export class ErrorBoundary extends React.Component<
       );
     }
     return this.props.children;
-  }
+  };
 }
