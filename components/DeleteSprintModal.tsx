@@ -36,16 +36,16 @@ export const DeleteSprintModal: React.FC<DeleteSprintModalProps> = ({ sprint, sp
     });
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center p-4" onClick={onClose}>
+        <div role="dialog" aria-modal="true" aria-labelledby="delete-sprint-title" aria-describedby="delete-sprint-desc" className="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center p-4" onClick={onClose}>
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-xl font-bold text-red-700">Delete Sprint</h2>
+                    <h2 id="delete-sprint-title" className="text-xl font-bold text-red-700">Delete Sprint</h2>
                     <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-gray-200">
                         <XMarkIcon className="w-6 h-6 text-gray-500" />
                     </button>
                 </header>
                 <main className="p-6 space-y-4">
-                    <p>
+                    <p id="delete-sprint-desc">
                         You are about to delete the sprint: <strong className="font-bold text-gray-800">{sprint.name}</strong>.
                         This action cannot be undone immediately after confirmation.
                     </p>

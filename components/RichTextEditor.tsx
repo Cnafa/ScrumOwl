@@ -257,7 +257,14 @@ export const RichTextEditor = ({ value, onChange, onValidityChange, editable = t
             TextStyle,
             Color,
             Highlight.configure({ multicolor: true }),
-            Link.configure({ openOnClick: false, autolink: true }),
+            Link.configure({
+                openOnClick: false,
+                autolink: true,
+                HTMLAttributes: {
+                    rel: 'noopener noreferrer',
+                    target: '_blank',
+                },
+            }),
             CharacterCount.configure({ limit: MAX_CHARS }),
             CodeBlock.configure({ languageClassPrefix: 'language-' }),
             Suggestion(suggestionConfig),
