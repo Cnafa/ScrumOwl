@@ -180,7 +180,16 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
                  const workload = reportData[ReportType.ASSIGNEE_WORKLOAD];
                  content = <DataInspector
                     headers={[t('assignee'), 'Open', 'In Progress', 'In Review', t('report_wip_limit')]}
-                    data={workload.map(d => [d.assignee.name, d.open, d.inProgress, d.inReview, d.wipBreached ? t('report_wip_breached') : 'OK'])}
+                    data={workload.map(d => [
+                      <div className="flex items-center gap-2">
+                          <img src={d.assignee.avatarUrl} alt={d.assignee.name} className="w-6 h-6 rounded-full" />
+                          <span>{d.assignee.name}</span>
+                      </div>,
+                      d.open,
+                      d.inProgress,
+                      d.inReview,
+                      d.wipBreached ? t('report_wip_breached') : 'OK'
+                    ])}
                     onRowClick={(_, index) => setDrilldown({ title: `Workload for ${workload[index].assignee.name}`, items: props.workItems.filter(item => item.assignee.id === workload[index].assignee.id && item.status !== 'Done') })}
                     highlightRow={(row, index) => workload[index].wipBreached}
                 />;
@@ -219,7 +228,7 @@ const ReportCard: React.FC<{ type: ReportType, onClick: () => void }> = ({ type,
     );
 };
 
-const DataInspector: React.FC<{ headers: string[], data: (string|number|undefined)[][], onRowClick?: (row: (string|number|undefined)[], index: number) => void, renderProgress?: number, highlightRow?: (row: (string|number|undefined)[], index: number) => boolean }> = ({ headers, data, onRowClick, renderProgress, highlightRow }) => {
+const DataInspector: React.FC<{ headers: string[], data: (string|number|undefined|React.ReactNode)[][], onRowClick?: (row: (string|number|undefined|React.ReactNode)[], index: number) => void, renderProgress?: number, highlightRow?: (row: (string|number|undefined|React.ReactNode)[], index: number) => boolean }> = ({ headers, data, onRowClick, renderProgress, highlightRow }) => {
     const { t } = useLocale();
     return (
         <div className="mt-6">
@@ -238,7 +247,7 @@ const DataInspector: React.FC<{ headers: string[], data: (string|number|undefine
                                              <div className="w-full bg-gray-200 rounded-full h-2.5">
                                                 <div className="bg-[#486966] h-2.5 rounded-full" style={{ width: cell?.toString() }}></div>
                                              </div>
-                                        ) : cell}
+                                        ) : (React.isValidElement(cell) ? cell : cell)}
                                     </td>
                                 ))}
                             </tr>

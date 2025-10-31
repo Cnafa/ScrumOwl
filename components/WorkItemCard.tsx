@@ -4,12 +4,11 @@ import { UserRoundIcon, UsersRoundIcon, BookOpenIcon, ClipboardCheckIcon, BugIco
 
 interface WorkItemCardProps {
   workItem: WorkItem;
-  onDragStart: (e: React.DragEvent, id: string) => void;
   onSelect: (workItem: WorkItem) => void;
 }
 
 const typeConfig: Record<WorkItemType, { border: string; icon: React.ReactNode, name: string }> = {
-    [WorkItemType.STORY]: { border: 'border-l-primary', icon: <BookOpenIcon className="w-4 h-4 text-primary"/>, name: "Story" },
+    [WorkItemType.STORY]: { border: 'border-l-blue-500', icon: <BookOpenIcon className="w-4 h-4 text-blue-600"/>, name: "Story" },
     [WorkItemType.TASK]: { border: 'border-l-yellow-500', icon: <ClipboardCheckIcon className="w-4 h-4 text-yellow-600"/>, name: "Task" },
     [WorkItemType.BUG_URGENT]: { border: 'border-l-red-500', icon: <AlarmClockIcon className="w-4 h-4 text-red-600"/>, name: "Urgent Bug" },
     [WorkItemType.BUG_MINOR]: { border: 'border-l-orange-500', icon: <BugIcon className="w-4 h-4 text-orange-600"/>, name: "Bug" },
@@ -25,14 +24,14 @@ export const WorkItemCard: React.FC<WorkItemCardProps> = ({ workItem, onSelect }
   return (
     <div
       onClick={() => onSelect(workItem)}
-      className={`bg-white rounded-lg p-3 border-l-4 ${config.border} cursor-pointer hover:shadow-md transition-all duration-300 ${highlightClass} space-y-2`}
+      className={`bg-white rounded-lg p-2.5 border-l-4 ${config.border} cursor-pointer hover:shadow-md transition-all duration-300 ${highlightClass} space-y-1.5`}
       aria-label={`View details for ${workItem.title}`}
     >
       <div className="flex justify-between items-start">
         <p className="text-xs font-medium text-slate-500">{workItem.id}</p>
         <div title={config.name}>{config.icon}</div>
       </div>
-      <h3 className="font-medium text-slate-800 text-sm">{workItem.title}</h3>
+      <h3 className="font-medium text-slate-800 text-sm leading-snug">{workItem.title}</h3>
       <div className="flex justify-between items-center pt-1">
         {workItem.teamInfo ? (
             <div className="flex items-center gap-1 text-xs text-slate-500" title={`Team: ${workItem.teamInfo.name}`}>

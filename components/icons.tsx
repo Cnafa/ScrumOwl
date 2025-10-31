@@ -44,6 +44,7 @@ export const UsersIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<I
 export const UsersRoundIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M18 21a8 8 0 0 0-16 0" /><circle cx="10" cy="8" r="4" /><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-10 0c-2 1.5-4 4.63-4 8" /></Icon>);
 export const BookmarkCheckIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /><path d="m9 10 2 2 4-4" /></Icon>);
 export const CalendarRangeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><rect width="18" height="18" x="3" y="4" rx="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M17 14h-6" /><path d="M13 18H7" /><path d="M7 14h.01" /><path d="M17 18h.01" /></Icon>);
+export const RepeatIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" /></Icon>);
 
 
 // Item Types
@@ -73,5 +74,5 @@ export const Heading4Icon: React.FC<{className?: string}> = ({className}) => (<h
 export const Heading5Icon: React.FC<{className?: string}> = ({className}) => (<h5 className={className}>H5</h5>)
 export const Heading6Icon: React.FC<{className?: string}> = ({className}) => (<h6 className={className}>H6</h6>)
 export const ColorSwatchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z" /></Icon>);
-export const HighlightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="m16 5-4 4" /><path d="M13 8 8 3" /><path d="M7 13 2 8" /><path d="M22 19 17 14" /><path d="m15 21 5-5" /><path d="m5 21 5-5" /><path d="M12 22v-2.5" /><path d="M12 4V2" /><path d="M4 12H2" /><path d="M22 12h-2" /></Icon>);
+export const HighlightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="m16 5-4 4" /><path d="M13 8 8 3" /><path d="M7 13 2 8" /><path d="M22 19 17 14" /><path d="m15 21 5-5" /><path d="m5 21 5-5" /><path d="M12 22v-2.5" /><path d="M12 4V2" /><path d="M22 12h-2" /><path d="M4 12H2" /></Icon>);
 export const CodeBlockIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M10 18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2Z" /><path d="M14 14a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2Z" /><path d="M6 10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2Z" /><path d="M18 10a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2Z" /></Icon>);

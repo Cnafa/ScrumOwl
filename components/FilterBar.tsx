@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FilterSet, Team, Sprint, User } from '../types';
 import { ALL_USERS, WORK_ITEM_TYPES } from '../constants';
 import { useLocale } from '../context/LocaleContext';
@@ -18,8 +18,64 @@ interface FilterBarProps {
   onIncludeUnassignedEpicItemsChange: (checked: boolean) => void;
 }
 
+const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) => {
+    useEffect(() => {
+        const listener = (event: MouseEvent | TouchEvent) => {
+            if (!ref.current || ref.current.contains(event.target as Node)) return;
+            handler(event);
+        };
+        document.addEventListener('mousedown', listener);
+        document.addEventListener('touchstart', listener);
+        return () => {
+            document.removeEventListener('mousedown', listener);
+            document.removeEventListener('touchstart', listener);
+        };
+    }, [ref, handler]);
+};
+
+const AssigneeFilter: React.FC<{ selected: string, onChange: (assigneeName: string) => void, users: User[] }> = ({ selected, onChange, users }) => {
+    const { t } = useLocale();
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    useClickOutside(dropdownRef, () => setIsOpen(false));
+
+    const selectedUser = users.find(u => u.name === selected);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-40 flex items-center justify-between px-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary">
+                <span className="flex items-center gap-2 text-sm">
+                    {selectedUser ? (
+                        <>
+                            <img src={selectedUser.avatarUrl} alt={selectedUser.name} className="w-5 h-5 rounded-full" />
+                            <span className="truncate">{selectedUser.name}</span>
+                        </>
+                    ) : (
+                        t('allAssignees')
+                    )}
+                </span>
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            {isOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                    <ul>
+                        <li onClick={() => { onChange('ALL'); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100">{t('allAssignees')}</li>
+                        {users.map(user => (
+                            <li key={user.id} onClick={() => { onChange(user.name); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
+                                <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
+                                <span>{user.name}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 const FilterChip: React.FC<{ onRemove: () => void; children: React.ReactNode }> = ({ onRemove, children }) => (
-    <div className="flex items-center gap-1 bg-primarySoft text-primary font-medium pl-2 pr-1 py-0.5 rounded-full text-sm">
+    <div className="flex items-center gap-1 bg-primarySoft text-primary font-medium pl-2 pr-1 py-0.5 rounded-full text-xs">
         {children}
         <button onClick={onRemove} className="p-0.5 rounded-full hover:bg-blue-200">
             <XMarkIcon className="w-3 h-3"/>
@@ -42,7 +98,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const selectedAssignee = ALL_USERS.find(u => u.name === filterSet.assignee);
 
   return (
-    <div className="h-14 flex-shrink-0 bg-white/70 backdrop-blur-sm flex items-center justify-between px-3 border-b border-slate-200/80">
+    <div className="h-12 flex-shrink-0 bg-white/70 backdrop-blur-sm flex items-center justify-between px-3 border-b border-slate-200/80">
       <div className="flex items-center gap-2">
         <input
           type="search"
@@ -50,15 +106,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           value={filterSet.searchQuery}
           onChange={handleInputChange}
           placeholder={t('searchPlaceholder')}
-          className="w-56 px-3 py-2 min-h-[36px] bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-48 px-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
         />
         
         {/* Active Filters as Chips */}
         {selectedAssignee && (
             <FilterChip onRemove={() => onFilterChange({ ...filterSet, assignee: 'ALL' })}>
-                {selectedAssignee.avatarUrl 
-                    ? <img src={selectedAssignee.avatarUrl} className="w-4 h-4 rounded-full mr-1" />
-                    : <UserRoundIcon className="w-4 h-4 mr-1" />}
+                <img src={selectedAssignee.avatarUrl} className="w-4 h-4 rounded-full mr-1" alt={selectedAssignee.name} />
                 {selectedAssignee.name}
             </FilterChip>
         )}
@@ -81,20 +135,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="flex items-center gap-2">
          {/* Filter Selectors */}
-        <select
-          name="assignee"
-          value={filterSet.assignee}
-          onChange={handleInputChange}
-          className="w-40 px-3 py-2 min-h-[36px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="ALL">{t('allAssignees')}</option>
-          {ALL_USERS.map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
-        </select>
+        <AssigneeFilter selected={filterSet.assignee} onChange={(name) => onFilterChange({...filterSet, assignee: name})} users={ALL_USERS} />
+
         <select
           name="type"
           value={filterSet.type}
           onChange={handleInputChange}
-          className="w-40 px-3 py-2 min-h-[36px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-36 px-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="ALL">{t('allTypes')}</option>
           {WORK_ITEM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -103,7 +150,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           name="groupBy"
           value={groupBy}
           onChange={(e) => onGroupByChange(e.target.value as 'status' | 'epic')}
-          className="w-40 px-3 py-2 min-h-[36px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-36 px-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="status">{t('groupBy')}: {t('status')}</option>
           <option value="epic">{t('groupBy')}: {t('epic')}</option>

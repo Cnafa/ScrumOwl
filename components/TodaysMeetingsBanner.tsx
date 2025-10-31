@@ -24,7 +24,7 @@ const EventItem: React.FC<{ event: CalendarEvent, onOpenEvent: (event: Partial<C
                     target="_blank" 
                     rel="noopener noreferrer" 
                     onClick={e => e.stopPropagation()}
-                    className="ml-2 flex-shrink-0 text-xs font-bold text-white bg-primary hover:bg-blue-700 px-3 py-1 rounded-full"
+                    className="ml-2 flex-shrink-0 text-xs font-bold text-white bg-primary hover:bg-[#3a5a58] px-3 py-1 rounded-full"
                 >
                     {t('join_meeting')}
                 </a>

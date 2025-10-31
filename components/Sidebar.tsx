@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import { useLocale } from '../context/LocaleContext';
 import { SavedView } from '../types';
-import { ScrumOwlLogoIcon, UsersIcon, LayoutKanbanIcon, MilestoneIcon, MountainIcon, CalendarRangeIcon, BarChart3Icon, UsersRoundIcon, BookmarkCheckIcon, ChevronLeftIcon } from './icons';
+import { ScrumOwlLogoIcon, UsersIcon, LayoutKanbanIcon, RepeatIcon, MountainIcon, CalendarRangeIcon, BarChart3Icon, UsersRoundIcon, BookmarkCheckIcon, ChevronLeftIcon } from './icons';
 import { useBoard } from '../context/BoardContext';
 import { BoardSwitcher } from './BoardSwitcher';
 
@@ -27,7 +27,7 @@ const NavItem: React.FC<NavItemProps> = ({ view, label, icon, isCollapsed }) => 
                     : 'text-slate-700 hover:bg-slate-200/50'
             }`}
         >
-            <span className="flex-shrink-0 w-5 h-5">{icon}</span>
+            <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center">{icon}</span>
             {!isCollapsed && <span className="ml-3 text-sm font-medium">{label}</span>}
         </button>
     );
@@ -64,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
             <nav className="flex-1 p-2 space-y-1.5">
                 <NavItem view="KANBAN" label={t('sprintBoard')} isCollapsed={isCollapsed} icon={<LayoutKanbanIcon />}/>
                 {can('sprint.manage') && (
-                    <NavItem view="SPRINTS" label={t('sprints')} isCollapsed={isCollapsed} icon={<MilestoneIcon />}/>
+                    <NavItem view="SPRINTS" label={t('sprints')} isCollapsed={isCollapsed} icon={<RepeatIcon />}/>
                 )}
                 {can('epic.manage') && (
                     <NavItem view="EPICS" label={t('epics')} isCollapsed={isCollapsed} icon={<MountainIcon />}/>
@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
                                 title={view.name}
                                 className="flex items-center w-full h-10 px-3 rounded-lg text-slate-700 hover:bg-slate-200/50"
                             >
-                                <BookmarkCheckIcon className="h-5 w-5 flex-shrink-0 text-slate-500"/>
+                                <BookmarkCheckIcon className="h-4 w-4 flex-shrink-0 text-slate-500"/>
                                 {!isCollapsed && <span className="ml-3 text-sm font-medium truncate">{view.name}</span>}
                             </button>
                         ))}

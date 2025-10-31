@@ -4,9 +4,11 @@ import { logCrash } from "../../libs/logging/crashLogger";
 // FIX: Correctly typed the component's props using `React.PropsWithChildren<{}>`.
 // The generic type `PropsWithChildren` requires a type argument. Using `{}` for components that only have children props.
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
-  // FIX: Initialize state using a class property. This is a modern and concise syntax for React class components
-  // that also ensures TypeScript correctly identifies `this.state` and `this.props`.
-  state = { hasError: false };
+  // FIX: Switched to an explicit constructor to initialize state and ensure `this.props` is correctly handled by the component lifecycle, resolving the type error.
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError() { return { hasError: true }; }
 

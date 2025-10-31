@@ -1,9 +1,8 @@
 // components/WorkItemEditor.tsx
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { WorkItem, Status, Priority, WorkItemType, Epic, Team } from '../types';
+import { WorkItem, Status, Priority, WorkItemType, Epic, Team, User } from '../types';
 import { useLocale } from '../context/LocaleContext';
-// FIX: Add missing LayoutKanbanIcon and ClipboardCheckIcon.
 import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon } from './icons';
 import { ALL_USERS, PRIORITIES, SPRINTS, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
 import { LabelInput } from './LabelInput';
@@ -24,12 +23,20 @@ interface WorkItemEditorProps {
   highlightSection?: string;
 }
 
-const FieldWrapper: React.FC<{ icon: React.ReactNode, label: string, children: React.ReactNode, highlightKey?: string }> = ({ icon, label, children, highlightKey }) => (
-    <div className="grid grid-cols-[36px_1fr] items-center gap-x-3" data-highlight-key={highlightKey}>
-        <div className="flex items-center justify-center text-slate-500">{icon}</div>
-        <div>{children}</div>
-    </div>
-);
+const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) => {
+    useEffect(() => {
+        const listener = (event: MouseEvent | TouchEvent) => {
+            if (!ref.current || ref.current.contains(event.target as Node)) return;
+            handler(event);
+        };
+        document.addEventListener('mousedown', listener);
+        document.addEventListener('touchstart', listener);
+        return () => {
+            document.removeEventListener('mousedown', listener);
+            document.removeEventListener('touchstart', listener);
+        };
+    }, [ref, handler]);
+};
 
 
 export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, onSave, onCancel, isNew, highlightSection }) => {
@@ -41,18 +48,12 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const epicDropdownRef = useRef<HTMLDivElement>(null);
-  const teamDropdownRef = useRef<HTMLDivElement>(null);
 
 
   useEffect(() => {
     setLocalWorkItem(workItem);
     setOriginalWorkItem(workItem);
-    const selectedEpic = epics.find(e => e.id === workItem.epicId);
-    // setEpicSearch(selectedEpic ? `[${selectedEpic.id}] ${selectedEpic.name}`: '');
-    const selectedTeam = teams.find(t => t.id === workItem.teamId);
-    // setTeamSearch(selectedTeam ? selectedTeam.name : '');
-  }, [workItem, epics, teams]);
+  }, [workItem]);
 
   useEffect(() => {
     if (highlightSection && editorContainerRef.current) {
@@ -138,13 +139,67 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
         setLocalWorkItem(prev => ({ ...prev, teamId: team?.id, teamInfo: team ? { id: team.id, name: team.name } : undefined }));
     };
 
-    const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, highlightKey: string, disabled?: boolean }> = ({ icon, value, onChange, children, name, highlightKey, disabled }) => (
-        <div className="relative w-full" data-highlight-key={highlightKey}>
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">{icon}</div>
-            <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full pl-10 pr-3 py-2 min-h-[36px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
-                {children}
-            </select>
+    const UserSelect: React.FC<{
+      icon: React.ReactNode;
+      selectedUser: User | undefined;
+      onChange: (userId: string) => void;
+      highlightKey: string;
+      disabled?: boolean;
+    }> = ({ icon, selectedUser, onChange, highlightKey, disabled }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      const dropdownRef = useRef<HTMLDivElement>(null);
+      useClickOutside(dropdownRef, () => setIsOpen(false));
+      
+      return (
+        <div className="relative" ref={dropdownRef} data-highlight-key={highlightKey}>
+          <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className="w-full flex items-center gap-2 pl-2 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50 text-left">
+            <span className="text-slate-500">{icon}</span>
+            {selectedUser ? (
+              <>
+                <img src={selectedUser.avatarUrl} alt={selectedUser.name} className="w-5 h-5 rounded-full" />
+                <span className="text-sm">{selectedUser.name}</span>
+              </>
+            ) : (
+              <span className="text-sm text-slate-400">Select user...</span>
+            )}
+          </button>
+          {isOpen && (
+            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+              <ul>
+                {ALL_USERS.map(user => (
+                  <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
+                    <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
+                    <span>{user.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
+      );
+    };
+
+    const FieldWrapper: React.FC<{ icon: React.ReactNode, children: React.ReactNode, highlightKey?: string }> = ({ icon, children, highlightKey }) => (
+      <div className="grid grid-cols-[28px_1fr] items-center gap-x-2" data-highlight-key={highlightKey}>
+          <div className="flex items-center justify-center text-slate-500">{icon}</div>
+          <div>{children}</div>
+      </div>
+    );
+
+    const SideFieldWrapper: React.FC<{ label: string, children: React.ReactNode, highlightKey?: string }> = ({ label, children, highlightKey }) => (
+      <div className="space-y-1" data-highlight-key={highlightKey}>
+          <label className="text-xs font-medium text-slate-600 px-1">{label}</label>
+          <div>{children}</div>
+      </div>
+    );
+
+    const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, disabled?: boolean }> = ({ icon, value, onChange, children, name, disabled }) => (
+      <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500">{icon}</div>
+          <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full pl-9 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
+              {children}
+          </select>
+      </div>
     );
   
   const availableStatuses = isNew ? [Status.BACKLOG, Status.TODO] : [originalWorkItem.status, ...(WORKFLOW_RULES[originalWorkItem.status!] || [])];
@@ -152,37 +207,37 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4" onMouseDown={handleBackdropMouseDown}>
       <div ref={editorContainerRef} className="bg-slate-50 rounded-lg shadow-2xl w-full max-w-5xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
-        <header className="flex items-center justify-between p-3 border-b bg-white rounded-t-lg">
-          <h2 className="text-lg font-bold text-slate-800">
+        <header className="flex items-center justify-between p-2 border-b bg-white rounded-t-lg">
+          <h2 className="text-base font-bold text-slate-800">
             {isNew ? t('createNewItem') : `${t('editing')} ${originalWorkItem.id}`}
           </h2>
           <button onClick={handleCancel} className="p-1 rounded-full hover:bg-slate-200">
-            <XMarkIcon className="w-6 h-6 text-slate-500" />
+            <XMarkIcon className="w-5 h-5 text-slate-500" />
           </button>
         </header>
         
-        <main className="flex-1 flex overflow-hidden p-3 gap-3">
-          <div className="flex-[2] overflow-y-auto pr-2 space-y-4">
-            {/* Title */}
-            <FieldWrapper icon={<TypeIcon className="w-5 h-5"/>} label={t('title')} highlightKey="title">
+        <main className="flex-1 flex overflow-hidden p-2 gap-2">
+          <div className="flex-[2] overflow-y-auto pr-2 space-y-3">
+            <FieldWrapper icon={<TypeIcon className="w-4 h-4"/>} highlightKey="title">
                 <input
                   type="text" name="title" value={localWorkItem.title || ''} onChange={handleChange}
                   placeholder={t('title')} required
-                  className="w-full text-lg font-semibold px-2 py-1 border-b-2 border-transparent focus:border-primary focus:outline-none bg-transparent text-slate-800 rounded"
+                  className="w-full text-base font-semibold px-2 py-1 border-b-2 border-transparent focus:border-primary focus:outline-none bg-transparent text-slate-800 rounded"
                 />
             </FieldWrapper>
 
-            {/* Summary */}
-            <FieldWrapper icon={<FileTextIcon className="w-5 h-5"/>} label={t('aiPoweredSummary')} highlightKey="summary">
+            <FieldWrapper icon={<FileTextIcon className="w-4 h-4"/>} highlightKey="summary">
+              <div>
                 <textarea
                     name="summary" value={localWorkItem.summary || ''} onChange={handleChange}
                     placeholder="A concise AI-generated summary will appear here." rows={2}
-                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-2 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button type="button" onClick={handleGenerateSummary} disabled={isGeneratingSummary}
                     className="mt-1 text-xs text-primary hover:underline disabled:text-slate-400">
                     {isGeneratingSummary ? 'Generating...' : t('generateSummary')}
                 </button>
+              </div>
             </FieldWrapper>
             
             <RichTextEditor
@@ -191,81 +246,97 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                 onValidityChange={setIsDescriptionOverLimit}
             />
             
-            <FieldWrapper icon={<CheckSquareIcon className="w-5 h-5"/>} label={t('checklist')} highlightKey="checklist">
+            <FieldWrapper icon={<CheckSquareIcon className="w-4 h-4"/>} highlightKey="checklist">
               <ChecklistInput items={localWorkItem.checklist || []} onChange={(items) => setLocalWorkItem(prev => ({...prev, checklist: items}))} />
             </FieldWrapper>
 
-             <FieldWrapper icon={<PaperclipIcon className="w-5 h-5"/>} label={t('attachments')} highlightKey="attachments">
+             <FieldWrapper icon={<PaperclipIcon className="w-4 h-4"/>} highlightKey="attachments">
               <AttachmentsManager attachments={localWorkItem.attachments || []} onChange={(atts) => setLocalWorkItem(prev => ({...prev, attachments: atts}))} />
             </FieldWrapper>
             
           </div>
           
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3 bg-white/50 p-3 rounded-lg">
+          <div className="flex-1 overflow-y-auto pr-2 space-y-2.5 bg-white/50 p-2 rounded-lg">
             
-            <SelectWithIcon icon={<LayoutKanbanIcon className="w-4 h-4" />} name="status" value={localWorkItem.status || ''} onChange={handleChange} highlightKey="status">
-                {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-            </SelectWithIcon>
-
-            <SelectWithIcon icon={<UserRoundIcon className="w-4 h-4" />} name="assignee" value={localWorkItem.assignee?.id || ''} onChange={(e) => handleUserChange('assignee', e.target.value)} highlightKey="assignee">
-                {ALL_USERS.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}
-            </SelectWithIcon>
-
-            <SelectWithIcon icon={<UserRoundIcon className="w-4 h-4" />} name="reporter" value={localWorkItem.reporter?.id || ''} onChange={(e) => handleUserChange('reporter', e.target.value)} highlightKey="reporter" disabled={!isNew}>
-                {ALL_USERS.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}
-            </SelectWithIcon>
+            <SideFieldWrapper label={t('status')} highlightKey="status">
+              <SelectWithIcon icon={<LayoutKanbanIcon className="w-4 h-4" />} name="status" value={localWorkItem.status || ''} onChange={handleChange}>
+                  {availableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
             
-            <SelectWithIcon icon={<ClipboardCheckIcon className="w-4 h-4" />} name="type" value={localWorkItem.type || ''} onChange={handleChange} highlightKey="type">
-                {WORK_ITEM_TYPES.filter(t => t !== WorkItemType.EPIC && t !== WorkItemType.TICKET).map(type => <option key={type} value={type}>{type}</option>)}
-            </SelectWithIcon>
-
-            <SelectWithIcon icon={<FlagIcon className="w-4 h-4" />} name="priority" value={localWorkItem.priority || ''} onChange={handleChange} highlightKey="priority">
-                {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
-            </SelectWithIcon>
+            <SideFieldWrapper label={t('assignee')} highlightKey="assignee">
+               <UserSelect icon={<UserRoundIcon className="w-4 h-4" />} selectedUser={localWorkItem.assignee} onChange={(userId) => handleUserChange('assignee', userId)} highlightKey="assignee" />
+            </SideFieldWrapper>
             
-            <SelectWithIcon icon={<UsersRoundIcon className="w-4 h-4" />} name="teamId" value={localWorkItem.teamId || ''} onChange={e => handleSelectTeam(teams.find(t => t.id === e.target.value))} highlightKey="teamId">
-                <option value="">No Team</option>
-                {teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}
-            </SelectWithIcon>
+            <SideFieldWrapper label={t('reporter')} highlightKey="reporter">
+              <UserSelect icon={<UserRoundIcon className="w-4 h-4" />} selectedUser={localWorkItem.reporter} onChange={(userId) => handleUserChange('reporter', userId)} highlightKey="reporter" disabled={!isNew} />
+            </SideFieldWrapper>
             
-            <SelectWithIcon icon={<MountainIcon className="w-4 h-4" />} name="epicId" value={localWorkItem.epicId || ''} onChange={e => handleSelectEpic(epics.find(epic => epic.id === e.target.value))} highlightKey="epicId">
-                 <option value="">No Epic</option>
-                {epics.map(item => <option key={item.id} value={item.id}>[{item.id}] {item.name}</option>)}
-            </SelectWithIcon>
+            <SideFieldWrapper label={t('type')} highlightKey="type">
+              <SelectWithIcon icon={<ClipboardCheckIcon className="w-4 h-4" />} name="type" value={localWorkItem.type || ''} onChange={handleChange}>
+                  {WORK_ITEM_TYPES.filter(t => t !== WorkItemType.EPIC && t !== WorkItemType.TICKET).map(type => <option key={type} value={type}>{type}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
 
-             <SelectWithIcon icon={<MilestoneIcon className="w-4 h-4" />} name="sprint" value={localWorkItem.sprint || ''} onChange={handleChange} highlightKey="sprint">
-                {SPRINTS.map(s => <option key={s} value={s}>{s}</option>)}
-            </SelectWithIcon>
+            <SideFieldWrapper label={t('priority')} highlightKey="priority">
+              <SelectWithIcon icon={<FlagIcon className="w-4 h-4" />} name="priority" value={localWorkItem.priority || ''} onChange={handleChange}>
+                  {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
             
-             <SelectWithIcon icon={<BoxesIcon className="w-4 h-4" />} name="stack" value={localWorkItem.stack || ''} onChange={handleChange} highlightKey="stack">
-                {STACKS.map(s => <option key={s} value={s}>{s}</option>)}
-            </SelectWithIcon>
-
-            <div className="relative" data-highlight-key="dueDate">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500"><CalendarIcon className="w-4 h-4" /></div>
-                <DateField 
-                    value={localWorkItem.dueDate || null}
-                    onChange={(date) => setLocalWorkItem(prev => ({ ...prev, dueDate: date || '' }))}
-                    minDate={new Date()}
-                    className="pl-10"
-                />
-            </div>
+            <SideFieldWrapper label={t('teams')} highlightKey="teamId">
+              <SelectWithIcon icon={<UsersRoundIcon className="w-4 h-4" />} name="teamId" value={localWorkItem.teamId || ''} onChange={e => handleSelectTeam(teams.find(t => t.id === e.target.value))}>
+                  <option value="">No Team</option>
+                  {teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
             
-             <div className="relative" data-highlight-key="estimationPoints">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500"><TimerIcon className="w-4 h-4" /></div>
-                <input type="number" name="estimationPoints" value={(localWorkItem as any).estimationPoints || ''} onChange={handleChange} className="w-full pl-10 pr-3 py-2 min-h-[36px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary" placeholder={t('estimationPoints')} />
-            </div>
+            <SideFieldWrapper label={t('epic')} highlightKey="epicId">
+              <SelectWithIcon icon={<MountainIcon className="w-4 h-4" />} name="epicId" value={localWorkItem.epicId || ''} onChange={e => handleSelectEpic(epics.find(epic => epic.id === e.target.value))}>
+                   <option value="">No Epic</option>
+                  {epics.map(item => <option key={item.id} value={item.id}>[{item.id}] {item.name}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
 
-            <div data-highlight-key="labels">
+            <SideFieldWrapper label={t('sprint')} highlightKey="sprint">
+               <SelectWithIcon icon={<MilestoneIcon className="w-4 h-4" />} name="sprint" value={localWorkItem.sprint || ''} onChange={handleChange}>
+                  {SPRINTS.map(s => <option key={s} value={s}>{s}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
+            
+            <SideFieldWrapper label={t('stack')} highlightKey="stack">
+               <SelectWithIcon icon={<BoxesIcon className="w-4 h-4" />} name="stack" value={localWorkItem.stack || ''} onChange={handleChange}>
+                  {STACKS.map(s => <option key={s} value={s}>{s}</option>)}
+              </SelectWithIcon>
+            </SideFieldWrapper>
+
+            <SideFieldWrapper label={t('dueDate')} highlightKey="dueDate">
+              <div className="relative">
+                  <DateField 
+                      value={localWorkItem.dueDate || null}
+                      onChange={(date) => setLocalWorkItem(prev => ({ ...prev, dueDate: date || '' }))}
+                      minDate={new Date()}
+                  />
+              </div>
+            </SideFieldWrapper>
+            
+            <SideFieldWrapper label={t('estimationPoints')} highlightKey="estimationPoints">
+              <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500"><TimerIcon className="w-4 h-4" /></div>
+                  <input type="number" name="estimationPoints" value={(localWorkItem as any).estimationPoints || ''} onChange={handleChange} className="w-full text-sm pl-9 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+            </SideFieldWrapper>
+            
+            <SideFieldWrapper label={t('labels')} highlightKey="labels">
               <LabelInput labels={localWorkItem.labels || []} onChange={(labels) => setLocalWorkItem(prev => ({...prev, labels }))} />
-            </div>
+            </SideFieldWrapper>
             
           </div>
         </main>
         
-        <footer className="p-3 border-t bg-slate-100 flex justify-end gap-2 rounded-b-lg">
-          <button onClick={handleCancel} className="py-2 px-3 border border-slate-400 rounded-lg text-sm font-medium text-slate-800 hover:bg-slate-200">{t('cancel')}</button>
-          <button onClick={handleSave} disabled={!hasChanges || isDescriptionOverLimit} className="py-2 px-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed">{t('saveChanges')}</button>
+        <footer className="p-2 border-t bg-slate-100 flex justify-end gap-2 rounded-b-lg">
+          <button onClick={handleCancel} className="py-1.5 px-3 border border-slate-400 rounded-lg text-sm font-medium text-slate-800 hover:bg-slate-200">{t('cancel')}</button>
+          <button onClick={handleSave} disabled={!hasChanges || isDescriptionOverLimit} className="py-1.5 px-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-[#3a5a58] disabled:bg-slate-400 disabled:cursor-not-allowed">{t('saveChanges')}</button>
         </footer>
       </div>
       

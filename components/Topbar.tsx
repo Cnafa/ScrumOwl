@@ -181,7 +181,7 @@ export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotifica
                 {currentView !== 'EPICS' && can('item.create') && (
                      <button 
                         onClick={onNewItem} 
-                        className="py-1.5 px-3 text-sm font-medium rounded-md text-white bg-primary hover:bg-blue-700"
+                        className="py-1.5 px-3 text-sm font-medium rounded-md text-white bg-primary hover:bg-[#3a5a58]"
                     >
                         {t('newItem')}
                     </button>
