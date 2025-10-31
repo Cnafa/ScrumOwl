@@ -6,7 +6,6 @@ import { XMarkIcon, StarIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { ActivityFeed } from './ActivityFeed';
-import { getMockActivities } from '../services/mockDataService';
 import { useBoard } from '../context/BoardContext';
 
 interface WorkItemDetailModalProps {
@@ -47,7 +46,7 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
   const { user } = useAuth();
   const { can } = useBoard();
   const [comment, setComment] = useState('');
-  const [activities, setActivities] = useState<ActivityItem[]>(() => getMockActivities(5));
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const modalBodyRef = useRef<HTMLDivElement>(null);
 
   const canEditItem = can('item.edit.any') || (can('item.edit.own') && workItem.assignee?.id === user?.id);

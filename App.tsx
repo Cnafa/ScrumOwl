@@ -5,7 +5,6 @@ import LoginScreen from './components/LoginScreen';
 import { AppShell } from './components/AppShell';
 // FIX: Import Status, Priority, and WorkItemType enums to fix type errors.
 import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState, Board, JoinRequest, InviteCode } from './types';
-import { getMockWorkItems, getMockNotifications, getMockEpics, getMockTeams, getMockSprints, getMockJoinRequests, getMockInviteCodes } from './services/mockDataService';
 import { WorkItemDetailModal } from './components/WorkItemDetailModal';
 import { WorkItemEditor } from './components/WorkItemEditor';
 import { UserSettingsModal } from './components/UserSettingsModal';

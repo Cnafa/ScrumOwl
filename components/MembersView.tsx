@@ -5,7 +5,6 @@ import { JoinRequestsTab } from './JoinRequestsTab';
 import { InviteCodesTab } from './InviteCodesTab';
 import { TeamsTab } from './TeamsTab';
 import { Team, InviteCode, JoinRequest, BoardMember, User } from '../types';
-import { getMockJoinRequests, getMockInviteCodes } from '../services/mockDataService';
 import { useBoard } from '../context/BoardContext';
 import { ROLES } from '../constants';
 import { useAuth } from '../context/AuthContext';

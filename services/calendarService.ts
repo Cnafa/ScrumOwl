@@ -1,5 +1,4 @@
 import { CalendarEvent, WorkItem, User, Conflict, Team } from '../types';
-import { getMockCalendarEvents } from './mockDataService';
 import { ALL_USERS } from '../constants';
 
 let events: CalendarEvent[] = [];
@@ -43,8 +42,7 @@ const updateAllConflicts = (allEvents: CalendarEvent[]): CalendarEvent[] => {
 // Initialize with some mock data
 export const initializeCalendarEvents = (workItems: WorkItem[]) => {
     if (events.length === 0) {
-        const mockEvents = getMockCalendarEvents(15, workItems);
-        events = updateAllConflicts(mockEvents);
+        events = [];
     }
 };
 
