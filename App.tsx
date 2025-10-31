@@ -245,6 +245,14 @@ const App: React.FC = () => {
         setEditingWorkItem(null);
         setIsNewItem(false);
     };
+
+    const handleItemUpdate = (updatedItem: WorkItem) => {
+        const updatedItemWithTimestamp = { ...updatedItem, updatedAt: new Date().toISOString() };
+        setWorkItems(prev => prev.map(item => item.id === updatedItemWithTimestamp.id ? updatedItemWithTimestamp : item));
+        if (selectedWorkItem && selectedWorkItem.id === updatedItem.id) {
+            setSelectedWorkItem(updatedItemWithTimestamp);
+        }
+    };
     
     const handleNewEpic = () => {
         if (!activeBoard) return;
@@ -420,6 +428,7 @@ const App: React.FC = () => {
                     workItem={selectedWorkItem}
                     onClose={() => setSelectedWorkItem(null)}
                     onEdit={handleEditWorkItem}
+                    onItemUpdate={handleItemUpdate}
                 />
             )}
             

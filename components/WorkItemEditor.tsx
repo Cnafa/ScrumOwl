@@ -38,6 +38,68 @@ const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: Mou
     }, [ref, handler]);
 };
 
+const UserSelect: React.FC<{
+  icon: React.ReactNode;
+  selectedUser: User | undefined;
+  onChange: (userId: string) => void;
+  highlightKey: string;
+  disabled?: boolean;
+}> = ({ icon, selectedUser, onChange, highlightKey, disabled }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useClickOutside(dropdownRef, () => setIsOpen(false));
+  
+  return (
+    <div className="relative" ref={dropdownRef} data-highlight-key={highlightKey}>
+      <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className="w-full flex items-center gap-2 pl-2 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50 text-left">
+        <span className="text-slate-500">{icon}</span>
+        {selectedUser ? (
+          <>
+            <img src={selectedUser.avatarUrl} alt={selectedUser.name} className="w-5 h-5 rounded-full" />
+            <span className="text-sm">{selectedUser.name}</span>
+          </>
+        ) : (
+          <span className="text-sm text-slate-400">Select user...</span>
+        )}
+      </button>
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+          <ul>
+            {ALL_USERS.map(user => (
+              <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
+                <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
+                <span>{user.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const FieldWrapper: React.FC<{ icon: React.ReactNode, children: React.ReactNode, highlightKey?: string }> = ({ icon, children, highlightKey }) => (
+  <div className="grid grid-cols-[28px_1fr] items-center gap-x-2" data-highlight-key={highlightKey}>
+      <div className="flex items-center justify-center text-slate-500">{icon}</div>
+      <div>{children}</div>
+  </div>
+);
+
+const SideFieldWrapper: React.FC<{ label: string, children: React.ReactNode, highlightKey?: string }> = ({ label, children, highlightKey }) => (
+  <div className="space-y-1" data-highlight-key={highlightKey}>
+      <label className="text-xs font-medium text-slate-600 px-1">{label}</label>
+      <div>{children}</div>
+  </div>
+);
+
+const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, disabled?: boolean }> = ({ icon, value, onChange, children, name, disabled }) => (
+  <div className="relative w-full">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500">{icon}</div>
+      <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full pl-9 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
+          {children}
+      </select>
+  </div>
+);
 
 export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, onSave, onCancel, isNew, highlightSection }) => {
   const { t } = useLocale();
@@ -138,75 +200,12 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
     const handleSelectTeam = (team?: Team) => {
         setLocalWorkItem(prev => ({ ...prev, teamId: team?.id, teamInfo: team ? { id: team.id, name: team.name } : undefined }));
     };
-
-    const UserSelect: React.FC<{
-      icon: React.ReactNode;
-      selectedUser: User | undefined;
-      onChange: (userId: string) => void;
-      highlightKey: string;
-      disabled?: boolean;
-    }> = ({ icon, selectedUser, onChange, highlightKey, disabled }) => {
-      const [isOpen, setIsOpen] = useState(false);
-      const dropdownRef = useRef<HTMLDivElement>(null);
-      useClickOutside(dropdownRef, () => setIsOpen(false));
-      
-      return (
-        <div className="relative" ref={dropdownRef} data-highlight-key={highlightKey}>
-          <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className="w-full flex items-center gap-2 pl-2 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50 text-left">
-            <span className="text-slate-500">{icon}</span>
-            {selectedUser ? (
-              <>
-                <img src={selectedUser.avatarUrl} alt={selectedUser.name} className="w-5 h-5 rounded-full" />
-                <span className="text-sm">{selectedUser.name}</span>
-              </>
-            ) : (
-              <span className="text-sm text-slate-400">Select user...</span>
-            )}
-          </button>
-          {isOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-              <ul>
-                {ALL_USERS.map(user => (
-                  <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
-                    <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
-                    <span>{user.name}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      );
-    };
-
-    const FieldWrapper: React.FC<{ icon: React.ReactNode, children: React.ReactNode, highlightKey?: string }> = ({ icon, children, highlightKey }) => (
-      <div className="grid grid-cols-[28px_1fr] items-center gap-x-2" data-highlight-key={highlightKey}>
-          <div className="flex items-center justify-center text-slate-500">{icon}</div>
-          <div>{children}</div>
-      </div>
-    );
-
-    const SideFieldWrapper: React.FC<{ label: string, children: React.ReactNode, highlightKey?: string }> = ({ label, children, highlightKey }) => (
-      <div className="space-y-1" data-highlight-key={highlightKey}>
-          <label className="text-xs font-medium text-slate-600 px-1">{label}</label>
-          <div>{children}</div>
-      </div>
-    );
-
-    const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, disabled?: boolean }> = ({ icon, value, onChange, children, name, disabled }) => (
-      <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500">{icon}</div>
-          <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full pl-9 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
-              {children}
-          </select>
-      </div>
-    );
   
   const availableStatuses = isNew ? [Status.BACKLOG, Status.TODO] : [originalWorkItem.status, ...(WORKFLOW_RULES[originalWorkItem.status!] || [])];
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4" onMouseDown={handleBackdropMouseDown}>
-      <div ref={editorContainerRef} className="bg-slate-50 rounded-lg shadow-2xl w-full max-w-5xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
+      <div ref={editorContainerRef} className="bg-slate-50 rounded-lg shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
         <header className="flex items-center justify-between p-2 border-b bg-white rounded-t-lg">
           <h2 className="text-base font-bold text-slate-800">
             {isNew ? t('createNewItem') : `${t('editing')} ${originalWorkItem.id}`}
@@ -217,7 +216,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
         </header>
         
         <main className="flex-1 flex overflow-hidden p-2 gap-2">
-          <div className="flex-[2] overflow-y-auto pr-2 space-y-3">
+          <div className="flex-[3] overflow-y-auto pr-2 space-y-3">
             <FieldWrapper icon={<TypeIcon className="w-4 h-4"/>} highlightKey="title">
                 <input
                   type="text" name="title" value={localWorkItem.title || ''} onChange={handleChange}

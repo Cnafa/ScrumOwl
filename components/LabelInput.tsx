@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { XMarkIcon } from './icons';
+import { XMarkIcon, PlusCircleIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 
 interface LabelInputProps {
@@ -41,14 +41,19 @@ export const LabelInput: React.FC<LabelInputProps> = ({ labels, onChange }) => {
           </span>
         ))}
       </div>
-      <input
-        type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={t('addLabel')}
-        className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
-      />
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('addLabel')}
+          className="flex-grow px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
+        />
+        <button type="button" onClick={handleAddLabel} className="flex-shrink-0 text-[#486966] hover:text-[#3a5a58]">
+          <PlusCircleIcon className="w-6 h-6" />
+        </button>
+      </div>
     </div>
   );
 };

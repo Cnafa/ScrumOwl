@@ -101,7 +101,7 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4" onMouseDown={handleBackdropMouseDown}>
-      <div ref={editorContainerRef} className="bg-[#F0F4F4] rounded-lg shadow-2xl w-full max-w-4xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
+      <div ref={editorContainerRef} className="bg-[#F0F4F4] rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
         <header className="flex items-center justify-between p-4 border-b bg-white/60 rounded-t-lg">
           <h2 className="text-xl font-bold text-[#3B3936]">
             {isNew ? 'Create New Epic' : `Editing Epic ${originalEpic.id}`}
@@ -112,7 +112,7 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
         </header>
         
         <main className="flex-1 flex overflow-hidden p-4 gap-4">
-          <div className="flex-[2] overflow-y-auto pr-2 space-y-4">
+          <div className="flex-[3] overflow-y-auto pr-2 space-y-4">
             <input
               type="text"
               name="name"

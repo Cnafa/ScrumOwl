@@ -1,3 +1,5 @@
+// components/WorkItemDetailModal.tsx
+
 import React, { useState } from 'react';
 import { WorkItem, ActivityItem, User, ChecklistItem } from '../types';
 // FIX: Removed unused and non-existent 'UserIcon' import.
@@ -12,6 +14,7 @@ interface WorkItemDetailModalProps {
   workItem: WorkItem;
   onClose: () => void;
   onEdit: (workItem: WorkItem) => void;
+  onItemUpdate: (item: WorkItem) => void;
 }
 
 const DetailField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
@@ -31,7 +34,7 @@ const UserDisplay: React.FC<{ user?: User }> = ({ user }) => {
     );
 };
 
-export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, onClose, onEdit }) => {
+export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, onClose, onEdit, onItemUpdate }) => {
   const { t } = useLocale();
   const { user } = useAuth();
   const { can } = useBoard();
@@ -57,11 +60,19 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
       setComment('');
     }
   };
+
+  const handleToggleChecklistItem = (checklistItemId: string) => {
+    const newChecklist = workItem.checklist.map(item =>
+        item.id === checklistItemId ? { ...item, isCompleted: !item.isCompleted } : item
+    );
+    const updatedWorkItem = { ...workItem, checklist: newChecklist };
+    onItemUpdate(updatedWorkItem);
+  };
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onMouseDown={onClose}>
       <div 
-        className="bg-[#F0F4F4] rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col"
+        className="bg-[#F0F4F4] rounded-lg shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col"
         onMouseDown={e => e.stopPropagation()}
       >
         <header className="flex items-center justify-between p-4 border-b bg-white/60 rounded-t-lg flex-shrink-0">
@@ -97,7 +108,7 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
                         <ul className="space-y-1">
                             {workItem.checklist.map(item => (
                                 <li key={item.id} className="flex items-center gap-2 text-sm">
-                                    <input type="checkbox" checked={item.isCompleted} readOnly className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
+                                    <input type="checkbox" checked={item.isCompleted} onChange={() => handleToggleChecklistItem(item.id)} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                                     <span className={item.isCompleted ? 'line-through text-gray-500' : ''}>{item.text}</span>
                                 </li>
                             ))}
