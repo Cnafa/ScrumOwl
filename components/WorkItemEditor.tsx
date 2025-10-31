@@ -1,10 +1,10 @@
 // components/WorkItemEditor.tsx
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { WorkItem, Status, Priority, WorkItemType, Epic, Team, User } from '../types';
+import { WorkItem, Status, Priority, WorkItemType, Epic, Team, User, Sprint, SprintState } from '../types';
 import { useLocale } from '../context/LocaleContext';
 import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon } from './icons';
-import { ALL_USERS, PRIORITIES, SPRINTS, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
+import { ALL_USERS, PRIORITIES, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
 import { LabelInput } from './LabelInput';
 import { ChecklistInput } from './ChecklistInput';
 import { AttachmentsManager } from './AttachmentsManager';
@@ -17,6 +17,7 @@ interface WorkItemEditorProps {
   workItem: Partial<WorkItem>;
   epics: Epic[];
   teams: Team[];
+  sprints: Sprint[];
   onSave: (item: Partial<WorkItem>) => void;
   onCancel: () => void;
   isNew: boolean;
@@ -101,7 +102,7 @@ const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange:
   </div>
 );
 
-export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, onSave, onCancel, isNew, highlightSection }) => {
+export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, sprints, onSave, onCancel, isNew, highlightSection }) => {
   const { t } = useLocale();
   const [localWorkItem, setLocalWorkItem] = useState<Partial<WorkItem>>(workItem);
   const [originalWorkItem, setOriginalWorkItem] = useState<Partial<WorkItem>>(workItem);
@@ -111,6 +112,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
+  const selectableSprints = useMemo(() => sprints.filter(s => s.state === SprintState.ACTIVE || s.state === SprintState.PLANNED), [sprints]);
 
   useEffect(() => {
     setLocalWorkItem(workItem);
@@ -174,6 +176,16 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
     if (user) {
       setLocalWorkItem(prev => ({ ...prev, [fieldName]: user }));
     }
+  };
+
+  const handleSprintChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const sprintId = e.target.value;
+    const selectedSprint = selectableSprints.find(s => s.id === sprintId);
+    setLocalWorkItem(prev => ({
+        ...prev,
+        sprintId: selectedSprint?.id,
+        sprint: selectedSprint?.name || '',
+    }));
   };
   
   const handleGenerateSummary = async () => {
@@ -298,8 +310,9 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             </SideFieldWrapper>
 
             <SideFieldWrapper label={t('sprint')} highlightKey="sprint">
-               <SelectWithIcon icon={<MilestoneIcon className="w-4 h-4" />} name="sprint" value={localWorkItem.sprint || ''} onChange={handleChange}>
-                  {SPRINTS.map(s => <option key={s} value={s}>{s}</option>)}
+               <SelectWithIcon icon={<MilestoneIcon className="w-4 h-4" />} name="sprintId" value={localWorkItem.sprintId || ''} onChange={handleSprintChange}>
+                    <option value="">No Sprint</option>
+                    {selectableSprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </SelectWithIcon>
             </SideFieldWrapper>
             

@@ -142,14 +142,19 @@ const createMockWorkItem = (id: number): WorkItem => {
     const activeSprint1 = MOCK_SPRINTS.find(s => s.number === 3); // Sprint 24.03
     const activeSprint2 = MOCK_SPRINTS.find(s => s.number === 4); // Sprint 24.04
 
-    let sprintName = faker.helpers.arrayElement(SPRINTS);
+    const randomSprint = faker.datatype.boolean(0.8) ? faker.helpers.arrayElement(MOCK_SPRINTS.filter(s => s.state === SprintState.ACTIVE || s.state === SprintState.PLANNED)) : undefined;
+    
+    let sprintName = randomSprint?.name || '';
+    let sprintId = randomSprint?.id;
     let itemAssignee = assignee;
 
     if (id <= 5 && activeSprint1) {
         sprintName = activeSprint1.name;
+        sprintId = activeSprint1.id;
         itemAssignee = ALL_USERS[0]; // Alice
     } else if (id > 5 && id <= 10 && activeSprint2) {
         sprintName = activeSprint2.name;
+        sprintId = activeSprint2.id;
         itemAssignee = ALL_USERS[1]; // Bob
     }
 
@@ -166,6 +171,7 @@ const createMockWorkItem = (id: number): WorkItem => {
         reporter,
         priority: faker.helpers.arrayElement(PRIORITIES),
         sprint: sprintName,
+        sprintId: sprintId,
         group: faker.helpers.arrayElement(GROUPS),
         stack: faker.helpers.arrayElement(STACKS),
         estimationPoints: faker.helpers.arrayElement([1, 2, 3, 5, 8, 13]),

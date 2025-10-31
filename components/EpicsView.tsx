@@ -13,8 +13,6 @@ interface EpicsViewProps {
     onNewItem: (options: { epicId: string }) => void;
     onSelectWorkItem: (workItem: WorkItem) => void;
     onUpdateStatus: (epicId: string, newStatus: EpicStatus) => void;
-    onDeleteEpic: (epicId: string) => void;
-    onRestoreEpic: (epicId: string) => void;
 }
 
 const BlockActionModal: React.FC<{ epicName: string, openItems: WorkItem[], onClose: () => void }> = ({ epicName, openItems, onClose }) => {
@@ -47,9 +45,7 @@ const ActionsMenu: React.FC<{
     onEdit: () => void, 
     setBlockModalOpen: (items: WorkItem[]) => void, 
     workItems: WorkItem[], 
-    onDelete: () => void,
-    onRestore: () => void 
-}> = ({ epic, onUpdateStatus, onEdit, setBlockModalOpen, workItems, onDelete, onRestore }) => {
+}> = ({ epic, onUpdateStatus, onEdit, setBlockModalOpen, workItems }) => {
     const { t } = useLocale();
     const [isOpen, setIsOpen] = useState(false);
     
@@ -59,15 +55,6 @@ const ActionsMenu: React.FC<{
             setBlockModalOpen(openItems);
         } else {
             onUpdateStatus(epic.id, newStatus);
-        }
-        setIsOpen(false);
-    };
-
-    const handleDelete = () => {
-        const itemCount = workItems.filter(item => item.epicId === epic.id).length;
-        const confirmMessage = `Are you sure you want to delete the epic "${epic.name}"?\n\nThis will detach ${itemCount} work item(s).\n\nThis action can be undone from the Deleted tab.`;
-        if (window.confirm(confirmMessage)) {
-            onDelete();
         }
         setIsOpen(false);
     };
@@ -82,21 +69,19 @@ const ActionsMenu: React.FC<{
                         ? [{ label: t('epic_action_hold'), action: () => handleStatusChange(EpicStatus.ON_HOLD) }] 
                         : [{ label: t('epic_action_activate'), action: () => handleStatusChange(EpicStatus.ACTIVE) }]),
                     { label: t('epic_action_mark_done'), action: () => handleStatusChange(EpicStatus.DONE), disabled: epic.openItemsCount !== 0 },
-                    { type: 'divider' },
-                    { label: t('delete'), action: handleDelete, isDestructive: true },
                 ];
             case EpicStatus.DONE:
                 return [
                     { label: t('edit'), action: onEdit },
                     { label: t('epic_action_reopen'), action: () => handleStatusChange(EpicStatus.ACTIVE) },
-                    { label: t('epic_action_archive'), action: () => handleStatusChange(EpicStatus.ARCHIVED), disabled: epic.openItemsCount !== 0 }
+                    // FIX: Add divider and destructive flag for archive action.
+                    { type: 'divider' as const },
+                    { label: t('epic_action_archive'), action: () => handleStatusChange(EpicStatus.ARCHIVED), disabled: epic.openItemsCount !== 0, isDestructive: true }
                 ];
             case EpicStatus.ARCHIVED:
                 return [
                      { label: t('epic_action_reopen'), action: () => handleStatusChange(EpicStatus.ACTIVE) }
                 ];
-            case EpicStatus.DELETED:
-                 return [{ label: 'Restore', action: onRestore }];
             default:
                 return [];
         }
@@ -110,12 +95,13 @@ const ActionsMenu: React.FC<{
             {isOpen && (
                 <div onMouseLeave={() => setIsOpen(false)} className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
                     <ul className="py-1">
+                        {/* FIX: Use type guards with 'in' operator to safely handle different action types (regular, divider, destructive). */}
                         {getActions().map((action, index) => (
-                             action.type === 'divider' ? 
+                             'type' in action && action.type === 'divider' ?
                              <div key={index} className="my-1 h-px bg-gray-200" /> :
                             <li key={action.label}>
-                                <button onClick={(e) => { e.stopPropagation(); (action.action as Function)(); setIsOpen(false); }} disabled={action.disabled} 
-                                className={`w-full text-left px-4 py-2 text-sm ${action.isDestructive ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'} disabled:text-gray-400 disabled:cursor-not-allowed`}>
+                                <button onClick={(e) => { e.stopPropagation(); (action.action as Function)(); setIsOpen(false); }} disabled={action.disabled}
+                                className={`w-full text-left px-4 py-2 text-sm ${'isDestructive' in action && action.isDestructive ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'} disabled:text-gray-400 disabled:cursor-not-allowed`}>
                                     {action.label}
                                 </button>
                             </li>
@@ -185,7 +171,7 @@ const EpicDrawerContent: React.FC<{
     );
 }
 
-export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus, onDeleteEpic, onRestoreEpic }) => {
+export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpic, onEditEpic, onNewItem, onSelectWorkItem, onUpdateStatus }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const canManage = can('epic.manage');
@@ -233,7 +219,6 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                 <TabButton tab={EpicStatus.ACTIVE} label={t('epic_tab_active')} />
                 <TabButton tab={EpicStatus.DONE} label={t('epic_tab_done')} />
                 <TabButton tab={EpicStatus.ARCHIVED} label={t('epic_tab_archive')} />
-                <TabButton tab={EpicStatus.DELETED} label="Deleted" />
             </nav>
 
             <div className="overflow-x-auto">
@@ -273,7 +258,7 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(epic.updatedAt).toLocaleDateString()}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                                         {canManage && (
-                                            <ActionsMenu epic={epic} onEdit={() => onEditEpic(epic)} onUpdateStatus={onUpdateStatus} setBlockModalOpen={setBlockModalInfo} workItems={workItems} onDelete={() => onDeleteEpic(epic.id)} onRestore={() => onRestoreEpic(epic.id)} />
+                                            <ActionsMenu epic={epic} onEdit={() => onEditEpic(epic)} onUpdateStatus={onUpdateStatus} setBlockModalOpen={setBlockModalInfo} workItems={workItems} />
                                         )}
                                     </td>
                                 </tr>

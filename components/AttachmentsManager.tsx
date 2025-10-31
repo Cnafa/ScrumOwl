@@ -44,7 +44,7 @@ const GooglePickerModal: React.FC<{ files: any[], onSelect: (file: any) => void,
     );
 };
 
-export const AttachmentsManager: React.FC<{ attachments: Attachment[], onChange: (attachments: Attachment[]) => void }> = ({ attachments, onChange }) => {
+export const AttachmentsManager: React.FC<{ attachments: Attachment[], onChange: (attachments: Attachment[]) => void, readOnly?: boolean }> = ({ attachments, onChange, readOnly = false }) => {
     const { t } = useLocale();
     const { user } = useAuth();
     const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -99,21 +99,26 @@ export const AttachmentsManager: React.FC<{ attachments: Attachment[], onChange:
                         {att.provider === 'GOOGLE_DRIVE' && <GoogleIcon className="w-4 h-4 flex-shrink-0" />}
                         <span className="text-sm truncate" title={att.fileName}>{att.fileName}</span>
                     </div>
-                    <button onClick={() => handleRemoveAttachment(att.id)} className="text-gray-400 hover:text-red-500">
-                        <TrashIcon className="w-4 h-4" />
-                    </button>
+                    {!readOnly && (
+                        <button onClick={() => handleRemoveAttachment(att.id)} className="text-gray-400 hover:text-red-500">
+                            <TrashIcon className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             ))}
+            {attachments.length === 0 && !readOnly && <p className="text-xs text-center text-gray-500 py-2">No attachments yet.</p>}
 
-            <div className="pt-2 text-center">
-                 <div className="p-4 bg-blue-50 rounded-md">
-                     <p className="text-sm text-blue-700 mb-3">Google Drive is connected for <strong>{user?.email}</strong>.</p>
-                    <button type="button" onClick={() => setIsPickerOpen(true)} className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
-                        <GoogleIcon className="w-5 h-5" />
-                        Attach from Google Drive
-                    </button>
+            {!readOnly && (
+                <div className="pt-2 text-center">
+                     <div className="p-4 bg-blue-50 rounded-md">
+                         <p className="text-sm text-blue-700 mb-3">Google Drive is connected for <strong>{user?.email}</strong>.</p>
+                        <button type="button" onClick={() => setIsPickerOpen(true)} className="w-full inline-flex items-center justify-center gap-2 py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
+                            <GoogleIcon className="w-5 h-5" />
+                            Attach from Google Drive
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
             
             {isPickerOpen && <GooglePickerModal files={mockGoogleFiles} onSelect={handleFileSelect} onClose={() => setIsPickerOpen(false)} />}
         </div>

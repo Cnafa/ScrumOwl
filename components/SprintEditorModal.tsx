@@ -53,6 +53,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
         
         const relevantEpics = allEpics.filter(e => {
             const isArchived = e.status === EpicStatus.ARCHIVED;
+            // FIX: Removed check for non-existent EpicStatus.DELETED.
             const isDone = e.status === EpicStatus.DONE;
             if (isArchived) return false;
             if (isDone && !showCompleted) return false;

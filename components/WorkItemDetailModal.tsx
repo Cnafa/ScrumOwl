@@ -1,6 +1,6 @@
 // components/WorkItemDetailModal.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WorkItem, ActivityItem, User, ChecklistItem } from '../types';
 // FIX: Removed unused and non-existent 'UserIcon' import.
 import { XMarkIcon } from './icons';
@@ -15,10 +15,11 @@ interface WorkItemDetailModalProps {
   onClose: () => void;
   onEdit: (workItem: WorkItem) => void;
   onItemUpdate: (item: WorkItem) => void;
+  highlightSection?: string;
 }
 
-const DetailField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-    <div>
+const DetailField: React.FC<{ label: string; children: React.ReactNode, highlightKey?: string }> = ({ label, children, highlightKey }) => (
+    <div data-highlight-key={highlightKey}>
         <p className="text-sm font-medium text-[#889C9B] mb-1">{label}</p>
         <div className="text-sm text-[#3B3936]">{children}</div>
     </div>
@@ -34,14 +35,30 @@ const UserDisplay: React.FC<{ user?: User }> = ({ user }) => {
     );
 };
 
-export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, onClose, onEdit, onItemUpdate }) => {
+export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, onClose, onEdit, onItemUpdate, highlightSection }) => {
   const { t } = useLocale();
   const { user } = useAuth();
   const { can } = useBoard();
   const [comment, setComment] = useState('');
   const [activities, setActivities] = useState<ActivityItem[]>(() => getMockActivities(5));
+  const modalBodyRef = useRef<HTMLDivElement>(null);
 
   const canEditItem = can('item.edit.any') || (can('item.edit.own') && workItem.assignee.id === user?.id);
+  
+  // US-42: Highlighting logic
+  useEffect(() => {
+    if (highlightSection && modalBodyRef.current) {
+        const elementToHighlight = modalBodyRef.current.querySelector(`[data-highlight-key="${highlightSection}"]`);
+        if (elementToHighlight) {
+            elementToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            elementToHighlight.classList.add('animate-highlight-pulse');
+            const timer = setTimeout(() => {
+                elementToHighlight.classList.remove('animate-highlight-pulse');
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }
+  }, [highlightSection, workItem]);
   
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,8 +94,8 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
       >
         <header className="flex items-center justify-between p-4 border-b bg-white/60 rounded-t-lg flex-shrink-0">
           <div>
-             <p className="text-xs text-[#889C9B]">{workItem.id}</p>
-             <h2 className="text-xl font-bold text-[#3B3936]">{workItem.title}</h2>
+             <p className="text-xs text-[#889C9B]" data-highlight-key="id">{workItem.id}</p>
+             <h2 className="text-xl font-bold text-[#3B3936]" data-highlight-key="title">{workItem.title}</h2>
           </div>
           <div className="flex items-center gap-2 ml-4">
             {canEditItem && (
@@ -92,18 +109,18 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
 
         <div className="flex-1 flex overflow-hidden">
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div>
+            <main ref={modalBodyRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div data-highlight-key="summary">
                     <h3 className="text-md font-semibold text-[#486966] mb-2">{t('aiPoweredSummary')}</h3>
                     <p className="text-sm text-[#3B3936] p-3 bg-[#B2BEBF]/50 rounded-lg">{workItem.summary || 'No summary available.'}</p>
                 </div>
-                <div>
+                <div data-highlight-key="description">
                     <h3 className="text-md font-semibold text-[#486966] mb-2">{t('description')}</h3>
                     <div className="prose prose-sm max-w-none text-[#3B3936]" dangerouslySetInnerHTML={{ __html: workItem.description.replace(/\n/g, '<br />') }} />
                 </div>
                 
                 {workItem.checklist && workItem.checklist.length > 0 && (
-                    <div>
+                    <div data-highlight-key="checklist">
                         <h3 className="text-md font-semibold text-[#486966] mb-2">{t('checklist')}</h3>
                         <ul className="space-y-1">
                             {workItem.checklist.map(item => (
@@ -118,7 +135,7 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
                 
                 <hr className="border-t border-[#B2BEBF]" />
 
-                <div>
+                <div data-highlight-key="activity">
                     <h3 className="text-md font-semibold text-[#486966] mb-4">{t('activity')}</h3>
                     <form onSubmit={handleCommentSubmit} className="mb-6">
                         <textarea
@@ -136,24 +153,25 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
                         activities={activities} 
                         onUpdateComment={(id, content) => { /* Logic to update comment */ }}
                         onDeleteComment={(id) => { /* Logic to delete comment */ }}
+                        highlightSection={highlightSection}
                     />
                 </div>
             </main>
             
             {/* Sidebar with metadata */}
             <aside className="w-1/3 max-w-xs border-l border-[#B2BEBF] overflow-y-auto p-6 space-y-5 bg-white/50">
-                 <DetailField label={t('status')}><span className="font-semibold px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-800">{workItem.status}</span></DetailField>
-                 <DetailField label={t('assignee')}><UserDisplay user={workItem.assignee} /></DetailField>
-                 <DetailField label={'Reporter'}><UserDisplay user={workItem.reporter} /></DetailField>
-                 <DetailField label={t('priority')}><span className="font-bold">{workItem.priority}</span></DetailField>
-                 <DetailField label={'Sprint'}>{workItem.sprint}</DetailField>
-                 <DetailField label={'Group'}>{workItem.group}</DetailField>
-                 <DetailField label={t('type')}>{workItem.type}</DetailField>
-                 <DetailField label={t('stack')}>{workItem.stack || 'N/A'}</DetailField>
-                 <DetailField label={t('estimationPoints')}>{workItem.estimationPoints || 'N/A'}</DetailField>
-                 <DetailField label={t('effortHours')}>{workItem.effortHours ? `${workItem.effortHours}h` : 'N/A'}</DetailField>
-                 <DetailField label={t('dueDate')}>{workItem.dueDate ? new Date(workItem.dueDate).toLocaleDateString() : 'N/A'}</DetailField>
-                 <DetailField label={t('labels')}>
+                 <DetailField label={t('status')} highlightKey="status"><span className="font-semibold px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-800">{workItem.status}</span></DetailField>
+                 <DetailField label={t('assignee')} highlightKey="assignee"><UserDisplay user={workItem.assignee} /></DetailField>
+                 <DetailField label={'Reporter'} highlightKey="reporter"><UserDisplay user={workItem.reporter} /></DetailField>
+                 <DetailField label={t('priority')} highlightKey="priority"><span className="font-bold">{workItem.priority}</span></DetailField>
+                 <DetailField label={'Sprint'} highlightKey="sprint">{workItem.sprint}</DetailField>
+                 <DetailField label={'Group'} highlightKey="group">{workItem.group}</DetailField>
+                 <DetailField label={t('type')} highlightKey="type">{workItem.type}</DetailField>
+                 <DetailField label={t('stack')} highlightKey="stack">{workItem.stack || 'N/A'}</DetailField>
+                 <DetailField label={t('estimationPoints')} highlightKey="estimationPoints">{workItem.estimationPoints || 'N/A'}</DetailField>
+                 <DetailField label={t('effortHours')} highlightKey="effortHours">{workItem.effortHours ? `${workItem.effortHours}h` : 'N/A'}</DetailField>
+                 <DetailField label={t('dueDate')} highlightKey="dueDate">{workItem.dueDate ? new Date(workItem.dueDate).toLocaleDateString() : 'N/A'}</DetailField>
+                 <DetailField label={t('labels')} highlightKey="labels">
                     {workItem.labels && workItem.labels.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                             {workItem.labels.map(label => (

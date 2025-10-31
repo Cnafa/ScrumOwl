@@ -9,14 +9,12 @@ interface SprintsViewProps {
     sprints: Sprint[];
     workItems: WorkItem[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
-    onDeleteSprint: (sprintId: string, sprintName: string) => void;
-    onRestoreSprint: (sprintId: string) => void;
     epics: Epic[];
 }
 
-type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST' | 'DELETED';
+type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST';
 
-export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, onSaveSprint, onDeleteSprint, onRestoreSprint, epics }) => {
+export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, onSaveSprint, epics }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const [activeTab, setActiveTab] = useState<Tab>('ACTIVE');
@@ -31,8 +29,6 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                 return sprints.filter(s => s.state === SprintState.PLANNED).sort((a,b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
             case 'PAST':
                  return sprints.filter(s => s.state === SprintState.CLOSED).sort((a,b) => new Date(b.endAt).getTime() - new Date(a.endAt).getTime());
-            case 'DELETED':
-                 return sprints.filter(s => s.state === SprintState.DELETED).sort((a,b) => new Date(b.endAt).getTime() - new Date(a.endAt).getTime());
             default:
                 return [];
         }
@@ -55,18 +51,6 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
         onSaveSprint(sprintToSave);
         setEditingSprint(null);
-    };
-
-    const handleDelete = (sprint: Sprint) => {
-        const itemCount = workItems.filter(item => item.sprint === sprint.name).length;
-        const confirmMessage = `Are you sure you want to delete "${sprint.name}"?\n\nThis will unassign ${itemCount} work item(s).\n\nThis action can be undone from the Deleted tab.`;
-        if (window.confirm(confirmMessage)) {
-            onDeleteSprint(sprint.id, sprint.name);
-        }
-    };
-
-    const handleRestore = (sprintId: string) => {
-        onRestoreSprint(sprintId);
     };
 
     const TabButton: React.FC<{ tab: Tab, label: string }> = ({ tab, label }) => (
@@ -94,7 +78,6 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                     <TabButton tab="ACTIVE" label="Active" />
                     <TabButton tab="UPCOMING" label="Upcoming" />
                     <TabButton tab="PAST" label="Past" />
-                    <TabButton tab="DELETED" label="Deleted" />
                 </nav>
             </div>
             
@@ -113,8 +96,8 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                        {filteredSprints.map(sprint => (
                            <tr 
                                 key={sprint.id} 
-                                onClick={() => { if (sprint.state === SprintState.CLOSED) setEditingSprint(sprint); }}
-                                className={`${sprint.state === SprintState.DELETED ? 'bg-red-50' : ''} ${sprint.state === SprintState.CLOSED ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                                onClick={() => { if (sprint.state === SprintState.CLOSED || canManage) setEditingSprint(sprint); }}
+                                className={`${sprint.state === SprintState.CLOSED || canManage ? 'cursor-pointer hover:bg-gray-50' : ''}`}
                             >
                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{sprint.name}</td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -123,19 +106,9 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sprint.epicIds.length}</td>
                                <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{sprint.goal}</td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-right">
-                                   {canManage && activeTab !== 'DELETED' && activeTab !== 'PAST' && (
+                                   {canManage && activeTab !== 'PAST' && (
                                        <button onClick={(e) => { e.stopPropagation(); setEditingSprint(sprint); }} className="text-indigo-600 hover:text-indigo-900 px-2">
                                            Edit
-                                       </button>
-                                   )}
-                                   {canManage && (activeTab === 'ACTIVE' || activeTab === 'UPCOMING') && (
-                                       <button onClick={(e) => { e.stopPropagation(); handleDelete(sprint); }} className="text-red-600 hover:text-red-900 px-2">
-                                           Delete
-                                       </button>
-                                   )}
-                                   {canManage && activeTab === 'DELETED' && (
-                                       <button onClick={(e) => { e.stopPropagation(); handleRestore(sprint.id); }} className="text-green-600 hover:text-green-900 px-2">
-                                            Restore
                                        </button>
                                    )}
                                </td>

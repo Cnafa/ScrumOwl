@@ -55,6 +55,9 @@ const App: React.FC = () => {
     const [highlightSection, setHighlightSection] = useState<string | undefined>(undefined);
     const coalescingRef = useRef<Map<string, { data: ToastNotification, timer: number }>>(new Map());
 
+    // US-42: State for read-only view mode
+    const [isReadOnlyView, setIsReadOnlyView] = useState(false);
+
     // Dev route state
     const [isDevRoute, setIsDevRoute] = useState(false);
 
@@ -89,8 +92,8 @@ const App: React.FC = () => {
         if (isAuthenticated && onboardingStatus === 'COMPLETED') {
             const mockEpics = getMockEpics();
             const mockTeams = getMockTeams();
-            const mockWorkItems = getMockWorkItems(30);
             const mockSprints = getMockSprints();
+            const mockWorkItems = getMockWorkItems(30);
             const mockJoinRequests = getMockJoinRequests();
             const mockInviteCodes = getMockInviteCodes();
             
@@ -192,10 +195,10 @@ const App: React.FC = () => {
         }
         const sprintsWithUserItems = new Set(
             workItems
-                .filter(item => item.assignee.id === user.id && item.sprint)
-                .map(item => item.sprint)
+                .filter(item => item.assignee.id === user.id && item.sprintId)
+                .map(item => item.sprintId)
         );
-        return activeSprints.filter(s => sprintsWithUserItems.has(s.name));
+        return activeSprints.filter(s => sprintsWithUserItems.has(s.id));
     }, [activeSprints, workItems, user, can]);
 
     useEffect(() => {
@@ -210,6 +213,16 @@ const App: React.FC = () => {
     }, [availableActiveSprints, selectedSprintId]);
     
     const selectedSprint = useMemo(() => sprints.find(s => s.id === selectedSprintId), [sprints, selectedSprintId]);
+    const activeEpics = useMemo(() => epics.filter(e => e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD), [epics]);
+
+    // US-42: Clear highlight states when modals are closed
+    useEffect(() => {
+        if (!selectedWorkItem && !editingEpic && !editingWorkItem) {
+            setHighlightSection(undefined);
+            setIsReadOnlyView(false);
+        }
+    }, [selectedWorkItem, editingEpic, editingWorkItem]);
+
 
     // Handlers for modals and actions
     const handleSelectWorkItem = (item: WorkItem) => {
@@ -223,21 +236,15 @@ const App: React.FC = () => {
         setEditingWorkItem(item);
         setIsNewItem(false);
     };
-    
-    const handleOpenItem = (itemId: string, highlight?: string) => {
-         const item = workItems.find(w => w.id === itemId);
-         if (item) {
-             setEditingWorkItem(item);
-             setIsNewItem(false);
-             setHighlightSection(highlight);
-         }
-    };
 
-    const handleOpenItemForView = (itemId: string) => {
+    // US-42: Refactored to open VIEW modal instead of edit.
+    const handleOpenItemForView = (itemId: string, highlight?: string) => {
         const item = workItems.find(w => w.id === itemId);
         if (item) {
-            setEditingWorkItem(null);
-            setSelectedWorkItem(item);
+            setEditingWorkItem(null); // Close editor if open
+            setEditingEpic(null);
+            setHighlightSection(highlight);
+            setSelectedWorkItem(item); // Open viewer
         }
     };
 
@@ -260,6 +267,7 @@ const App: React.FC = () => {
             description: '', // FIX: Initialize description to prevent .replace on undefined error
             // FIX: Assign the new item to the currently selected sprint
             sprint: selectedSprint ? selectedSprint.name : '',
+            sprintId: selectedSprint ? selectedSprint.id : undefined,
         });
         setIsNewItem(true);
     };
@@ -340,29 +348,12 @@ const App: React.FC = () => {
         }));
     };
 
-    // TECH-DBG: Fix stale state bug by updating states sequentially
-    const handleDeleteEpic = useCallback((epicId: string) => {
-        // First, update work items to detach them from the epic being deleted.
-        setWorkItems(prevWorkItems =>
-            prevWorkItems.map(item =>
-                item.epicId === epicId
-                    ? { ...item, epicId: undefined, epicInfo: undefined }
-                    : item
-            )
-        );
-        // Then, soft-delete the epic itself.
-        setEpics(prevEpics =>
-            prevEpics.map(e => e.id === epicId ? { ...e, status: EpicStatus.DELETED } : e)
-        );
-    }, []);
-
-    const handleRestoreEpic = useCallback((epicId: string) => {
-        setEpics(prev => prev.map(e => e.id === epicId ? { ...e, status: EpicStatus.ACTIVE } : e));
-    }, []);
-
     // FIX-07: Handle saving sprints and automatically assigning work items.
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
+        const isNew = !sprintToSave.id;
+        const sprintId = isNew ? `sprint-${Date.now()}` : sprintToSave.id!;
         const sprintName = sprintToSave.name || (sprintToSave.id ? sprints.find(s => s.id === sprintToSave.id)?.name : '');
+
         if (!sprintName) {
             console.error("Sprint save failed: sprint name is missing.");
             return;
@@ -384,7 +375,7 @@ const App: React.FC = () => {
             setWorkItems(prevWorkItems =>
                 prevWorkItems.map(item =>
                     item.epicId && newlyAddedEpicIds.includes(item.epicId)
-                        ? { ...item, sprint: sprintName }
+                        ? { ...item, sprint: sprintName, sprintId: sprintId }
                         : item
                 )
             );
@@ -395,7 +386,7 @@ const App: React.FC = () => {
             setSprints(prev => prev.map(s => s.id === sprintToSave.id ? { ...s, ...sprintToSave } as Sprint : s));
         } else { // Create new
             const newSprint: Sprint = {
-                id: `sprint-${Date.now()}`,
+                id: sprintId,
                 boardId: activeBoard!.id,
                 number: sprints.reduce((max, s) => Math.max(s.number, max), 0) + 1,
                 ...sprintToSave
@@ -404,49 +395,39 @@ const App: React.FC = () => {
         }
     };
 
-    // Refactored to accept sprintName directly, removing the dependency on the 'sprints' array.
-    // This makes the handler more performant and robust.
-    const handleDeleteSprint = useCallback((sprintId: string, sprintName: string) => {
-        // First, update work items to unassign them from the deleted sprint
-        setWorkItems(prevWorkItems => prevWorkItems.map(item =>
-            item.sprint === sprintName
-                ? { ...item, sprint: '' }
-                : item
-        ));
-        
-        // Then, soft-delete the sprint
-        setSprints(prevSprints =>
-            prevSprints.map(s => 
-                s.id === sprintId ? { ...s, state: SprintState.DELETED } : s
-            )
-        );
-    }, []);
-
-    const handleRestoreSprint = useCallback((sprintId: string) => {
-        setSprints(prev => prev.map(s => s.id === sprintId ? { ...s, state: SprintState.PLANNED } : s));
-    }, []);
-
     const handleMarkAllNotificationsRead = () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     };
 
+    // US-42: Refactored notification handler to open VIEW modals instead of EDIT modals.
     const handleShowNotification = (notification: Notification) => {
         const { target } = notification;
         if (!target) return;
 
+        // Close any open modals
         setSelectedWorkItem(null);
         setEditingWorkItem(null);
         setEditingEpic(null);
-        setHighlightSection(undefined);
+        setIsReadOnlyView(false);
+
+        // Set highlight for the modal that is about to open
+        setHighlightSection(target.section); 
 
         if (target.entity === 'work_item') {
-            handleOpenItem(target.id, target.section);
+            const item = workItems.find(w => w.id === target.id);
+            if (item) {
+                setSelectedWorkItem(item); // This opens WorkItemDetailModal (the VIEW modal)
+            } else {
+                setToastQueue(prev => [{ id: `toast-notfound-${Date.now()}`, itemId: '', title: 'Item not found', changes: [`The requested item ${target.id} could not be found.`], highlightSection: undefined }, ...prev]);
+            }
         } else if (target.entity === 'epic') {
              const epic = epics.find(e => e.id === target.id);
              if (epic) {
-                 setEditingEpic(epic);
-                 setIsNewEpic(false);
-                 setHighlightSection(target.section);
+                 setIsReadOnlyView(true); // Trigger read-only mode
+                 setEditingEpic(epic); // This opens EpicEditor in view mode
+                 setIsNewEpic(false); 
+             } else {
+                setToastQueue(prev => [{ id: `toast-notfound-${Date.now()}`, itemId: '', title: 'Epic not found', changes: [`The requested epic ${target.id} could not be found.`], highlightSection: undefined }, ...prev]);
              }
         }
     };
@@ -523,8 +504,6 @@ const App: React.FC = () => {
                 setTeams={setTeams}
                 sprints={sprints}
                 onSaveSprint={handleSaveSprint}
-                onDeleteSprint={handleDeleteSprint}
-                onRestoreSprint={handleRestoreSprint}
                 onSelectWorkItem={handleSelectWorkItem}
                 notifications={notifications}
                 onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
@@ -534,8 +513,6 @@ const App: React.FC = () => {
                 onNewEpic={handleNewEpic}
                 onEditEpic={handleEditEpic}
                 onUpdateEpicStatus={handleUpdateEpicStatus}
-                onDeleteEpic={handleDeleteEpic}
-                onRestoreEpic={handleRestoreEpic}
                 onEditWorkItem={handleEditWorkItem}
                 realtimeStatus={connectionStatus}
                 selectedSprint={selectedSprint}
@@ -549,14 +526,16 @@ const App: React.FC = () => {
                     onClose={() => setSelectedWorkItem(null)}
                     onEdit={handleEditWorkItem}
                     onItemUpdate={handleItemUpdate}
+                    highlightSection={highlightSection}
                 />
             )}
             
             {editingWorkItem && (
                 <WorkItemEditor
                     workItem={editingWorkItem}
-                    epics={epics}
+                    epics={activeEpics}
                     teams={teams}
+                    sprints={sprints}
                     onSave={handleSaveWorkItem}
                     onCancel={() => setEditingWorkItem(null)}
                     isNew={isNewItem}
@@ -568,9 +547,10 @@ const App: React.FC = () => {
                 <EpicEditor
                     epic={editingEpic}
                     onSave={handleSaveEpic}
-                    onCancel={() => setEditingEpic(null)}
+                    onCancel={() => { setEditingEpic(null); setIsReadOnlyView(false); }}
                     isNew={isNewEpic}
                     highlightSection={highlightSection}
+                    readOnly={isReadOnlyView}
                 />
             )}
 

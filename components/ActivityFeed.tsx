@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ActivityItem, Comment, TransitionLog, DisplayUser } from '../types';
 // FIX: Replaced non-existent icons with available ones: ArrowRightIcon -> ChevronRightIcon, ChatBubbleLeftIcon -> FileTextIcon, UserIcon -> UserRoundIcon.
 import { ChevronRightIcon, FileTextIcon, UserRoundIcon } from './icons';
@@ -9,6 +9,7 @@ interface ActivityFeedProps {
     activities: ActivityItem[];
     onUpdateComment: (commentId: string, newContent: string) => void;
     onDeleteComment: (commentId: string) => void;
+    highlightSection?: string;
 }
 
 const UserDisplay: React.FC<{ user: DisplayUser }> = ({ user }) => (
@@ -63,11 +64,25 @@ const renderCommentContent = (comment: Comment) => {
 };
 
 
-export const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, onUpdateComment, onDeleteComment }) => {
+export const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, onUpdateComment, onDeleteComment, highlightSection }) => {
     const { t, locale } = useLocale();
     const { user: currentUser } = useAuth();
     const [editingComment, setEditingComment] = useState<{ id: string, content: string } | null>(null);
+    const highlightedRef = useRef<HTMLDivElement>(null);
     
+    useEffect(() => {
+        if (highlightSection?.startsWith('comment:') && highlightedRef.current) {
+            const element = highlightedRef.current;
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('animate-highlight-pulse');
+            const timer = setTimeout(() => {
+                element.classList.remove('animate-highlight-pulse');
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightSection, activities]);
+
+
     const handleSaveEdit = () => {
         if (!editingComment) return;
         onUpdateComment(editingComment.id, editingComment.content);
@@ -85,9 +100,10 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities, onUpdate
                     const isAuthor = currentUser?.name === comment.user.name;
                     const isEditable = (new Date().getTime() - new Date(comment.timestamp).getTime()) < 15 * 60 * 1000;
                     const canEditOrDelete = isAuthor && isEditable;
+                    const isHighlighted = highlightSection === `comment:${comment.id}`;
 
                     return (
-                        <div key={key} className="flex gap-3">
+                        <div key={key} className="flex gap-3" ref={isHighlighted ? highlightedRef : null} data-highlight-key={`comment:${comment.id}`}>
                             <div className="flex-shrink-0 mt-1">
                                 {/* FIX: Use FileTextIcon instead of ChatBubbleLeftIcon. */}
                                 <FileTextIcon className="w-5 h-5 text-[#889C9B]" />

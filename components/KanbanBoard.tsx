@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { WorkItem, Status, Epic, Sprint, FilterSet, WorkItemType } from '../types';
+import { WorkItem, Status, Epic, Sprint, FilterSet, WorkItemType, EpicStatus } from '../types';
 import { WorkItemCard } from './WorkItemCard';
 import { KANBAN_COLUMNS, WORKFLOW_RULES } from '../constants';
 import { useLocale } from '../context/LocaleContext';
@@ -92,7 +92,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
     const epicsWithItems = useMemo(() => {
         return epics
-            .filter(e => itemsByEpic[e.id]?.length > 0)
+            .filter(e => (e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD) && itemsByEpic[e.id]?.length > 0)
             .sort((a,b) => b.iceScore - a.iceScore);
     }, [epics, itemsByEpic]);
 

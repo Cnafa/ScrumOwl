@@ -241,7 +241,7 @@ const suggestionConfig = {
     },
 };
 
-export const RichTextEditor = ({ value, onChange, onValidityChange }: any) => {
+export const RichTextEditor = ({ value, onChange, onValidityChange, editable = true }: any) => {
     const { t } = useLocale();
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [headings, setHeadings] = useState<any[]>([]);
@@ -263,6 +263,7 @@ export const RichTextEditor = ({ value, onChange, onValidityChange }: any) => {
             Suggestion(suggestionConfig),
         ],
         content: value,
+        editable,
         onUpdate: ({ editor }) => {
             const html = editor.getHTML();
             onChange(html);
@@ -277,10 +278,17 @@ export const RichTextEditor = ({ value, onChange, onValidityChange }: any) => {
         },
     });
 
+    useEffect(() => {
+        if(editor && editor.isEditable !== editable) {
+            editor.setEditable(editable);
+        }
+    }, [editable, editor]);
+
+
     const openLinkModal = useCallback(() => {
-        if (!editor) return;
+        if (!editor || !editable) return;
         setIsLinkModalOpen(true);
-    }, [editor]);
+    }, [editor, editable]);
 
     const handleSetLink = useCallback((url: string) => {
         if (!editor) return;
@@ -337,19 +345,19 @@ export const RichTextEditor = ({ value, onChange, onValidityChange }: any) => {
     const counterColor = charCount > MAX_CHARS ? 'text-red-600' : charCount >= WARN_CHARS ? 'text-yellow-600' : 'text-gray-500';
 
     return (
-        <div className="w-full bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-[#486966]">
-            <Toolbar editor={editor} onOpenLinkModal={openLinkModal} />
-            <div className="p-2 border-b">
+        <div className={`w-full bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 ${editable ? 'focus-within:outline-none focus-within:ring-2 focus-within:ring-[#486966]' : 'bg-gray-50'}`}>
+            {editable && <Toolbar editor={editor} onOpenLinkModal={openLinkModal} />}
+            {editable && (<div className="p-2 border-b">
                  <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input type="checkbox" checked={isTocVisible} onChange={(e) => setIsTocVisible(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                     {t('editor_showToC')}
                 </label>
-            </div>
+            </div>)}
             {isTocVisible && <TableOfContents headings={headings} />}
             <EditorContent editor={editor} style={{ whiteSpace: 'pre-wrap' }} />
-            <div className={`text-xs text-right p-2 border-t ${counterColor}`}>
+            {editable && (<div className={`text-xs text-right p-2 border-t ${counterColor}`}>
                 {t('editor_charCounterTemplate').replace('{count}', String(charCount)).replace('{max}', String(MAX_CHARS))}
-            </div>
+            </div>)}
             {isLinkModalOpen && (
                 <LinkModal
                     initialUrl={editor.getAttributes('link').href || ''}
