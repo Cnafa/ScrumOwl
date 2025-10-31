@@ -1,29 +1,14 @@
 // context/BoardContext.tsx
-import React, { createContext, useState, useContext, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import { Board, BoardMember, Role, Permission } from '../types';
-import { BOARDS, ALL_USERS, ROLES } from '../constants';
-
-// Mock data for members and roles on each board
-const MOCK_BOARD_MEMBERS: Record<string, BoardMember[]> = {
-    'board-1': [
-        { user: ALL_USERS[0], roleId: 'role-1' }, // Alice is Owner
-        { user: ALL_USERS[1], roleId: 'role-2' }, // Bob is Admin
-        { user: ALL_USERS[2], roleId: 'role-3' }, // Charlie is Member
-    ],
-    'board-2': [
-        { user: ALL_USERS[0], roleId: 'role-3' }, // Alice is Member
-        { user: ALL_USERS[3], roleId: 'role-2' }, // Diana is Admin
-    ],
-     'board-3': [
-        { user: ALL_USERS[0], roleId: 'role-3' }, // Alice is Member
-        { user: ALL_USERS[4], roleId: 'role-2' }, // Ethan is Admin
-    ],
-};
+import { ALL_USERS, ROLES } from '../constants';
+import { useAuth } from './AuthContext';
 
 interface BoardContextType {
   boards: Board[];
   activeBoard: Board | null;
   setActiveBoard: (boardId: string) => void;
+  createBoard: (boardName: string) => Board;
   can: (permission: Permission) => boolean;
   activeBoardMembers: BoardMember[];
   roles: Role[];
@@ -32,42 +17,76 @@ interface BoardContextType {
 const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 export const BoardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [boards] = useState<Board[]>(BOARDS);
-  const [activeBoardId, setActiveBoardId] = useState<string | null>(BOARDS[0]?.id || null);
+  const { user } = useAuth();
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [boardMembers, setBoardMembers] = useState<Record<string, BoardMember[]>>({});
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+
+  useEffect(() => {
+      if (!user) {
+          // Reset state on logout
+          setBoards([]);
+          setBoardMembers({});
+          setActiveBoardId(null);
+      }
+      // In a real app, this is where you'd fetch boards for the logged-in user.
+      // For this demo, we start with a clean slate to trigger onboarding.
+  }, [user]);
 
   const activeBoard = useMemo(() => boards.find(b => b.id === activeBoardId) || null, [boards, activeBoardId]);
   
   const activeBoardMembers = useMemo(() => {
     if (!activeBoardId) return [];
-    return MOCK_BOARD_MEMBERS[activeBoardId] || [];
-  }, [activeBoardId]);
+    return boardMembers[activeBoardId] || [];
+  }, [activeBoardId, boardMembers]);
 
   const can = useCallback((permission: Permission): boolean => {
-    // In a real app, we'd get the current user from AuthContext. For now, assume it's Alice.
-    const currentUser = ALL_USERS[0]; 
-    if (!activeBoardId || !currentUser) return false;
+    if (!activeBoardId || !user) return false;
 
-    const memberInfo = MOCK_BOARD_MEMBERS[activeBoardId]?.find(m => m.user.id === currentUser.id);
+    const memberInfo = boardMembers[activeBoardId]?.find(m => m.user.id === user.id);
     if (!memberInfo) return false;
 
     const role = ROLES.find(r => r.id === memberInfo.roleId);
     if (!role) return false;
 
     return role.permissions.includes(permission);
-  }, [activeBoardId]);
+  }, [activeBoardId, user, boardMembers]);
 
   const setActiveBoard = (boardId: string) => {
     setActiveBoardId(boardId);
   };
+
+  const createBoard = useCallback((boardName: string): Board => {
+    if (!user) {
+      throw new Error("User must be logged in to create a board");
+    }
+    const newBoard: Board = {
+      id: `board-${Date.now()}`,
+      name: boardName,
+    };
+    const ownerRole = ROLES.find(r => r.name === 'Owner');
+    if (!ownerRole) {
+        throw new Error("Owner role not found");
+    }
+    
+    setBoards(prev => [...prev, newBoard]);
+    setBoardMembers(prev => ({
+      ...prev,
+      [newBoard.id]: [{ user, roleId: ownerRole.id }]
+    }));
+    
+    return newBoard;
+  }, [user]);
   
   const value = useMemo(() => ({
     boards,
     activeBoard,
     setActiveBoard,
+    createBoard,
     can,
     activeBoardMembers,
     roles: ROLES,
-  }), [boards, activeBoard, can, activeBoardMembers]);
+  }), [boards, activeBoard, can, activeBoardMembers, createBoard, setActiveBoard]);
 
   return (
     <BoardContext.Provider value={value}>

@@ -1,8 +1,9 @@
 // components/TeamsTab.tsx
 import React, { useState } from 'react';
-import { Team, BoardMember } from '../types';
+import { Team, BoardMember, User } from '../types';
 import { TeamEditorModal } from './TeamEditorModal';
 import { ManageTeamMembersModal } from './ManageTeamMembersModal';
+import { ALL_USERS } from '../constants';
 
 interface TeamsTabProps {
     teams: Team[];
@@ -56,6 +57,10 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ teams, setTeams, allMembers 
         setManagingMembersOf(null);
     };
 
+    const getMemberAvatars = (memberIds: string[], max: number = 5): User[] => {
+        return memberIds.map(id => ALL_USERS.find(u => u.id === id)).filter((u): u is User => !!u).slice(0, max);
+    };
+
 
     return (
         <div>
@@ -81,7 +86,18 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ teams, setTeams, allMembers 
                                 <div className="text-sm font-semibold text-gray-900">{team.name}</div>
                                 <div className="text-xs text-gray-500">{team.description}</div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{team.members.length}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                                <div className="flex -space-x-2">
+                                    {getMemberAvatars(team.members).map(member => (
+                                        <img key={member.id} src={member.avatarUrl} title={member.name} className="h-6 w-6 rounded-full ring-2 ring-white" />
+                                    ))}
+                                     {team.members.length > 5 && (
+                                        <div className="h-6 w-6 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-xs font-medium">
+                                            +{team.members.length - 5}
+                                        </div>
+                                     )}
+                                </div>
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-3">
                                 <button onClick={() => handleEditTeam(team)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
                                 <button onClick={() => setManagingMembersOf(team)} className="text-indigo-600 hover:text-indigo-900">Manage Members</button>

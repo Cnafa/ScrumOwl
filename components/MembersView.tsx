@@ -8,6 +8,7 @@ import { Team, InviteCode, JoinRequest, BoardMember, User } from '../types';
 import { getMockJoinRequests, getMockInviteCodes } from '../services/mockDataService';
 import { useBoard } from '../context/BoardContext';
 import { ROLES } from '../constants';
+import { useAuth } from '../context/AuthContext';
 
 type Tab = 'MEMBERS' | 'TEAMS' | 'JOIN_REQUESTS' | 'INVITE_CODES';
 
@@ -18,6 +19,7 @@ interface MembersViewProps {
 
 export const MembersView: React.FC<MembersViewProps> = ({ teams, setTeams }) => {
     const { activeBoardMembers: initialMembers } = useBoard();
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab>('MEMBERS');
     
     // Manage local state for admin data to make it mutable
@@ -50,7 +52,7 @@ export const MembersView: React.FC<MembersViewProps> = ({ teams, setTeams }) => 
         const newCode: InviteCode = {
             ...invite,
             code: `INV-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-            createdBy: 'user-1', // Mock current user
+            createdBy: user?.id || 'user-1', // Mock current user
             createdAt: new Date().toISOString(),
             uses: 0,
         };

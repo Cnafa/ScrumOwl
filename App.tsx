@@ -4,8 +4,8 @@ import { useAuth } from './context/AuthContext';
 import LoginScreen from './components/LoginScreen';
 import { AppShell } from './components/AppShell';
 // FIX: Import Status, Priority, and WorkItemType enums to fix type errors.
-import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState } from './types';
-import { getMockWorkItems, getMockNotifications, getMockEpics, getMockTeams, getMockSprints } from './services/mockDataService';
+import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState, Board, JoinRequest, InviteCode } from './types';
+import { getMockWorkItems, getMockNotifications, getMockEpics, getMockTeams, getMockSprints, getMockJoinRequests, getMockInviteCodes } from './services/mockDataService';
 import { WorkItemDetailModal } from './components/WorkItemDetailModal';
 import { WorkItemEditor } from './components/WorkItemEditor';
 import { UserSettingsModal } from './components/UserSettingsModal';
@@ -18,12 +18,22 @@ import { ToastManager } from './components/ToastManager';
 import { useLocale } from './context/LocaleContext';
 import { ALL_USERS } from './constants';
 import DevCrashInspector from './pages/DevCrashInspector';
+import OnboardingScreen from './components/OnboardingScreen';
+import CreateBoardModal from './components/CreateBoardModal';
+import JoinBoardModal from './components/JoinBoardModal';
+import PendingApprovalScreen from './components/PendingApprovalScreen';
+
 
 const App: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
     const { settings } = useSettings();
-    const { activeBoard, can } = useBoard();
+    const { activeBoard, boards, setActiveBoard, can, createBoard } = useBoard();
     const { t, locale } = useLocale();
+
+    // ONB-01: Onboarding state management
+    type OnboardingStatus = 'UNKNOWN' | 'NEEDS_ONBOARDING' | 'PENDING_APPROVAL' | 'COMPLETED';
+    const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus>('UNKNOWN');
+    const [onboardingModal, setOnboardingModal] = useState<'CREATE_BOARD' | 'JOIN_BOARD' | null>(null);
 
     // Main data state
     const [workItems, setWorkItems] = useState<WorkItem[]>([]);
@@ -31,6 +41,8 @@ const App: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+    const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
     
     // UI state
     const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
@@ -55,20 +67,46 @@ const App: React.FC = () => {
             setIsDevRoute(true);
         }
     }, []);
+    
+    // ONB-01: Determine user status after login
+    useEffect(() => {
+        if (isAuthenticated) {
+            if (boards.length === 0) {
+                setOnboardingStatus('NEEDS_ONBOARDING');
+            } else {
+                if (!activeBoard) {
+                    setActiveBoard(boards[0].id);
+                }
+                setOnboardingStatus('COMPLETED');
+            }
+        } else {
+            setOnboardingStatus('UNKNOWN');
+        }
+    }, [isAuthenticated, boards, activeBoard, setActiveBoard]);
 
     // Fetch initial data
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && onboardingStatus === 'COMPLETED') {
             const mockEpics = getMockEpics();
             const mockTeams = getMockTeams();
             const mockWorkItems = getMockWorkItems(30);
             const mockSprints = getMockSprints();
+            const mockJoinRequests = getMockJoinRequests();
+            const mockInviteCodes = getMockInviteCodes();
+            
             setEpics(mockEpics);
             setTeams(mockTeams);
             setSprints(mockSprints);
             setWorkItems(mockWorkItems);
             setNotifications(getMockNotifications(15, mockWorkItems));
-        } else {
+            setJoinRequests(mockJoinRequests);
+            setInviteCodes(mockInviteCodes);
+
+            if (!activeBoard && boards.length > 0) {
+                setActiveBoard(boards[0].id);
+            }
+
+        } else if (!isAuthenticated) {
             // Clear data on logout
             setWorkItems([]);
             setEpics([]);
@@ -76,8 +114,11 @@ const App: React.FC = () => {
             setSprints([]);
             setNotifications([]);
             setToastQueue([]);
+            setJoinRequests([]);
+            setInviteCodes([]);
+            setOnboardingStatus('UNKNOWN');
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, onboardingStatus, activeBoard, setActiveBoard, boards.length]);
 
     useEffect(() => {
         document.documentElement.lang = locale;
@@ -381,6 +422,21 @@ const App: React.FC = () => {
         setToastQueue(prev => prev.filter(t => t.id !== toastId));
     };
 
+    // ONB-02: Onboarding action handlers
+    const handleCreateBoard = (boardName: string) => {
+        const newBoard = createBoard(boardName);
+        setActiveBoard(newBoard.id);
+        setOnboardingStatus('COMPLETED');
+        setOnboardingModal(null);
+    };
+
+    const handleJoinRequest = () => {
+        setOnboardingStatus('PENDING_APPROVAL');
+        setOnboardingModal(null);
+    };
+    
+    // --- Render Logic ---
+
     if (isDevRoute) {
         return <DevCrashInspector />;
     }
@@ -389,12 +445,31 @@ const App: React.FC = () => {
         return <LoginScreen />;
     }
     
-    if (!activeBoard) {
+    if (onboardingStatus === 'NEEDS_ONBOARDING') {
+        return (
+            <>
+                <OnboardingScreen onShowCreate={() => setOnboardingModal('CREATE_BOARD')} onShowJoin={() => setOnboardingModal('JOIN_BOARD')} />
+                {onboardingModal === 'CREATE_BOARD' && <CreateBoardModal onClose={() => setOnboardingModal(null)} onCreate={handleCreateBoard} />}
+                {onboardingModal === 'JOIN_BOARD' && <JoinBoardModal onClose={() => setOnboardingModal(null)} onJoinRequest={handleJoinRequest} />}
+            </>
+        );
+    }
+    
+    if (onboardingStatus === 'PENDING_APPROVAL') {
+        return <PendingApprovalScreen />;
+    }
+
+    if (onboardingStatus === 'COMPLETED' && !activeBoard) {
         return (
             <div className="flex items-center justify-center h-screen">
                 <p>Loading board...</p>
             </div>
         );
+    }
+
+    if (!activeBoard) {
+        // This case should ideally not be hit if logic is correct, but it's a safe fallback.
+         return <div className="flex items-center justify-center h-screen"><p>No active board. Please select a board.</p></div>
     }
 
     return (

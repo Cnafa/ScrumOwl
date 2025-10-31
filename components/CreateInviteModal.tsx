@@ -10,7 +10,7 @@ interface CreateInviteModalProps {
 }
 
 const CreateInviteModal: React.FC<CreateInviteModalProps> = ({ roles, onClose, onCreate }) => {
-    const [roleId, setRoleId] = useState<string>(roles[0]?.id || '');
+    const [roleId, setRoleId] = useState<string>(roles.find(r => r.name === 'Member')?.id || roles[0]?.id || '');
     const [maxUses, setMaxUses] = useState<number | null>(10);
     const [expiresAt, setExpiresAt] = useState<string | null>(() => {
         const date = new Date();
@@ -21,7 +21,7 @@ const CreateInviteModal: React.FC<CreateInviteModalProps> = ({ roles, onClose, o
     const handleSave = () => {
         onCreate({
             roleId,
-            maxUses,
+            maxUses: maxUses === 0 ? null : maxUses,
             expiresAt,
         });
         onClose();
@@ -53,9 +53,10 @@ const CreateInviteModal: React.FC<CreateInviteModalProps> = ({ roles, onClose, o
                         <input
                             type="number"
                             id="maxUses"
-                            value={maxUses || ''}
+                            value={maxUses === null ? '' : maxUses}
                             onChange={(e) => setMaxUses(e.target.value ? parseInt(e.target.value, 10) : null)}
-                            placeholder="e.g., 10 (leave blank for unlimited)"
+                            placeholder="e.g., 10 (0 for unlimited)"
+                            min="0"
                             className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
                         />
                     </div>
@@ -66,6 +67,7 @@ const CreateInviteModal: React.FC<CreateInviteModalProps> = ({ roles, onClose, o
                             id="expiresAt"
                             value={expiresAt || ''}
                             onChange={(e) => setExpiresAt(e.target.value || null)}
+                            min={new Date().toISOString().split('T')[0]}
                             className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
                         />
                          <p className="text-xs text-gray-500 mt-1">Leave blank for no expiration.</p>

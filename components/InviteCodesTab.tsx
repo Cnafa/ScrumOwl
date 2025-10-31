@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import CreateInviteModal from './CreateInviteModal';
 import { InviteCode } from '../types';
 import { useBoard } from '../context/BoardContext';
+import { useAuth } from '../context/AuthContext';
 
 interface InviteCodesTabProps {
     codes: InviteCode[];
@@ -13,8 +14,10 @@ interface InviteCodesTabProps {
 export const InviteCodesTab: React.FC<InviteCodesTabProps> = ({ codes, onCreate, onRevoke }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const { roles } = useBoard();
+    const { user } = useAuth();
 
     const getRoleName = (roleId: string) => roles.find(r => r.id === roleId)?.name || 'Unknown';
+    const getCreatorName = (userId: string) => user?.id === userId ? user.name : 'Another Admin';
 
     const handleCopy = (code: string) => {
         const joinUrl = `${window.location.origin}/join/${code}`;
@@ -40,6 +43,7 @@ export const InviteCodesTab: React.FC<InviteCodesTabProps> = ({ codes, onCreate,
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uses</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -50,6 +54,7 @@ export const InviteCodesTab: React.FC<InviteCodesTabProps> = ({ codes, onCreate,
                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{getRoleName(invite.roleId)}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{invite.uses}/{invite.maxUses || '∞'}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{invite.expiresAt ? new Date(invite.expiresAt).toLocaleDateString() : 'Never'}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{getCreatorName(invite.createdBy)}</td>
                                 <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-3">
                                     <button onClick={() => handleCopy(invite.code)} className="text-indigo-600 hover:text-indigo-900">Copy Link</button>
                                     <button onClick={() => onRevoke(invite.code)} className="text-red-600 hover:text-red-900">Revoke</button>
@@ -58,7 +63,7 @@ export const InviteCodesTab: React.FC<InviteCodesTabProps> = ({ codes, onCreate,
                         ))}
                          {codes.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="text-center py-6 text-sm text-gray-500">No active invite codes.</td>
+                                <td colSpan={6} className="text-center py-6 text-sm text-gray-500">No active invite codes.</td>
                             </tr>
                         )}
                     </tbody>
