@@ -67,7 +67,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [isManageViewsModalOpen, setIsManageViewsModalOpen] = useState(false);
 
     // Filter and Grouping State
-    // US-45: Updated filter state for multi-type select
+    // US-45: Updated filter state for multi-type
     const [filterSet, setFilterSet] = useState<FilterSet>({ searchQuery: '', assigneeIds: [], assigneeMatch: 'any', typeIds: [], teamIds: [] });
     const [groupBy, setGroupBy] = useState<'status' | 'epic'>('epic');
     const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
@@ -124,17 +124,23 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
             return props.workItems;
         }
 
+        // When grouping by status, show all items in the sprint for a complete overview.
+        if (groupBy === 'status') {
+          return props.workItems.filter(item => item.sprintId === selectedSprint.id);
+        }
+    
+        // When grouping by epic, apply the epic-based filtering logic
         const sprintEpicIds = new Set(selectedSprint.epicIds);
         
         return props.workItems.filter(item => {
             if (item.sprintId !== selectedSprint.id) return false;
-
+    
             const hasAssignedEpic = item.epicId && sprintEpicIds.has(item.epicId);
             const isUnassignedAndIncluded = includeUnassignedEpicItems && !item.epicId;
-
+    
             return hasAssignedEpic || isUnassignedAndIncluded;
         });
-    }, [props.workItems, selectedSprint, currentView, includeUnassignedEpicItems]);
+    }, [props.workItems, selectedSprint, currentView, includeUnassignedEpicItems, groupBy]);
 
     const filteredWorkItems = useMemo(() => {
         return sprintAndEpicFilteredItems.filter(item => {

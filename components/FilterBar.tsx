@@ -193,7 +193,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <option value="epic">{t('groupBy')}: {t('epic')}</option>
         </select>
 
-        {activeSprint && (
+        {activeSprint && groupBy === 'epic' && (
             <div className="flex items-center gap-2 ps-2 ms-2 border-s">
                 <input
                     type="checkbox"
