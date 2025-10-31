@@ -41,8 +41,14 @@ export const EventViewModal: React.FC<EventViewModalProps> = ({ event, workItems
         return `${new Date(start).toLocaleString()} - ${new Date(end).toLocaleString()}`;
     };
 
+    const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]" onMouseDown={onClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[70]" onMouseDown={handleBackdropMouseDown}>
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
                     <div>

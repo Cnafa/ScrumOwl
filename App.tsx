@@ -147,6 +147,14 @@ const App: React.FC = () => {
          }
     };
 
+    const handleOpenItemForView = (itemId: string) => {
+        const item = workItems.find(w => w.id === itemId);
+        if (item) {
+            setEditingWorkItem(null);
+            setSelectedWorkItem(item);
+        }
+    };
+
     const handleNewItem = (options?: { epicId?: string }) => {
         if (!user || !activeBoard) return;
         const linkedEpic = options?.epicId ? epics.find(e => e.id === options.epicId) : undefined;
@@ -389,7 +397,7 @@ const App: React.FC = () => {
             <ToastManager
                 toasts={toastQueue}
                 onDismiss={handleDismissToast}
-                onOpen={handleOpenItem}
+                onOpen={handleOpenItemForView}
             />
             
              {isIdle && (

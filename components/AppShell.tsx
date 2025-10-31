@@ -12,11 +12,11 @@ import { ReportsDashboard } from './ReportsDashboard';
 import { SettingsPlaceholder } from './SettingsPlaceholder';
 import { useNavigation } from '../context/NavigationContext';
 import { useAuth } from '../context/AuthContext';
-import { WorkItem, Notification, Epic, FilterSet, SavedView, ViewVisibility, Team, Sprint, SprintState, Status, EpicStatus, CalendarEvent } from '../types';
+import { WorkItem, Notification, Epic, FilterSet, SavedView, ViewVisibility, Team, Sprint, SprintState, Status, EpicStatus, CalendarEvent, WorkItemType } from '../types';
 import { SaveViewModal } from './SaveViewModal';
 import { ManageViewsModal } from './ManageViewsModal';
 import { faker } from 'https://cdn.skypack.dev/@faker-js/faker';
-import { ALL_USERS } from '../constants';
+import { ALL_USERS, WORK_ITEM_TYPES, ALL_TEAMS } from '../constants';
 import { TodaysMeetingsBanner } from './TodaysMeetingsBanner';
 import * as calendarService from '../services/calendarService';
 import { EventEditorModal } from './EventEditorModal';
@@ -46,15 +46,30 @@ interface AppShellProps {
 }
 
 // Mock saved views
-const createMockSavedView = (id: number, ownerId: string): SavedView => ({
-    id: `view-${id}`,
-    name: faker.commerce.productAdjective() + ' View',
-    ownerId: ownerId,
-    visibility: faker.helpers.arrayElement([ViewVisibility.PRIVATE, ViewVisibility.GROUP]),
-    filterSet: { searchQuery: '', assignee: 'ALL', type: 'ALL', team: 'ALL' },
-    isDefault: false,
-    isPinned: faker.datatype.boolean(0.4),
-});
+const createMockSavedView = (id: number, ownerId: string): SavedView => {
+    const randomUser = faker.helpers.arrayElement(ALL_USERS);
+    // Exclude Epic from random types as it's not a filterable work item type in the dropdown
+    const randomType = faker.helpers.arrayElement(WORK_ITEM_TYPES.filter(t => t !== WorkItemType.EPIC));
+    const randomTeam = faker.helpers.arrayElement(ALL_TEAMS);
+
+    const filterOptions = [
+        { filterSet: { searchQuery: `PROJ-${faker.number.int({min: 1, max: 10})}`, assignee: 'ALL', type: 'ALL', team: 'ALL' }, name: 'View for a specific item' },
+        { filterSet: { searchQuery: '', assignee: randomUser.name, type: 'ALL', team: 'ALL' }, name: `${randomUser.name.split(' ')[0]}'s Tasks` },
+        { filterSet: { searchQuery: '', assignee: 'ALL', type: randomType, team: 'ALL' }, name: `All ${randomType} items` },
+        { filterSet: { searchQuery: '', assignee: 'ALL', type: 'ALL', team: randomTeam.id }, name: `Tasks for ${randomTeam.name}` },
+    ];
+    const chosenFilter = faker.helpers.arrayElement(filterOptions);
+
+    return {
+        id: `view-${id}`,
+        name: chosenFilter.name,
+        ownerId: ownerId,
+        visibility: faker.helpers.arrayElement([ViewVisibility.PRIVATE, ViewVisibility.GROUP]),
+        filterSet: chosenFilter.filterSet,
+        isDefault: false,
+        isPinned: faker.datatype.boolean(0.4),
+    };
+};
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
     const { user } = useAuth();
@@ -430,7 +445,10 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     onEdit={handleEditEvent}
                     onOpenWorkItem={(itemId) => {
                         const item = props.workItems.find(wi => wi.id === itemId);
-                        if (item) props.onEditWorkItem(item);
+                        if (item) {
+                            setViewingEvent(null); // Close current modal
+                            props.onSelectWorkItem(item); // Open read-only detail modal
+                        }
                     }}
                 />
             )}

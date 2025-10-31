@@ -16,23 +16,36 @@ interface ReportsDashboardProps {
 
 // --- Chart Components ---
 const SimpleLineChart: React.FC<{ data: { labels: string[], datasets: { label: string, data: number[], color: string }[] } }> = ({ data }) => {
-    const maxValue = Math.max(...data.datasets.flatMap(ds => ds.data));
+    const { t } = useLocale();
+    if (!data || !Array.isArray(data.datasets) || !data.datasets.some(ds => ds && ds.data && ds.data.length > 0)) {
+        return <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex items-center justify-center text-gray-500">{t('report_no_data')}</div>;
+    }
+
+    const validDatasets = data.datasets.filter(ds => ds && Array.isArray(ds.data));
+    const allData = validDatasets.flatMap(ds => ds.data.filter(p => typeof p === 'number' && isFinite(p)));
+
+    if (allData.length === 0) {
+        return <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex items-center justify-center text-gray-500">{t('report_no_data')}</div>;
+    }
+
+    const maxValue = Math.max(0, ...allData);
     const yAxisLabels = Array.from({ length: 5 }, (_, i) => Math.round(maxValue * i / 4));
+    const effectiveMaxValue = maxValue > 0 ? maxValue : 1;
     
     return (
         <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex gap-4">
             <div className="flex flex-col justify-between text-xs text-gray-500">
-                {yAxisLabels.reverse().map(label => <span key={label}>{label}</span>)}
+                {yAxisLabels.reverse().map((label, i) => <span key={i}>{label}</span>)}
             </div>
             <div className="flex-grow grid grid-cols-1 relative">
                  <svg className="w-full h-full" viewBox={`0 0 ${data.labels.length * 40} 100`} preserveAspectRatio="none">
-                    {data.datasets.map(dataset => (
+                    {validDatasets.map(dataset => (
                         <polyline
                             key={dataset.label}
                             fill="none"
                             stroke={dataset.color}
                             strokeWidth="2"
-                            points={dataset.data.map((p, i) => `${i * 40 + 20},${100 - (p / maxValue * 100)}`).join(' ')}
+                            points={dataset.data.map((p, i) => `${i * 40 + 20},${100 - ((isFinite(p) ? p : 0) / effectiveMaxValue * 100)}`).join(' ')}
                         />
                     ))}
                 </svg>
@@ -45,18 +58,31 @@ const SimpleLineChart: React.FC<{ data: { labels: string[], datasets: { label: s
 };
 
 const SimpleBarChart: React.FC<{ data: { labels: string[], datasets: { label: string, data: number[], color: string }[] }, average?: number }> = ({ data, average }) => {
-    const maxValue = Math.max(...data.datasets.flatMap(ds => ds.data), average || 0);
+    const { t } = useLocale();
+    if (!data || !Array.isArray(data.datasets) || !data.datasets.some(ds => ds && ds.data && ds.data.length > 0)) {
+        return <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex items-center justify-center text-gray-500">{t('report_no_data')}</div>;
+    }
+
+    const validDatasets = data.datasets.filter(ds => ds && Array.isArray(ds.data));
+    const allData = validDatasets.flatMap(ds => ds.data.filter(p => typeof p === 'number' && isFinite(p)));
+
+    if (allData.length === 0 && (average === undefined || !isFinite(average))) {
+        return <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex items-center justify-center text-gray-500">{t('report_no_data')}</div>;
+    }
+
+    const maxValue = Math.max(0, ...allData, (average && isFinite(average) ? average : 0));
+    const effectiveMaxValue = maxValue > 0 ? maxValue : 1;
     return (
         <div className="w-full h-80 bg-gray-50 p-4 rounded-lg flex flex-col justify-end">
             <div className="flex-grow flex items-end justify-around gap-2">
                 {data.labels.map((label, i) => (
                     <div key={label} className="flex-1 flex flex-col items-center">
                         <div className="w-full flex justify-center gap-1">
-                            {data.datasets.map(dataset => (
+                            {validDatasets.map(dataset => (
                                 <div
                                     key={dataset.label}
                                     className="w-1/2 rounded-t"
-                                    style={{ height: `${(dataset.data[i] / maxValue) * 100}%`, backgroundColor: dataset.color }}
+                                    style={{ height: `${(((isFinite(dataset.data[i]) ? dataset.data[i] : 0)) / effectiveMaxValue) * 100}%`, backgroundColor: dataset.color }}
                                     title={`${dataset.label}: ${dataset.data[i]}`}
                                 />
                             ))}
@@ -65,7 +91,7 @@ const SimpleBarChart: React.FC<{ data: { labels: string[], datasets: { label: st
                     </div>
                 ))}
             </div>
-             {average && (
+             {average != null && isFinite(average) && (
                 <div className="relative border-t-2 border-dashed border-red-400 mt-2">
                     <span className="absolute -top-3 left-0 bg-gray-50 px-1 text-xs text-red-500">Avg: {average.toFixed(2)}</span>
                 </div>
@@ -128,7 +154,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
                                 { label: t('report_actual_line'), data: burndown.actual, color: '#486966' }
                             ]
                         }} />
-                        <DataInspector headers={['Day', 'Ideal', 'Actual']} data={burndown.labels.map((l, i) => [l, burndown.ideal[i].toFixed(1), burndown.actual[i].toFixed(1)])}/>
+                        <DataInspector headers={['Day', 'Ideal', 'Actual']} data={burndown.labels.map((l, i) => [l, burndown.ideal[i]?.toFixed(1), burndown.actual[i]?.toFixed(1)])}/>
                     </div>
                 );
                 break;
@@ -193,7 +219,7 @@ const ReportCard: React.FC<{ type: ReportType, onClick: () => void }> = ({ type,
     );
 };
 
-const DataInspector: React.FC<{ headers: string[], data: (string|number)[][], onRowClick?: (row: (string|number)[], index: number) => void, renderProgress?: number, highlightRow?: (row: (string|number)[], index: number) => boolean }> = ({ headers, data, onRowClick, renderProgress, highlightRow }) => {
+const DataInspector: React.FC<{ headers: string[], data: (string|number|undefined)[][], onRowClick?: (row: (string|number|undefined)[], index: number) => void, renderProgress?: number, highlightRow?: (row: (string|number|undefined)[], index: number) => boolean }> = ({ headers, data, onRowClick, renderProgress, highlightRow }) => {
     const { t } = useLocale();
     return (
         <div className="mt-6">
@@ -210,7 +236,7 @@ const DataInspector: React.FC<{ headers: string[], data: (string|number)[][], on
                                     <td key={j} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
                                         {j === renderProgress ? (
                                              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                                <div className="bg-[#486966] h-2.5 rounded-full" style={{ width: cell.toString() }}></div>
+                                                <div className="bg-[#486966] h-2.5 rounded-full" style={{ width: cell?.toString() }}></div>
                                              </div>
                                         ) : cell}
                                     </td>

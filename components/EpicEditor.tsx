@@ -63,6 +63,12 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
 
   const hasChanges = !isEqual(originalEpic, localEpic);
 
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onCancel();
+    }
+  };
+
   const handleSave = () => {
     onSave(localEpic);
   };
@@ -94,7 +100,7 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4" onMouseDown={onCancel}>
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4" onMouseDown={handleBackdropMouseDown}>
       <div ref={editorContainerRef} className="bg-[#F0F4F4] rounded-lg shadow-2xl w-full max-w-4xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
         <header className="flex items-center justify-between p-4 border-b bg-white/60 rounded-t-lg">
           <h2 className="text-xl font-bold text-[#3B3936]">
