@@ -4,8 +4,11 @@ import { logCrash } from "../../libs/logging/crashLogger";
 // FIX: Correctly typed the component's props using `React.PropsWithChildren<{}>`.
 // The generic type `PropsWithChildren` requires a type argument. Using `{}` for components that only have children props.
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
-  // FIX: Replaced the constructor with a state class property to correctly initialize state. This resolves type errors where 'state' and 'props' were not found.
-  state = { hasError: false };
+  // FIX: Re-instated the constructor to explicitly call `super(props)`. This ensures `this.props` is correctly initialized on the component instance, resolving the "Property 'props' does not exist" error.
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError() { return { hasError: true }; }
 
