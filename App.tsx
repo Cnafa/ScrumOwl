@@ -296,7 +296,7 @@ const App: React.FC = () => {
         }
         const sprintsWithUserItems = new Set(
             workItems
-                .filter(item => item.assignee.id === user.id && item.sprintId)
+                .filter(item => item.sprintId && item.assignees?.some(a => a.id === user.id))
                 .map(item => item.sprintId)
         );
         return activeSprints.filter(s => sprintsWithUserItems.has(s.id));
@@ -378,6 +378,7 @@ const App: React.FC = () => {
             epicId: options?.epicId,
             epicInfo: linkedEpic ? { id: linkedEpic.id, name: linkedEpic.name, color: linkedEpic.color } : undefined,
             assignee: user,
+            assignees: [user],
             attachments: [],
             checklist: [],
             labels: [],

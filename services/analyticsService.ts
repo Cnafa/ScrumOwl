@@ -89,14 +89,18 @@ export const getAssigneeWorkloadData = (workItems: WorkItem[]): AssigneeWorkload
     });
 
     workItems.forEach(item => {
-        if (item.assignee && workloadMap[item.assignee.id]) {
-            if (item.status === Status.TODO || item.status === Status.BACKLOG) {
-                workloadMap[item.assignee.id].open++;
-            } else if (item.status === Status.IN_PROGRESS) {
-                workloadMap[item.assignee.id].inProgress++;
-            } else if (item.status === Status.IN_REVIEW) {
-                workloadMap[item.assignee.id].inReview++;
-            }
+        if (item.assignees && item.assignees.length > 0) {
+            item.assignees.forEach(assignee => {
+                if (workloadMap[assignee.id]) {
+                    if (item.status === Status.TODO || item.status === Status.BACKLOG) {
+                        workloadMap[assignee.id].open++;
+                    } else if (item.status === Status.IN_PROGRESS) {
+                        workloadMap[assignee.id].inProgress++;
+                    } else if (item.status === Status.IN_REVIEW) {
+                        workloadMap[assignee.id].inReview++;
+                    }
+                }
+            });
         }
     });
 

@@ -141,13 +141,19 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 item.title.toLowerCase().includes(filterSet.searchQuery.toLowerCase()) ||
                 item.id.toLowerCase().includes(filterSet.searchQuery.toLowerCase());
             
-            // US-45: Multi-assignee match. 'all' behaves like 'any' for single-assignee model.
-            const assigneeMatch = filterSet.assigneeIds.length === 0 || filterSet.assigneeIds.includes(item.assignee.id);
-
             const typeMatch = filterSet.typeIds.length === 0 || filterSet.typeIds.includes(item.type);
 
-            // US-45: Multi-team match.
             const teamMatch = filterSet.teamIds.length === 0 || (item.teamId ? filterSet.teamIds.includes(item.teamId) : false);
+
+            let assigneeMatch = true;
+            if (filterSet.assigneeIds.length > 0) {
+                const itemAssigneeIds = new Set(item.assignees?.map(a => a.id) || []);
+                if (filterSet.assigneeMatch === 'any') {
+                    assigneeMatch = filterSet.assigneeIds.some(id => itemAssigneeIds.has(id));
+                } else { // 'all'
+                    assigneeMatch = filterSet.assigneeIds.every(id => itemAssigneeIds.has(id));
+                }
+            }
 
             return searchMatch && assigneeMatch && typeMatch && teamMatch;
         });

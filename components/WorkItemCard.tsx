@@ -1,5 +1,5 @@
-import React from 'react';
-import { WorkItem, WorkItemType } from '../types';
+import React, { useMemo } from 'react';
+import { WorkItem, WorkItemType, User } from '../types';
 import { UserRoundIcon, UsersRoundIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 
@@ -76,6 +76,46 @@ const getDueDateInfo = (dueDate: string | null | undefined, locale: string) => {
     };
 };
 
+const AssigneeAvatars: React.FC<{ assignees: User[], primary?: User }> = ({ assignees = [], primary }) => {
+    const orderedAssignees = useMemo(() => {
+        if (assignees.length === 0) return [];
+        const primaryAssignee = primary || assignees[0];
+        return [
+            primaryAssignee,
+            ...assignees.filter(a => a.id !== primaryAssignee.id)
+        ];
+    }, [assignees, primary]);
+
+    if (orderedAssignees.length === 0) {
+        return (
+            <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center" title="Unassigned">
+                <UserRoundIcon className="w-4 h-4 text-slate-500" />
+            </div>
+        );
+    }
+    
+    const tooltipText = orderedAssignees.map((u, i) => i === 0 ? `${u.name} (Primary)` : u.name).join(', ');
+
+    return (
+        <div className="flex items-center -space-x-2" title={tooltipText}>
+            {orderedAssignees.slice(0, 3).map((assignee) => (
+                <img
+                    key={assignee.id}
+                    src={assignee.avatarUrl}
+                    alt={assignee.name}
+                    className="w-6 h-6 rounded-full border-2 border-white"
+                />
+            ))}
+            {orderedAssignees.length > 3 && (
+                <div className="w-6 h-6 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600">
+                    +{orderedAssignees.length - 3}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 export const WorkItemCard: React.FC<WorkItemCardProps> = ({ workItem, onSelect }) => {
   const { locale } = useLocale();
   const config = typeConfig[workItem.type] || typeConfig[WorkItemType.TICKET];
@@ -105,13 +145,7 @@ export const WorkItemCard: React.FC<WorkItemCardProps> = ({ workItem, onSelect }
             <span title={dueDateInfo.fullDateText} className={`px-2 py-0.5 text-xs font-semibold rounded whitespace-nowrap ${dueDateInfo.classes}`}>
                 {dueDateInfo.displayText}
             </span>
-            {workItem.assignee.avatarUrl ? (
-              <img src={workItem.assignee.avatarUrl} alt={workItem.assignee.name} className="w-6 h-6 rounded-full" title={workItem.assignee.name} />
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center" title={workItem.assignee.name}>
-                <UserRoundIcon className="w-4 h-4 text-slate-500" />
-              </div>
-            )}
+            <AssigneeAvatars assignees={workItem.assignees} primary={workItem.assignee} />
         </div>
       </div>
     </div>

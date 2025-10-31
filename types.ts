@@ -68,7 +68,8 @@ export interface WorkItem {
   description: string;
   type: WorkItemType;
   status: Status;
-  assignee: User;
+  assignee?: User; // Represents the Primary Assignee
+  assignees: User[]; // All assignees, including the primary
   reporter: User;
   priority: Priority;
   sprint: string;

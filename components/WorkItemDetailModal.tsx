@@ -1,9 +1,8 @@
 // components/WorkItemDetailModal.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { WorkItem, ActivityItem, User, ChecklistItem } from '../types';
-// FIX: Removed unused and non-existent 'UserIcon' import.
-import { XMarkIcon } from './icons';
+import { XMarkIcon, StarIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { ActivityFeed } from './ActivityFeed';
@@ -25,6 +24,14 @@ const DetailField: React.FC<{ label: string; children: React.ReactNode, highligh
     </div>
 );
 
+const UserChip: React.FC<{ user: User, isPrimary: boolean }> = ({ user, isPrimary }) => (
+    <div className={`inline-flex items-center gap-2 rounded-full px-2 py-1 ${isPrimary ? 'bg-amber-100 border border-amber-300' : 'bg-gray-100'}`}>
+        <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
+        <span className="text-sm font-medium">{user.name}</span>
+        {isPrimary && <StarIcon className="w-3 h-3 text-amber-600" fill="currentColor" />}
+    </div>
+);
+
 const UserDisplay: React.FC<{ user?: User }> = ({ user }) => {
     if (!user) return <span className="text-gray-400">Unassigned</span>;
     return (
@@ -43,8 +50,18 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
   const [activities, setActivities] = useState<ActivityItem[]>(() => getMockActivities(5));
   const modalBodyRef = useRef<HTMLDivElement>(null);
 
-  const canEditItem = can('item.edit.any') || (can('item.edit.own') && workItem.assignee.id === user?.id);
+  const canEditItem = can('item.edit.any') || (can('item.edit.own') && workItem.assignee?.id === user?.id);
   
+  const orderedAssignees = useMemo(() => {
+    if (!workItem.assignees || workItem.assignees.length === 0) return [];
+    const primary = workItem.assignee;
+    if (!primary) return workItem.assignees;
+    return [
+        primary,
+        ...workItem.assignees.filter(a => a.id !== primary.id)
+    ];
+  }, [workItem.assignees, workItem.assignee]);
+
   // US-42: Highlighting logic
   useEffect(() => {
     if (highlightSection && modalBodyRef.current) {
@@ -161,7 +178,13 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
             {/* Sidebar with metadata */}
             <aside className="w-1/3 max-w-xs border-l border-[#B2BEBF] overflow-y-auto p-6 space-y-5 bg-white/50">
                  <DetailField label={t('status')} highlightKey="status"><span className="font-semibold px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-800">{workItem.status}</span></DetailField>
-                 <DetailField label={t('assignee')} highlightKey="assignee"><UserDisplay user={workItem.assignee} /></DetailField>
+                 <DetailField label={t('assignee')} highlightKey="assignee">
+                    <div className="flex flex-wrap gap-1.5">
+                      {orderedAssignees.length > 0 ? (
+                          orderedAssignees.map(a => <UserChip key={a.id} user={a} isPrimary={a.id === workItem.assignee?.id} />)
+                      ) : 'Unassigned'}
+                    </div>
+                 </DetailField>
                  <DetailField label={'Reporter'} highlightKey="reporter"><UserDisplay user={workItem.reporter} /></DetailField>
                  <DetailField label={t('priority')} highlightKey="priority"><span className="font-bold">{workItem.priority}</span></DetailField>
                  <DetailField label={'Sprint'} highlightKey="sprint">{workItem.sprint}</DetailField>

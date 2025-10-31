@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { WorkItem, Status, Priority, WorkItemType, Epic, Team, User, Sprint, SprintState } from '../types';
 import { useLocale } from '../context/LocaleContext';
-import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon } from './icons';
+import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon, StarIcon } from './icons';
 import { ALL_USERS, PRIORITIES, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
 import { LabelInput } from './LabelInput';
 import { ChecklistInput } from './ChecklistInput';
@@ -102,6 +102,22 @@ const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange:
   </div>
 );
 
+const AssigneeChip: React.FC<{ user: User, isPrimary: boolean, onRemove: () => void, onSetPrimary: () => void }> = ({ user, isPrimary, onRemove, onSetPrimary }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    return (
+        <div onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`relative flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 text-sm font-medium ${isPrimary ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-800'}`}>
+            <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
+            <span>{user.name}</span>
+            {isHovered && (
+                <div className="absolute -top-1 -right-1 flex items-center bg-white rounded-full shadow-md z-10">
+                    {!isPrimary && <button type="button" title="Make primary" onClick={onSetPrimary} className="p-0.5 text-amber-600 hover:bg-amber-100 rounded-full"><StarIcon className="w-4 h-4" /></button>}
+                    <button type="button" title="Remove" onClick={onRemove} className="p-0.5 text-red-600 hover:bg-red-100 rounded-full"><XMarkIcon className="w-4 h-4" /></button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics, teams, sprints, onSave, onCancel, isNew, highlightSection }) => {
   const { t } = useLocale();
   const [localWorkItem, setLocalWorkItem] = useState<Partial<WorkItem>>(workItem);
@@ -112,7 +128,17 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   
   const editorContainerRef = useRef<HTMLDivElement>(null);
 
+  const [assigneeSearch, setAssigneeSearch] = useState('');
+  const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+  useClickOutside(assigneeDropdownRef, () => setIsAssigneeDropdownOpen(false));
+
   const selectableSprints = useMemo(() => sprints.filter(s => (s.state === SprintState.ACTIVE || s.state === SprintState.PLANNED) && s.state !== SprintState.DELETED), [sprints]);
+  
+  const availableAssignees = useMemo(() => {
+    const selectedIds = new Set(localWorkItem.assignees?.map(a => a.id) || []);
+    return ALL_USERS.filter(u => !selectedIds.has(u) && u.name.toLowerCase().includes(assigneeSearch.toLowerCase()));
+  }, [assigneeSearch, localWorkItem.assignees]);
 
   useEffect(() => {
     setLocalWorkItem(workItem);
@@ -171,11 +197,34 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
     setLocalWorkItem(prev => ({...prev, description: html }));
   };
 
-  const handleUserChange = (fieldName: 'assignee' | 'reporter', userId: string) => {
+  const handleUserChange = (fieldName: 'reporter', userId: string) => {
     const user = ALL_USERS.find(u => u.id === userId);
     if (user) {
       setLocalWorkItem(prev => ({ ...prev, [fieldName]: user }));
     }
+  };
+
+  const handleAddAssignee = (user: User) => {
+    const currentAssignees = localWorkItem.assignees || [];
+    if (currentAssignees.length >= 10) return;
+    const newAssignees = [...currentAssignees, user];
+    const newPrimary = localWorkItem.assignee || user;
+    setLocalWorkItem(prev => ({ ...prev, assignees: newAssignees, assignee: newPrimary }));
+    setAssigneeSearch('');
+    setIsAssigneeDropdownOpen(false);
+  };
+
+  const handleRemoveAssignee = (userId: string) => {
+      let newAssignees = (localWorkItem.assignees || []).filter(a => a.id !== userId);
+      let newPrimary = localWorkItem.assignee;
+      if (newPrimary?.id === userId) {
+          newPrimary = newAssignees[0];
+      }
+      setLocalWorkItem(prev => ({ ...prev, assignees: newAssignees, assignee: newPrimary }));
+  };
+
+  const handleSetPrimary = (user: User) => {
+      setLocalWorkItem(prev => ({ ...prev, assignee: user }));
   };
 
   const handleSprintChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -276,7 +325,39 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             </SideFieldWrapper>
             
             <SideFieldWrapper label={t('assignee')} highlightKey="assignee">
-               <UserSelect icon={<UserRoundIcon className="w-4 h-4" />} selectedUser={localWorkItem.assignee} onChange={(userId) => handleUserChange('assignee', userId)} highlightKey="assignee" />
+              <div ref={assigneeDropdownRef} className="relative">
+                <div className="flex flex-wrap gap-1 p-1.5 border border-slate-300 rounded-lg bg-white min-h-[34px] items-center">
+                  {(localWorkItem.assignees || []).map(user => (
+                    <AssigneeChip
+                      key={user.id}
+                      user={user}
+                      isPrimary={user.id === localWorkItem.assignee?.id}
+                      onRemove={() => handleRemoveAssignee(user.id)}
+                      onSetPrimary={() => handleSetPrimary(user)}
+                    />
+                  ))}
+                  <input
+                    type="text"
+                    value={assigneeSearch}
+                    onChange={e => setAssigneeSearch(e.target.value)}
+                    onFocus={() => setIsAssigneeDropdownOpen(true)}
+                    placeholder="Add assignee..."
+                    className="flex-grow text-sm focus:outline-none min-w-[100px] p-1"
+                  />
+                </div>
+                {isAssigneeDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto text-start">
+                    <ul>
+                      {availableAssignees.map(user => (
+                        <li key={user.id} onClick={() => handleAddAssignee(user)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
+                          <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
+                          <span>{user.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </SideFieldWrapper>
             
             <SideFieldWrapper label={t('reporter')} highlightKey="reporter">

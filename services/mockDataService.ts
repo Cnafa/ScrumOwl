@@ -158,6 +158,13 @@ const createMockWorkItem = (id: number): WorkItem => {
         itemAssignee = ALL_USERS[1]; // Bob
     }
 
+    const primaryAssignee = itemAssignee;
+    const collaborators = faker.helpers.arrayElements(
+        ALL_USERS.filter(u => u.id !== primaryAssignee.id),
+        faker.number.int({ min: 0, max: 2 })
+    );
+    const allAssignees = [primaryAssignee, ...collaborators];
+
 
     return {
         id: `PROJ-${id}`,
@@ -167,7 +174,8 @@ const createMockWorkItem = (id: number): WorkItem => {
         description: faker.lorem.paragraphs(3),
         type,
         status,
-        assignee: itemAssignee,
+        assignee: primaryAssignee,
+        assignees: allAssignees,
         reporter,
         priority: faker.helpers.arrayElement(PRIORITIES),
         sprint: sprintName,
