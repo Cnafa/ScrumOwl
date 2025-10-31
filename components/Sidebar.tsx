@@ -28,7 +28,7 @@ const NavItem: React.FC<NavItemProps> = ({ view, label, icon, isCollapsed }) => 
             }`}
         >
             <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center">{icon}</span>
-            {!isCollapsed && <span className="ml-3 text-sm font-medium">{label}</span>}
+            {!isCollapsed && <span className="ms-3 text-sm font-medium">{label}</span>}
         </button>
     );
 };
@@ -45,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
     const { can } = useBoard();
     
     return (
-        <aside className={`flex flex-col bg-slate-50/80 backdrop-blur-sm border-r border-slate-200/80 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-60'}`}>
+        <aside className={`flex flex-col bg-slate-50/80 backdrop-blur-sm border-e border-slate-200/80 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-60'}`}>
             <div className={`h-14 flex items-center border-b border-slate-200/80 ${isCollapsed ? 'justify-center' : 'px-3'}`}>
                  <div className="flex items-center gap-2 overflow-hidden">
                     {isCollapsed ? (
@@ -88,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
                                 className="flex items-center w-full h-10 px-3 rounded-lg text-slate-700 hover:bg-slate-200/50"
                             >
                                 <BookmarkCheckIcon className="h-4 w-4 flex-shrink-0 text-slate-500"/>
-                                {!isCollapsed && <span className="ml-3 text-sm font-medium truncate">{view.name}</span>}
+                                {!isCollapsed && <span className="ms-3 text-sm font-medium truncate">{view.name}</span>}
                             </button>
                         ))}
                     </div>
@@ -96,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
             </nav>
             <div className="p-2 border-t border-slate-200/80">
                 <button onClick={onToggle} title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} className="w-full h-10 flex items-center justify-center rounded-lg hover:bg-slate-200/50">
-                    <ChevronLeftIcon className={`w-5 h-5 text-slate-600 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
+                    <ChevronLeftIcon className={`w-5 h-5 text-slate-600 transition-transform duration-300 rtl:scale-x-[-1] ${isCollapsed ? 'rotate-180' : ''}`} />
                 </button>
             </div>
         </aside>

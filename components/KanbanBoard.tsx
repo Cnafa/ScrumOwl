@@ -24,9 +24,9 @@ const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed
     return (
         <button 
             onClick={onToggle} 
-            className="w-full flex items-center gap-3 text-left p-2 border-b hover:bg-slate-100"
+            className="w-full flex items-center gap-3 text-start p-2 border-b hover:bg-slate-100"
         >
-             <ChevronRightIcon className={`h-4 w-4 transition-transform text-slate-500 ${isCollapsed ? '' : 'rotate-90'}`} />
+             <ChevronRightIcon className={`h-4 w-4 transition-transform text-slate-500 rtl:scale-x-[-1] ${isCollapsed ? '' : 'rotate-90'}`} />
             {epic ? <div className="w-2 h-5 rounded-full" style={{backgroundColor: epic.color}}></div> : <MountainIcon className="w-5 h-5 text-slate-500" />}
             <span className="font-semibold text-slate-800 text-sm">{epic ? epic.name : 'Items without Epic'}</span>
             <span className="text-xs font-normal text-slate-500">({itemsCount})</span>

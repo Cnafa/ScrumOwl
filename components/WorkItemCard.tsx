@@ -86,14 +86,14 @@ export const WorkItemCard: React.FC<WorkItemCardProps> = ({ workItem, onSelect }
   return (
     <div
       onClick={() => onSelect(workItem)}
-      className={`bg-white rounded-lg p-2.5 border-l-4 ${config.border} cursor-pointer hover:shadow-md transition-all duration-300 ${highlightClass} space-y-1.5`}
+      className={`bg-white rounded-lg p-2.5 border-s-4 ${config.border.replace('border-l-','border-s-')} cursor-pointer hover:shadow-md transition-all duration-300 ${highlightClass} space-y-1.5`}
       aria-label={`View details for ${workItem.title}`}
     >
       <div className="flex justify-between items-start">
         <p className="text-xs font-medium text-slate-500">{workItem.id}</p>
         <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${config.classes}`}>{config.label}</span>
       </div>
-      <h3 className="font-medium text-slate-800 text-sm leading-snug">{workItem.title}</h3>
+      <h3 className="font-medium text-slate-800 text-sm leading-snug text-start">{workItem.title}</h3>
       <div className="flex justify-between items-center pt-1">
         {workItem.teamInfo ? (
             <div className="flex items-center gap-1 text-xs text-slate-500" title={`Team: ${workItem.teamInfo.name}`}>

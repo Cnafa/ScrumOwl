@@ -128,7 +128,7 @@ const TableOfContents = ({ headings }: any) => {
         <div className="p-2 border-b bg-gray-50/50 text-sm">
             <ul className="space-y-1">
                 {headings.map(({ id, text, level }: any) => (
-                    <li key={id} style={{ marginLeft: `${(level - 3) * 1}rem` }}>
+                    <li key={id} style={{ marginInlineStart: `${(level - 3) * 1}rem` }}>
                         <a href={`#${id}`} onClick={(e) => { e.preventDefault(); const el = document.querySelector(`[data-toc-id="${id}"]`); el?.scrollIntoView({ behavior: 'smooth' }); }} className={`hover:underline text-gray-700`}>
                             {text}
                         </a>
@@ -242,7 +242,7 @@ const suggestionConfig = {
 };
 
 export const RichTextEditor = ({ value, onChange, onValidityChange, editable = true }: any) => {
-    const { t } = useLocale();
+    const { t, locale } = useLocale();
     const [isTocVisible, setIsTocVisible] = useState(false);
     const [headings, setHeadings] = useState<any[]>([]);
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -274,6 +274,7 @@ export const RichTextEditor = ({ value, onChange, onValidityChange, editable = t
         editorProps: {
             attributes: {
                 class: 'prose prose-sm max-w-none w-full min-h-[200px] max-h-[40vh] overflow-y-auto p-3 focus:outline-none',
+                dir: locale === 'fa-IR' ? 'rtl' : 'ltr',
             },
         },
     });
@@ -283,6 +284,19 @@ export const RichTextEditor = ({ value, onChange, onValidityChange, editable = t
             editor.setEditable(editable);
         }
     }, [editable, editor]);
+
+    useEffect(() => {
+        if (editor) {
+            editor.setOptions({
+                editorProps: {
+                    attributes: {
+                        ...editor.options.editorProps.attributes,
+                        dir: locale === 'fa-IR' ? 'rtl' : 'ltr',
+                    }
+                }
+            })
+        }
+    }, [locale, editor]);
 
 
     const openLinkModal = useCallback(() => {
@@ -355,7 +369,7 @@ export const RichTextEditor = ({ value, onChange, onValidityChange, editable = t
             </div>)}
             {isTocVisible && <TableOfContents headings={headings} />}
             <EditorContent editor={editor} style={{ whiteSpace: 'pre-wrap' }} />
-            {editable && (<div className={`text-xs text-right p-2 border-t ${counterColor}`}>
+            {editable && (<div className={`text-xs text-end p-2 border-t ${counterColor}`}>
                 {t('editor_charCounterTemplate').replace('{count}', String(charCount)).replace('{max}', String(MAX_CHARS))}
             </div>)}
             {isLinkModalOpen && (

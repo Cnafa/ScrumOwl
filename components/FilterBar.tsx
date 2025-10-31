@@ -44,7 +44,7 @@ const AssigneeFilter: React.FC<{ selected: string, onChange: (assigneeName: stri
 
     return (
         <div className="relative" ref={dropdownRef}>
-            <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-36 flex items-center justify-between px-2 py-1 bg-white border border-slate-300 rounded-md text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary">
+            <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-36 flex items-center justify-between px-2 py-1 bg-white border border-slate-300 rounded-md text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary text-start">
                 <span className="flex items-center gap-1 text-xs">
                     {selectedUser ? (
                         <>
@@ -58,7 +58,7 @@ const AssigneeFilter: React.FC<{ selected: string, onChange: (assigneeName: stri
                 <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </button>
             {isOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto text-start">
                     <ul>
                         <li onClick={() => { onChange('ALL'); setIsOpen(false); }} className="px-2 py-1 text-xs cursor-pointer hover:bg-gray-100">{t('allAssignees')}</li>
                         {users.map(user => (
@@ -76,7 +76,7 @@ const AssigneeFilter: React.FC<{ selected: string, onChange: (assigneeName: stri
 
 
 const FilterChip: React.FC<{ onRemove: () => void; children: React.ReactNode }> = ({ onRemove, children }) => (
-    <div className="flex items-center gap-1 bg-primarySoft text-primary font-medium pl-2 pr-1 py-0.5 rounded-full text-xs">
+    <div className="flex items-center gap-1 bg-primarySoft text-primary font-medium ps-2 pe-1 py-0.5 rounded-full text-xs">
         {children}
         <button onClick={onRemove} className="p-0.5 rounded-full hover:bg-blue-200">
             <XMarkIcon className="w-3 h-3"/>
@@ -113,7 +113,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Active Filters as Chips */}
         {selectedAssignee && (
             <FilterChip onRemove={() => onFilterChange({ ...filterSet, assignee: 'ALL' })}>
-                <img src={selectedAssignee.avatarUrl} className="w-4 h-4 rounded-full mr-1" alt={selectedAssignee.name} />
+                <img src={selectedAssignee.avatarUrl} className="w-4 h-4 rounded-full me-1" alt={selectedAssignee.name} />
                 {selectedAssignee.name}
             </FilterChip>
         )}
@@ -158,7 +158,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </select>
 
         {activeSprint && (
-            <div className="flex items-center gap-2 pl-2 ml-2 border-l">
+            <div className="flex items-center gap-2 ps-2 ms-2 border-s">
                 <input
                     type="checkbox"
                     id="include-unassigned"

@@ -18,7 +18,7 @@ export const ToastManager: React.FC<ToastManagerProps> = ({ toasts, onDismiss, o
         <div
             aria-live="polite"
             aria-atomic="true"
-            className="fixed bottom-0 right-0 p-4 space-y-3 w-full max-w-sm z-[100]"
+            className="fixed bottom-0 end-0 p-4 space-y-3 w-full max-w-sm z-[100]"
         >
             {activeToasts.map((toast, index) => (
                 <ToastItem

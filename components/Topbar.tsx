@@ -91,7 +91,7 @@ const SprintPlaque: React.FC<{
     return (
         <div className="relative flex items-center gap-1" ref={wrapperRef}>
             <button onClick={() => navigate(-1)} disabled={!canGoPrev} className="p-1 rounded-md hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed">
-                <ChevronLeftIcon className="w-4 h-4 text-slate-600"/>
+                <ChevronLeftIcon className="w-4 h-4 text-slate-600 rtl:scale-x-[-1]"/>
             </button>
             <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg hover:bg-slate-200">
                 <span className="font-semibold text-slate-800">{selected.name}</span>
@@ -101,11 +101,11 @@ const SprintPlaque: React.FC<{
                 <span className="font-semibold text-primary">{calculateDaysLeft(selected.endAt, t)}</span>
             </button>
              <button onClick={() => navigate(1)} disabled={!canGoNext} className="p-1 rounded-md hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed">
-                <ChevronRightIcon className="w-4 h-4 text-slate-600"/>
+                <ChevronRightIcon className="w-4 h-4 text-slate-600 rtl:scale-x-[-1]"/>
             </button>
 
             {isOpen && (
-                <div className="absolute top-full mt-1 w-64 bg-white rounded-md shadow-lg border z-10">
+                <div className="absolute top-full mt-1 w-64 bg-white rounded-md shadow-lg border z-10 text-start">
                     <ul className="py-1">
                         {sprints.map(sprint => (
                             <li key={sprint.id}>
@@ -167,7 +167,7 @@ export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotifica
             <div className="flex items-center">
                 <Breadcrumbs />
                 {selectedSprint && currentView === 'KANBAN' && (
-                    <div className="ml-4 pl-4 border-l">
+                    <div className="ms-4 ps-4 border-s">
                          <SprintPlaque 
                             sprints={availableSprints}
                             selected={selectedSprint}
@@ -189,6 +189,10 @@ export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotifica
                 )}
                 
                 <div className="h-5 w-px bg-slate-200" />
+                
+                <button onClick={handleLanguageToggle} title="Switch language / تغییر زبان" className="text-sm font-semibold text-slate-600 hover:bg-slate-200/80 px-2 py-1 rounded-md">
+                    {locale === 'en-US' ? 'fa' : 'en'}
+                </button>
 
                 <div className="flex items-center gap-2 text-sm text-slate-800">
                     <ConnectionIndicator status={realtimeStatus} />
@@ -203,7 +207,7 @@ export const Topbar: React.FC<TopbarProps> = ({ notifications, onMarkAllNotifica
                 <div className="relative" ref={notificationsRef}>
                     <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="p-2 rounded-full hover:bg-slate-200/80 relative" title={t('notifications')}>
                         <BellIcon className="h-5 w-5 text-slate-600" />
-                        {unreadCount > 0 && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />}
+                        {unreadCount > 0 && <span className="absolute top-1 end-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />}
                     </button>
                     {isNotificationsOpen && (
                         <NotificationPanel notifications={notifications} onClose={closeNotifications} onMarkAllAsRead={onMarkAllNotificationsRead} onShow={onShowNotification} />

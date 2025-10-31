@@ -45,7 +45,7 @@ const NotificationItem: React.FC<{ notification: Notification; onShow: (notifica
     };
 
     return (
-        <div className={`p-3 border-l-4 ${notification.isRead ? 'border-transparent' : 'border-[#486966] bg-[#486966]/10'}`}>
+        <div className={`p-3 border-s-4 ${notification.isRead ? 'border-transparent' : 'border-[#486966] bg-[#486966]/10'}`}>
             <div className="flex items-start gap-3">
                 <div className="mt-1">
                     {notification.actor.avatarUrl ? (
@@ -58,11 +58,11 @@ const NotificationItem: React.FC<{ notification: Notification; onShow: (notifica
                     )}
                 </div>
                 <div className="flex-1">
-                    <p className="text-sm text-[#3B3936]" dangerouslySetInnerHTML={{ __html: message }} />
+                    <p className="text-sm text-[#3B3936] text-start" dangerouslySetInnerHTML={{ __html: message }} />
                     <time className="text-xs text-[#889C9B]">{timeAgo(notification.timestamp, locale)}</time>
                 </div>
             </div>
-             <div className="mt-2 text-right">
+             <div className="mt-2 text-end">
                 <button onClick={handleShow} className="text-xs font-semibold text-[#486966] hover:underline px-2 py-1 rounded hover:bg-gray-200">
                     {t('show')}
                 </button>
@@ -81,7 +81,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ notificati
 
     return (
         <div 
-            className="absolute top-full right-0 mt-2 w-80 max-w-sm bg-white rounded-md shadow-lg border border-[#B2BEBF] z-50"
+            className="absolute top-full end-0 mt-2 w-80 max-w-sm bg-white rounded-md shadow-lg border border-[#B2BEBF] z-50"
             onClick={e => e.stopPropagation()}
         >
             <div className="flex items-center justify-between p-3 border-b border-[#B2BEBF]">

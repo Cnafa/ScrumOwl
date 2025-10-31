@@ -90,11 +90,11 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                  <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sprint Name</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dates</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Epics</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Goal</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Sprint Name</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Dates</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Epics</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Goal</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -110,7 +110,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                                </td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sprint.epicIds.length}</td>
                                <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{sprint.goal}</td>
-                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2 text-right">
+                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-2 text-end">
                                    {canManage && activeTab !== 'PAST' && activeTab !== 'DELETED' && (
                                     <>
                                        <button onClick={(e) => { e.stopPropagation(); setEditingSprint(sprint); }} className="text-indigo-600 hover:text-indigo-900 px-2">

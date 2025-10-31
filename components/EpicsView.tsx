@@ -98,14 +98,14 @@ const ActionsMenu: React.FC<{
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
             </button>
             {isOpen && (
-                <div onMouseLeave={() => setIsOpen(false)} className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border">
+                <div onMouseLeave={() => setIsOpen(false)} className="absolute end-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border text-start">
                     <ul className="py-1">
                         {getActions().map((action, index) => (
                              'type' in action && action.type === 'divider' ?
                              <div key={index} className="my-1 h-px bg-gray-200" /> :
                             <li key={action.label}>
                                 <button onClick={(e) => { e.stopPropagation(); (action.action as Function)(); setIsOpen(false); }} disabled={action.disabled}
-                                className={`w-full text-left px-4 py-2 text-sm ${'isDestructive' in action && action.isDestructive ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'} disabled:text-gray-400 disabled:cursor-not-allowed`}>
+                                className={`w-full text-start px-4 py-2 text-sm ${'isDestructive' in action && action.isDestructive ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-100'} disabled:text-gray-400 disabled:cursor-not-allowed`}>
                                     {action.label}
                                 </button>
                             </li>
@@ -143,12 +143,12 @@ const EpicDrawerContent: React.FC<{
                  <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50 sticky top-0">
                         <tr>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Assignee</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Est.</th>
+                            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">ID</th>
+                            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Title</th>
+                            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Assignee</th>
+                            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                            <th className="px-3 py-2 text-start text-xs font-medium text-gray-500 uppercase">Est.</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -156,7 +156,7 @@ const EpicDrawerContent: React.FC<{
                             <tr key={item.id} className="hover:bg-gray-50">
                                 <td className="px-3 py-2 text-xs text-gray-500">{item.id}</td>
                                 <td className="px-3 py-2 text-sm font-medium">
-                                    <button onClick={() => onSelectWorkItem(item)} className="text-gray-900 hover:underline text-left">
+                                    <button onClick={() => onSelectWorkItem(item)} className="text-gray-900 hover:underline text-start">
                                         {item.title}
                                     </button>
                                 </td>
@@ -203,7 +203,7 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
     );
 
     const Th: React.FC<{ children?: React.ReactNode, className?: string }> = ({ children, className }) => (
-        <th scope="col" className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className || ''}`}>
+        <th scope="col" className={`px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider ${className || ''}`}>
             {children}
         </th>
     );
@@ -245,8 +245,8 @@ export const EpicsView: React.FC<EpicsViewProps> = ({ epics, workItems, onNewEpi
                                 <tr onClick={() => handleToggleEpic(epic.id)} className="cursor-pointer hover:bg-gray-50">
                                     <td className="px-4 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-2 transition-transform text-gray-500 ${expandedEpicId === epic.id ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                                            <div className="w-2 h-6 rounded-full mr-3" style={{backgroundColor: epic.color}}></div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 me-2 transition-transform text-gray-500 rtl:scale-x-[-1] ${expandedEpicId === epic.id ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                                            <div className="w-2 h-6 rounded-full me-3" style={{backgroundColor: epic.color}}></div>
                                             <div className="text-sm font-medium text-gray-900">{epic.name}</div>
                                         </div>
                                     </td>

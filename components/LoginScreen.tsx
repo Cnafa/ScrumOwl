@@ -38,7 +38,7 @@ const LoginScreen: React.FC = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            <label htmlFor="remember-me" className="ms-2 block text-sm text-gray-900">
                 Remember me
             </label>
         </div>

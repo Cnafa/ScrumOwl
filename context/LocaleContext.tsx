@@ -12,9 +12,26 @@ interface LocaleContextType {
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export const LocaleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [locale, setLocale] = useState<Locale>('en-US');
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    try {
+      const savedLocale = window.localStorage.getItem('scrumowl-locale');
+      return savedLocale === 'fa-IR' ? 'fa-IR' : 'en-US';
+    } catch {
+      return 'en-US';
+    }
+  });
+
+  const setLocale = (newLocale: Locale) => {
+    try {
+        window.localStorage.setItem('scrumowl-locale', newLocale);
+    } catch (e) {
+        console.error("Failed to save locale", e);
+    }
+    setLocaleState(newLocale);
+  };
 
   const t = (key: keyof typeof translations['en-US']): string => {
+    // Fallback to English if a Farsi key is missing
     return translations[locale][key] || translations['en-US'][key];
   };
 

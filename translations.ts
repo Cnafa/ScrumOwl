@@ -68,7 +68,6 @@ export const translations = {
     noKeepEditing: 'No, Keep Editing',
 
     // Activity Feed
-    // FIX: Add missing 'activity' translation key.
     activity: 'Activity',
     transitioned: 'transitioned this item from',
     addComment: 'Add a comment...',
@@ -227,7 +226,7 @@ export const translations = {
     details: 'Details',
   },
   'fa-IR': {
-    // Farsi translations
+    // General
     cancel: 'لغو',
     save: 'ذخیره',
     edit: 'ویرایش',
@@ -254,35 +253,51 @@ export const translations = {
     comment: 'نظر',
     show: 'نمایش',
     close: 'بستن',
+    
+    // App Header / Topbar
     newItem: 'آیتم جدید',
+    
+    // Sidebar
     sprintBoard: 'بورد اسپرینت',
     sprints: 'اسپرینت‌ها',
     epics: 'اپیک‌ها',
     eventsView: 'رویدادها',
     reportsDashboard: 'داشبورد گزارشات',
     membersAndRoles: 'اعضا و نقش‌ها',
+    
+    // Kanban Board
     itemMovedSuccess: 'آیتم با موفقیت منتقل شد.',
     itemMoveFailed: 'انتقال نامعتبر است.',
     groupBy: 'گروه‌بندی بر اساس',
+    
+    // Filter Bar
     searchPlaceholder: 'جستجو با شناسه یا عنوان...',
     allAssignees: 'همه مسئولین',
     allTypes: 'همه انواع',
     clearFilters: 'پاک کردن فیلترها',
     saveView: 'ذخیره نما',
     manageViews: 'مدیریت نماها',
+    
+    // Work Item Editor
     createNewItem: 'ایجاد آیتم جدید',
     editing: 'در حال ویرایش',
     aiPoweredSummary: 'خلاصه با هوش مصنوعی',
     generateSummary: 'ایجاد با هوش مصنوعی',
     addLabel: 'افزودن برچسب...',
     addChecklistItem: 'افزودن آیتم چک‌لیست...',
+    
+    // Discard changes modal
     discardChangesTitle: 'لغو تغییرات؟',
     discardChangesBody: 'تغییرات ذخیره نشده‌ای دارید. آیا مطمئن هستید که می‌خواهید آن‌ها را لغو کنید؟',
     yesDiscard: 'بله، لغو کن',
     noKeepEditing: 'نه، ادامه ویرایش',
+    
+    // Activity Feed
     activity: 'فعالیت',
     transitioned: 'این آیتم را از',
     addComment: 'افزودن نظر...',
+    
+    // Notifications
     notifications: 'اعلان‌ها',
     markAllAsRead: 'علامت‌گذاری همه به عنوان خوانده شده',
     noNotifications: 'شما به‌روز هستید!',
@@ -291,16 +306,22 @@ export const translations = {
     notification_STATUS_CHANGE: '<strong>{actorName}</strong> وضعیت <strong>{workItemId}</strong> را تغییر داد.',
     notification_NEW_COMMENT: '<strong>{actorName}</strong> در <strong>{workItemId}</strong> نظر داد.',
     notification_ITEM_UPDATED: '<strong>{actorName}</strong> آیتم <strong>{workItemId}</strong> را به‌روزرسانی کرد.',
+    
+    // Google Picker (Attachments)
     googlePickerTitle: 'انتخاب فایل از گوگل درایو',
     fileName: 'نام فایل',
     fileType: 'نوع',
     lastModified: 'آخرین تغییر',
     select: 'انتخاب',
+    
+    // Epics View
     iceScore: 'امتیاز ICE',
     impact: 'تأثیر',
     confidence: 'اطمینان',
     ease: 'سهولت',
     newEpic: 'اپیک جدید',
+    
+    // Rich Text Editor
     editor_showToC: 'نمایش فهرست مطالب',
     editor_charCounterTemplate: '{count} / {max} کاراکتر',
     editor_linkUrlPrompt: 'آدرس لینک را وارد کنید:',
@@ -318,7 +339,7 @@ export const translations = {
     editor_tooltip_color: 'رنگ متن',
     editor_tooltip_highlight: 'هایلایت',
     
-    // US-29: Reports & Insights (Farsi)
+    // US-29: Reports & Insights
     reports_title: 'گزارش‌ها و آمار',
     reports_dashboard_description: 'برای مشاهده تحلیل‌های دقیق از عملکرد تیم و سلامت پروژه، یک گزارش را انتخاب کنید.',
     report_burndown_title: 'نمودار Burndown اسپرینت',
@@ -339,8 +360,8 @@ export const translations = {
     report_completed_points: 'امتیازات تکمیل‌شده',
     report_wip_limit: 'حد مجاز کار در جریان',
     report_wip_breached: 'حد مجاز کار در جریان نقض شده',
-
-    // FIX-04: Sprint Management (Farsi)
+    
+    // FIX-04: Sprint Management
     newSprint: 'اسپرینت جدید',
     goal: 'هدف',
     startDate: 'تاریخ شروع',
@@ -349,7 +370,7 @@ export const translations = {
     availableEpics: 'اپیک‌های موجود',
     assignedEpics: 'اپیک‌های تخصیص‌داده‌شده',
     
-    // FIX-05: Task Update Toast (Farsi)
+    // FIX-05: Task Update Toast
     toast_open: 'باز کردن',
     toast_dismiss: 'بستن',
     toast_change_status: 'وضعیت → {status}',
@@ -357,8 +378,8 @@ export const translations = {
     toast_change_due: 'سررسید → {date}',
     toast_change_comment: 'نظر جدید ثبت شد',
     toast_change_generic: '{field} به‌روز شد',
-
-    // FIX-06: Sprint Board Scope (Farsi)
+    
+    // FIX-06: Sprint Board Scope
     sprint_header_template: 'اسپرینت {number} • {startDate} – {endDate}',
     include_items_without_epic: 'شامل کردن آیتم‌های بدون اپیک',
     no_active_sprint_title: 'هیچ اسپرینت فعالی وجود ندارد',
@@ -366,7 +387,7 @@ export const translations = {
     open_items_stat: '{count} آیتم باز',
     total_est_stat: '{sum} امتیاز',
     
-    // FIX-07: Epic Status & Archive (Farsi)
+    // FIX-07: Epic Status & Archive
     epic_tab_active: 'فعال',
     epic_tab_done: 'انجام‌شده',
     epic_tab_archive: 'آرشیو',
@@ -379,8 +400,8 @@ export const translations = {
     cannot_archive_title: 'امکان آرشیو اپیک وجود ندارد',
     cannot_archive_body: 'این اپیک به دلیل داشتن آیتم‌های باز قابل آرشیو نیست. لطفاً تمام آیتم‌ها را تکمیل کرده یا منتقل کنید.',
     open_items_list: 'آیتم‌های باز',
-
-    // US-30: Events v2 (Farsi)
+    
+    // US-30: Events v2
     my_events: 'رویدادهای من',
     all_events: 'همه رویدادها',
     calendar_view: 'تقویم',
@@ -393,7 +414,7 @@ export const translations = {
     conflict_badge: 'تداخل',
     teams: 'تیم‌ها',
     
-    // FIX-08: Parallel Sprints & Events (Farsi)
+    // FIX-08: Parallel Sprints & Events
     sprint_days_left: '{days} روز باقی‌مانده',
     sprint_ends_today: 'امروز تمام می‌شود',
     sprint_ended_ago: '{days} روز پیش تمام شد',
@@ -402,7 +423,7 @@ export const translations = {
     more_meetings: '+{count} جلسه دیگر',
     online_meeting_link: 'لینک جلسه آنلاین',
     
-    // US-38: Manage Views Modal (Farsi)
+    // US-38: Manage Views Modal
     manage_views_title: 'مدیریت نماها',
     my_views: 'نماهای من',
     group_views: 'نماهای گروه',

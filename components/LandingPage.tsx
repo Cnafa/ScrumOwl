@@ -9,18 +9,20 @@ import {
   GitBranchIcon,
   ScrumOwlLogo,
 } from "./icons";
+import { useLocale } from "../context/LocaleContext";
 
 interface LandingPageProps {
   onStart: () => void;
 }
 
 export default function LandingPage({ onStart }: LandingPageProps) {
+  const { locale } = useLocale();
   React.useEffect(() => {
     document.title = "ScrumOwl — Home";
   }, []);
 
   return (
-    <div dir="ltr" className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900 font-sans">
+    <div dir={locale === 'fa-IR' ? 'rtl' : 'ltr'} className={`min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900 ${locale === 'fa-IR' ? 'font-vazir' : 'font-sans'}`}>
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -48,13 +50,13 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute left-[-6rem] top-[-6rem] w-72 h-72 bg-primarySoft rounded-3xl rotate-12 border-2 border-label-neutral-text" />
-          <div className="absolute right-[-4rem] bottom-[-4rem] w-64 h-64 bg-label-amber-bg rounded-3xl -rotate-6 border-2 border-label-neutral-text" />
+          <div className="absolute start-[-6rem] top-[-6rem] w-72 h-72 bg-primarySoft rounded-3xl rotate-12 border-2 border-label-neutral-text" />
+          <div className="absolute end-[-4rem] bottom-[-4rem] w-64 h-64 bg-label-amber-bg rounded-3xl -rotate-6 border-2 border-label-neutral-text" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
-            <div>
+            <div className="text-start">
               <h1 className="text-3xl sm:text-5xl font-bold leading-tight">
                 Pure Scrum, very simple and functional.
               </h1>
@@ -111,7 +113,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* Features */}
-      <section id="features" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+      <section id="features" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 text-start">
         <h2 className="text-2xl sm:text-3xl font-bold">Key Features</h2>
         <p className="mt-2 text-slate-600">Everything you need for daily and sprint planning.</p>
 
@@ -129,7 +131,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       <section id="reports" className="bg-white border-y border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
-            <div>
+            <div className="text-start">
               <h3 className="text-xl sm:text-2xl font-bold">Reliable insights for daily decisions.</h3>
               <p className="mt-2 text-slate-600 text-sm sm:text-base">Reports are cached and optimized; turn them into Saved Reports and share with your team in a few clicks.</p>
               <ul className="mt-4 space-y-2 text-slate-700 text-sm">
@@ -159,7 +161,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
       </section>
 
       {/* How it works */}
-      <section id="how" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+      <section id="how" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 text-start">
         <h2 className="text-2xl sm:text-3xl font-bold">How does it work?</h2>
         <ol className="mt-6 grid md:grid-cols-3 gap-5 text-sm">
           <Step n={1} title="Sign in with Google" desc="No long forms; name and avatar are set up automatically." />
@@ -200,7 +202,7 @@ export default function LandingPage({ onStart }: LandingPageProps) {
 
 function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
-    <div className="rounded-2xl border-2 border-label-neutral-text bg-white p-4 shadow-[6px_6px_0_0_#1F2937]">
+    <div className="rounded-2xl border-2 border-label-neutral-text bg-white p-4 shadow-[6px_6px_0_0_#1F2937] text-start">
       <div className="flex items-center gap-2">
         <div className="w-9 h-9 rounded-xl border-2 border-label-neutral-text bg-slate-50 flex items-center justify-center">{icon}</div>
         <h3 className="font-bold">{title}</h3>
@@ -212,7 +214,7 @@ function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; 
 
 function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
   return (
-    <li className="rounded-2xl border-2 border-label-neutral-text bg-white p-4 shadow-[6px_6px_0_0_#1F2937]">
+    <li className="rounded-2xl border-2 border-label-neutral-text bg-white p-4 shadow-[6px_6px_0_0_#1F2937] text-start">
       <div className="flex items-center gap-3">
         <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl border-2 border-label-neutral-text bg-label-amber-bg font-bold">{n}</span>
         <h4 className="font-bold">{title}</h4>
@@ -233,7 +235,7 @@ function Badge({ label }: { label: string }) {
 
 function CardStub({ title, badge, color }: { title: string; badge: string; color: string }) {
   return (
-    <div className={`rounded-xl border border-slate-200 ${color} px-3 py-2`}>
+    <div className={`rounded-xl border border-slate-200 ${color} px-3 py-2 text-start`}>
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold truncate max-w-[70%]">{title}</div>
         <span className="text-[11px] px-2 py-0.5 rounded-lg border border-slate-300 bg-white">{badge}</span>

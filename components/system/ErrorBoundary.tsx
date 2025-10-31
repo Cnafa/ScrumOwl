@@ -21,8 +21,8 @@ export class ErrorBoundary extends React.Component<
     logCrash(error);
   }
 
-  // FIX: Changed `render` to an arrow function to correctly resolve `this` context.
-  render = () => {
+  // FIX: Reverted `render` to a standard class method. The arrow function syntax was causing a TypeScript error where 'this.props' was not recognized.
+  render() {
     if (this.state.hasError) {
       return (
         <div

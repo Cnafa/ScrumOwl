@@ -52,7 +52,7 @@ const UserSelect: React.FC<{
   
   return (
     <div className="relative" ref={dropdownRef} data-highlight-key={highlightKey}>
-      <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className="w-full flex items-center gap-2 pl-2 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50 text-left">
+      <button type="button" onClick={() => !disabled && setIsOpen(!isOpen)} disabled={disabled} className="w-full flex items-center gap-2 ps-2 pe-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50 text-start">
         <span className="text-slate-500">{icon}</span>
         {selectedUser ? (
           <>
@@ -64,7 +64,7 @@ const UserSelect: React.FC<{
         )}
       </button>
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto text-start">
           <ul>
             {ALL_USERS.map(user => (
               <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
@@ -95,8 +95,8 @@ const SideFieldWrapper: React.FC<{ label: string, children: React.ReactNode, hig
 
 const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, disabled?: boolean }> = ({ icon, value, onChange, children, name, disabled }) => (
   <div className="relative w-full">
-      <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500">{icon}</div>
-      <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full pl-9 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
+      <div className="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none text-slate-500">{icon}</div>
+      <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full ps-9 pe-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
           {children}
       </select>
   </div>
@@ -228,7 +228,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
         </header>
         
         <main className="flex-1 flex overflow-hidden p-2 gap-2">
-          <div className="flex-[3] overflow-y-auto pr-2 space-y-3">
+          <div className="flex-[3] overflow-y-auto pe-2 space-y-3">
             <FieldWrapper icon={<TypeIcon className="w-4 h-4"/>} highlightKey="title">
                 <input
                   type="text" name="title" value={localWorkItem.title || ''} onChange={handleChange}
@@ -267,7 +267,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             
           </div>
           
-          <div className="flex-1 overflow-y-auto pr-2 space-y-2.5 bg-white/50 p-2 rounded-lg">
+          <div className="flex-1 overflow-y-auto pe-2 space-y-2.5 bg-white/50 p-2 rounded-lg">
             
             <SideFieldWrapper label={t('status')} highlightKey="status">
               <SelectWithIcon icon={<LayoutKanbanIcon className="w-4 h-4" />} name="status" value={localWorkItem.status || ''} onChange={handleChange}>
@@ -334,8 +334,8 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             
             <SideFieldWrapper label={t('estimationPoints')} highlightKey="estimationPoints">
               <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-500"><TimerIcon className="w-4 h-4" /></div>
-                  <input type="number" name="estimationPoints" value={(localWorkItem as any).estimationPoints || ''} onChange={handleChange} className="w-full text-sm pl-9 pr-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <div className="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none text-slate-500"><TimerIcon className="w-4 h-4" /></div>
+                  <input type="number" name="estimationPoints" value={(localWorkItem as any).estimationPoints || ''} onChange={handleChange} className="w-full text-sm ps-9 pe-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
             </SideFieldWrapper>
             
