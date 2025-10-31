@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unified Backlog: Work Item Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hack:wght@400;700&family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Hack', 'monospace'],
+              vazir: ['Vazirmatn', 'sans-serif'],
+            },
+            // US-09: Add animation for real-time updates
+            animation: {
+              'fade-in-out': 'fadeInOut 3s ease-in-out forwards',
+              'pulse-once': 'pulse-once 1.5s cubic-bezier(0.4, 0, 0.6, 1)',
+              'highlight-pulse': 'highlightPulse 2.5s ease-out forwards',
+            },
+            keyframes: {
+              fadeInOut: {
+                '0%, 100%': { opacity: 0, transform: 'translateY(10px)' },
+                '10%, 90%': { opacity: 1, transform: 'translateY(0)' },
+              },
+              'pulse-once': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: .7 },
+              },
+              highlightPulse: {
+                '0%': { outline: '2px solid rgba(59, 130, 246, 0.7)', outlineOffset: '2px' },
+                '70%': { outline: '2px solid rgba(59, 130, 246, 0.2)', outlineOffset: '2px' },
+                '100%': { outline: '2px solid rgba(59, 130, 246, 0)', outlineOffset: '2px' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      /* Custom scrollbar updated to the new Big-Machine color palette */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #B2BEBF; /* Big-Machine-3 */
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #889C9B; /* Big-Machine-4 */
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #486966; /* Big-Machine-5 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "lodash-es": "https://aistudiocdn.com/lodash-es@^4.17.21",
+    "@tiptap/extension-code-block": "https://aistudiocdn.com/@tiptap/extension-code-block@^3.9.1",
+    "@tiptap/extension-color": "https://aistudiocdn.com/@tiptap/extension-color@^3.9.1",
+    "@tiptap/extension-link": "https://aistudiocdn.com/@tiptap/extension-link@^3.9.1",
+    "@tiptap/starter-kit": "https://aistudiocdn.com/@tiptap/starter-kit@^3.9.1",
+    "@tiptap/extension-highlight": "https://aistudiocdn.com/@tiptap/extension-highlight@^3.9.1",
+    "tippy.js": "https://aistudiocdn.com/tippy.js@^6.3.7",
+    "@tiptap/extension-text-style": "https://aistudiocdn.com/@tiptap/extension-text-style@^3.9.1",
+    "@tiptap/react": "https://aistudiocdn.com/@tiptap/react@^3.9.1",
+    "@tiptap/extension-character-count": "https://aistudiocdn.com/@tiptap/extension-character-count@^3.9.1",
+    "@tiptap/suggestion": "https://aistudiocdn.com/@tiptap/suggestion@^3.9.1"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

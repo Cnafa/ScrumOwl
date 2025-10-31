@@ -1,0 +1,33 @@
+{
+  "name": "scrumowl-v1",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@google/genai": "^1.27.0",
+    "lodash-es": "^4.17.21",
+    "@tiptap/extension-code-block": "^3.9.1",
+    "@tiptap/extension-color": "^3.9.1",
+    "@tiptap/extension-link": "^3.9.1",
+    "@tiptap/starter-kit": "^3.9.1",
+    "@tiptap/extension-highlight": "^3.9.1",
+    "tippy.js": "^6.3.7",
+    "@tiptap/extension-text-style": "^3.9.1",
+    "@tiptap/react": "^3.9.1",
+    "@tiptap/extension-character-count": "^3.9.1",
+    "@tiptap/suggestion": "^3.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
