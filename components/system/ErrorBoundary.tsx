@@ -2,9 +2,13 @@ import React from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, { hasError: boolean }> {
-  // FIX: Initialize state as a class property to resolve errors about 'state'
-  // and 'props' not being available on the component instance.
-  state = { hasError: false };
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    // FIX: Initialize state within the constructor to ensure 'this.props' is available.
+    // The class property initializer syntax can sometimes lead to issues with `this` context
+    // if not configured correctly in the build pipeline.
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError() { return { hasError: true }; }
 
