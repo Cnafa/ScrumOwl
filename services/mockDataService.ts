@@ -1,4 +1,3 @@
-
 import { faker } from 'https://cdn.skypack.dev/@faker-js/faker';
 import { WorkItem, Status, Priority, WorkItemType, User, ActivityItem, Notification, NotificationType, CalendarEvent, Epic, Team, JoinRequest, InviteCode, JoinRequestStatus, Sprint, SprintState, EpicStatus } from '../types';
 import { ALL_USERS, SPRINTS, GROUPS, PRIORITIES, STACKS, WORK_ITEM_TYPES, BOARDS, EPIC_COLORS, ALL_TEAMS, ROLES } from '../constants';
@@ -277,45 +276,5 @@ export const getMockNotifications = (count: number = 15, workItems: WorkItem[]):
 };
 
 export const getMockCalendarEvents = (count: number = 10, workItems: WorkItem[]): CalendarEvent[] => {
-    const events = Array.from({ length: count }, (_, i) => createMockEvent(i + 1, faker.datatype.boolean() ? faker.helpers.arrayElement(workItems) : undefined));
-    
-    // Inject today's events for Alice to ensure banner works
-    const today = new Date();
-    const currentUser = ALL_USERS[0]; // Alice
-
-    // Event 1: in 2 hours
-    const start1 = new Date(today);
-    start1.setHours(today.getHours() + 2);
-    const end1 = new Date(start1);
-    end1.setHours(start1.getHours() + 1);
-    events.push({
-        id: 'event-today-1',
-        title: 'Project Phoenix Sync-up',
-        start: start1,
-        end: end1,
-        allDay: false,
-        attendees: [currentUser, ALL_USERS[1]],
-        createdBy: ALL_USERS[1],
-        onlineLink: 'https://meet.google.com/mock-link-today-1',
-        linkedWorkItemId: 'PROJ-3'
-    });
-
-    // Event 2: in 4 hours
-    const start2 = new Date(today);
-    start2.setHours(today.getHours() + 4);
-    const end2 = new Date(start2);
-    end2.setMinutes(start2.getMinutes() + 30);
-     events.push({
-        id: 'event-today-2',
-        title: 'Design Review: New Dashboard',
-        start: start2,
-        end: end2,
-        allDay: false,
-        attendees: [currentUser, ALL_USERS[2], ALL_USERS[3]],
-        createdBy: ALL_USERS[3],
-        onlineLink: 'https://meet.google.com/mock-link-today-2'
-    });
-
-    return events;
+    return Array.from({ length: count }, (_, i) => createMockEvent(i + 1, faker.datatype.boolean() ? faker.helpers.arrayElement(workItems) : undefined));
 };
-      

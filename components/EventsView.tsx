@@ -1,24 +1,27 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { CalendarEvent, WorkItem, Team } from '../types';
 import * as calendarService from '../services/calendarService';
+import { EventEditorModal } from './EventEditorModal';
 import { useAuth } from '../context/AuthContext';
 import { useBoard } from '../context/BoardContext';
 import { useLocale } from '../context/LocaleContext';
+import { ALL_TEAMS } from '../constants';
 import { CalendarGrid } from './CalendarGrid';
 
 interface EventsViewProps {
     workItems: WorkItem[];
     teams: Team[];
-    onViewEvent: (event: CalendarEvent) => void;
-    onNewEvent: () => void;
 }
 
-export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams, onViewEvent, onNewEvent }) => {
+export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams }) => {
     const { user } = useAuth();
     const { can } = useBoard();
     const { t } = useLocale();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
+    const [selectedEvent, setSelectedEvent] = useState<Partial<CalendarEvent> | null>(null);
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    
+    // US-30 State
     const [view, setView] = useState<'calendar' | 'list'>('calendar');
     const [scope, setScope] = useState<'my' | 'all'>('my');
     const isScrumMaster = can('sprint.manage');
@@ -32,11 +35,50 @@ export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams, onView
 
     useEffect(() => {
         calendarService.initializeCalendarEvents(workItems);
-    }, [workItems]);
-
-    useEffect(() => {
         fetchEvents();
-    }, [scope, isScrumMaster, user]);
+    }, [workItems, scope, isScrumMaster, user]);
+
+    const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
+        if (!user) return;
+
+        if (eventData.id) {
+            // This is an update
+            const originalEvent = events.find(e => e.id === eventData.id)!;
+            const eventToSave: CalendarEvent = {
+                ...originalEvent,
+                ...eventData,
+            };
+            await calendarService.updateEvent(eventToSave, teams);
+        } else {
+            // This is a new event
+            const { id, ...newEventData } = eventData;
+            await calendarService.createEvent(newEventData as any, user, teams);
+        }
+        
+        await fetchEvents();
+        setIsEditorOpen(false);
+        setSelectedEvent(null);
+    };
+
+    const handleSelectEvent = (event: CalendarEvent) => {
+        setSelectedEvent(event);
+        setIsEditorOpen(true);
+    };
+
+    const handleAddNewEvent = () => {
+        const start = new Date();
+        const end = new Date();
+        end.setHours(start.getHours() + 1);
+        setSelectedEvent({
+            title: '',
+            start,
+            end,
+            allDay: false,
+            attendees: user ? [user] : [],
+            teamIds: []
+        });
+        setIsEditorOpen(true);
+    };
     
     const ViewButton: React.FC<{ mode: 'calendar' | 'list', label: string }> = ({ mode, label }) => (
          <button 
@@ -64,7 +106,7 @@ export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams, onView
                         <ViewButton mode="calendar" label={t('calendar_view')} />
                         <ViewButton mode="list" label={t('list_view')} />
                     </div>
-                    <button onClick={onNewEvent} className="py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
+                    <button onClick={handleAddNewEvent} className="py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
                         New Event
                     </button>
                 </div>
@@ -72,12 +114,12 @@ export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams, onView
             
             <div className="flex-1 overflow-hidden">
                 {view === 'calendar' ? (
-                     <CalendarGrid events={events} onSelectEvent={onViewEvent} />
+                     <CalendarGrid events={events} onSelectEvent={handleSelectEvent} />
                 ) : (
                     <div className="overflow-y-auto h-full">
                         <ul className="space-y-2">
                             {events.sort((a,b) => new Date(a.start).getTime() - new Date(b.start).getTime()).map(event => (
-                                <li key={event.id} onClick={() => onViewEvent(event)} className="p-3 border rounded cursor-pointer hover:bg-gray-50 flex justify-between items-center">
+                                <li key={event.id} onClick={() => handleSelectEvent(event)} className="p-3 border rounded cursor-pointer hover:bg-gray-50 flex justify-between items-center">
                                     <div>
                                         <p className="font-semibold text-sm text-[#3B3936] flex items-center gap-2">
                                             {event.title}
@@ -92,7 +134,16 @@ export const EventsView: React.FC<EventsViewProps> = ({ workItems, teams, onView
                     </div>
                 )}
             </div>
+
+            {isEditorOpen && (
+                <EventEditorModal 
+                    event={selectedEvent}
+                    workItems={workItems}
+                    teams={teams}
+                    onSave={handleSaveEvent} 
+                    onClose={() => setIsEditorOpen(false)}
+                />
+            )}
         </div>
     );
 };
-      

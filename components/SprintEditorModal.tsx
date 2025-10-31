@@ -1,10 +1,8 @@
-
 // components/SprintEditorModal.tsx
 import React, { useState, useMemo } from 'react';
 import { Sprint, Epic, EpicStatus } from '../types';
 import { useLocale } from '../context/LocaleContext';
 import { XMarkIcon } from './icons';
-import { Datepicker } from './Datepicker';
 
 interface SprintEditorModalProps {
     sprint: Partial<Sprint>;
@@ -91,10 +89,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        // Set to start of day UTC for consistency
-        const date = new Date(value);
-        const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-        setLocalSprint(prev => ({...prev, [name]: utcDate.toISOString() }))
+        setLocalSprint(prev => ({...prev, [name]: new Date(value).toISOString() }))
     }
 
     const handleSave = () => {
@@ -127,11 +122,11 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="startAt" className="block text-sm font-medium text-[#486966] mb-1">{t('startDate')}</label>
-                                <Datepicker name="startAt" value={formatDateForInput(localSprint.startAt!)} onChange={handleDateChange} required />
+                                <input type="date" id="startAt" name="startAt" value={formatDateForInput(localSprint.startAt!)} onChange={handleDateChange} required className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md" />
                             </div>
                             <div>
                                 <label htmlFor="endAt" className="block text-sm font-medium text-[#486966] mb-1">{t('endDate')}</label>
-                                <Datepicker name="endAt" value={formatDateForInput(localSprint.endAt!)} onChange={handleDateChange} required />
+                                <input type="date" id="endAt" name="endAt" value={formatDateForInput(localSprint.endAt!)} onChange={handleDateChange} required className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md" />
                             </div>
                         </div>
                         <div className="!mt-8">
@@ -180,4 +175,3 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
         </div>
     );
 };
-      

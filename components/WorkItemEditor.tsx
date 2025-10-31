@@ -1,4 +1,3 @@
-
 // components/WorkItemEditor.tsx
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -12,7 +11,6 @@ import { AttachmentsManager } from './AttachmentsManager';
 import { generateSummary } from '../services/geminiService';
 import { isEqual } from 'lodash-es';
 import { RichTextEditor } from './RichTextEditor';
-import { Datepicker } from './Datepicker';
 
 interface WorkItemEditorProps {
   workItem: Partial<WorkItem>;
@@ -346,7 +344,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                  <div key={field} className="grid grid-cols-2 gap-4">
                     <label className="text-sm font-medium text-[#3B3936] my-auto">{t(field as any)}</label>
                     {field === 'dueDate' ? (
-                       <Datepicker name="dueDate" value={localWorkItem.dueDate?.split('T')[0] || ''} onChange={handleChange} data-highlight-key="dueDate" />
+                       <input type="date" name="dueDate" value={localWorkItem.dueDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black focus:outline-none focus:ring-2 focus:ring-[#486966]" data-highlight-key="dueDate" />
                     ) : field === 'sprint' ? (
                        <select name="sprint" value={localWorkItem.sprint || ''} onChange={handleChange} className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black focus:outline-none focus:ring-2 focus:ring-[#486966]" data-highlight-key="sprint">
                          {SPRINTS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -391,4 +389,3 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
     </div>
   );
 };
-      

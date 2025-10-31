@@ -1,4 +1,3 @@
-
 // components/SprintsView.tsx
 import React, { useState, useMemo } from 'react';
 import { Sprint, SprintState, Epic } from '../types';
@@ -129,4 +128,3 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
         </div>
     );
 };
-      
