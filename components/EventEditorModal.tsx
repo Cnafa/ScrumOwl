@@ -5,6 +5,7 @@ import { ALL_USERS } from '../constants';
 import * as calendarService from '../services/calendarService';
 import { debounce } from 'lodash-es';
 import { useLocale } from '../context/LocaleContext';
+import { DateTimeField } from './DateField';
 
 interface EventEditorModalProps {
     event: Partial<CalendarEvent> | null;
@@ -33,6 +34,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
     // Conflict State
     const [conflicts, setConflicts] = useState<Conflict[]>([]);
     const [isCheckingConflicts, setIsCheckingConflicts] = useState(false);
+    const [dateError, setDateError] = useState('');
 
     const checkConflicts = useCallback(debounce(async (eventData: Partial<CalendarEvent>) => {
         setIsCheckingConflicts(true);
@@ -61,18 +63,22 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
         return workItems.filter(item => item.title.toLowerCase().includes(lowercasedQuery) || item.id.toLowerCase().includes(lowercasedQuery));
     }, [workItems, workItemSearch]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value, type } = e.target;
-        let newEventData: Partial<CalendarEvent>;
-
-        if (type === 'checkbox') {
-            const { checked } = e.target as HTMLInputElement;
-            newEventData = { ...localEvent, [name]: checked };
-        } else if (type === 'datetime-local') {
-            newEventData = {...localEvent, [name]: new Date(value)};
-        } else {
-            newEventData = { ...localEvent, [name]: value };
+    const handleFieldChange = (name: string, value: any) => {
+        const newEventData = { ...localEvent, [name]: value };
+        setLocalEvent(newEventData);
+        checkConflicts(newEventData);
+    };
+    
+    const handleDateChange = (field: 'start' | 'end', value: string | null) => {
+        setDateError('');
+        const newEventData = { ...localEvent, [field]: value ? new Date(value) : undefined };
+        
+        if (newEventData.start && newEventData.end) {
+            if (newEventData.end < newEventData.start) {
+                setDateError("End time cannot be before start time.");
+            }
         }
+        
         setLocalEvent(newEventData);
         checkConflicts(newEventData);
     };
@@ -85,13 +91,8 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if(dateError) return;
         onSave(localEvent);
-    };
-    
-    const formatDateForInput = (date?: Date): string => {
-        if (!date) return '';
-        const d = new Date(date);
-        return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
     };
 
     return (
@@ -103,7 +104,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                         <button type="button" onClick={onClose}><XMarkIcon className="w-6 h-6 text-[#889C9B]" /></button>
                     </header>
                     <main className="p-6 space-y-4 flex-1 overflow-y-auto">
-                        {conflicts.length > 0 && (
+                        {conflicts.length > 0 && !isCheckingConflicts && (
                             <div className="p-3 bg-yellow-100 border-l-4 border-yellow-400 text-yellow-800">
                                 <h4 className="font-bold">{t('conflict_warning_title')}</h4>
                                 <p className="text-sm">{t('conflict_warning_body')}</p>
@@ -112,27 +113,32 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                                 </ul>
                             </div>
                         )}
+                        {dateError && (
+                            <div className="p-3 bg-red-100 border-l-4 border-red-400 text-red-800">
+                                <p className="text-sm font-bold">{dateError}</p>
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="title" className="block text-sm font-medium text-[#486966] mb-1">{t('title')}</label>
-                            <input type="text" id="title" name="title" value={localEvent.title || ''} onChange={handleChange} required className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                            <input type="text" id="title" name="title" value={localEvent.title || ''} onChange={(e) => handleFieldChange('title', e.target.value)} required className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div>
                                 <label htmlFor="start" className="block text-sm font-medium text-[#486966] mb-1">Start Time</label>
-                                <input type="datetime-local" id="start" name="start" value={formatDateForInput(localEvent.start)} onChange={handleChange} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                                <DateTimeField value={localEvent.start || null} onChange={(date) => handleDateChange('start', date)} />
                             </div>
                             <div>
                                 <label htmlFor="end" className="block text-sm font-medium text-[#486966] mb-1">End Time</label>
-                                <input type="datetime-local" id="end" name="end" value={formatDateForInput(localEvent.end)} onChange={handleChange} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                                <DateTimeField value={localEvent.end || null} onChange={(date) => handleDateChange('end', date)} minDate={localEvent.start || undefined} />
                             </div>
                         </div>
                          <div>
                             <label htmlFor="description" className="block text-sm font-medium text-[#486966] mb-1">{t('description')}</label>
-                            <textarea id="description" name="description" value={localEvent.description || ''} onChange={handleChange} rows={3} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                            <textarea id="description" name="description" value={localEvent.description || ''} onChange={(e) => handleFieldChange('description', e.target.value)} rows={3} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                         </div>
                         <div>
                            <label htmlFor="onlineLink" className="block text-sm font-medium text-[#486966] mb-1">{t('online_meeting_link')}</label>
-                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={handleChange} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={(e) => handleFieldChange('onlineLink', e.target.value)} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                         </div>
                         <div ref={workItemDropdownRef}>
                            <label htmlFor="linkedWorkItemId" className="block text-sm font-medium text-[#486966] mb-1">Link to Work Item</label>
@@ -172,7 +178,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                     </main>
                     <footer className="p-4 border-t bg-gray-50 flex justify-end gap-2">
                         <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">{t('cancel')}</button>
-                        <button type="submit" className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58]">{t('save')}</button>
+                        <button type="submit" disabled={!!dateError} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58] disabled:bg-gray-400">{t('save')}</button>
                     </footer>
                 </form>
             </div>

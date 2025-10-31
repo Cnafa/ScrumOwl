@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Sprint, Epic, EpicStatus } from '../types';
 import { useLocale } from '../context/LocaleContext';
 import { XMarkIcon } from './icons';
+import { DateField } from './DateField';
 
 interface SprintEditorModalProps {
     sprint: Partial<Sprint>;
@@ -10,10 +11,6 @@ interface SprintEditorModalProps {
     onSave: (sprint: Partial<Sprint>) => void;
     onClose: () => void;
 }
-
-const formatDateForInput = (dateStr: string): string => {
-    return dateStr.split('T')[0];
-};
 
 const EpicListItem: React.FC<{ epic: Epic, onAction: () => void, actionIcon: React.ReactNode, disabled?: boolean }> = ({ epic, onAction, actionIcon, disabled }) => {
     const { t } = useLocale();
@@ -48,6 +45,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
     const [search, setSearch] = useState('');
     const [showCompleted, setShowCompleted] = useState(false);
     const [nameError, setNameError] = useState('');
+    const [dateError, setDateError] = useState('');
 
     const { availableEpics, assignedEpics } = useMemo(() => {
         const lowercasedSearch = search.toLowerCase();
@@ -87,18 +85,36 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
         setLocalSprint(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setLocalSprint(prev => ({...prev, [name]: new Date(value).toISOString() }))
-    }
+    const handleDateChange = (field: 'startAt' | 'endAt', value: string | null) => {
+        setDateError('');
+        const newSprint = { ...localSprint, [field]: value };
+
+        // Validation logic
+        if (newSprint.startAt && newSprint.endAt) {
+            const start = new Date(newSprint.startAt);
+            const end = new Date(newSprint.endAt);
+            if (end <= start) {
+                setDateError('End date must be after the start date.');
+            }
+        }
+        setLocalSprint(newSprint);
+    };
 
     const handleSave = () => {
         if (!localSprint.name?.trim()) {
             setNameError("Sprint name cannot be empty.");
             return;
         }
+        if (dateError) return;
         onSave({ ...localSprint, epicIds: Array.from(assignedEpicIds) });
     };
+
+    const minEndDate = useMemo(() => {
+        if (!localSprint.startAt) return undefined;
+        const start = new Date(localSprint.startAt);
+        start.setDate(start.getDate() + 1); // must be at least one day after
+        return start;
+    }, [localSprint.startAt]);
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4" onClick={onClose}>
@@ -122,13 +138,15 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="startAt" className="block text-sm font-medium text-[#486966] mb-1">{t('startDate')}</label>
-                                <input type="date" id="startAt" name="startAt" value={formatDateForInput(localSprint.startAt!)} onChange={handleDateChange} required className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md" />
+                                <DateField value={localSprint.startAt!} onChange={(date) => handleDateChange('startAt', date)} />
                             </div>
                             <div>
                                 <label htmlFor="endAt" className="block text-sm font-medium text-[#486966] mb-1">{t('endDate')}</label>
-                                <input type="date" id="endAt" name="endAt" value={formatDateForInput(localSprint.endAt!)} onChange={handleDateChange} required className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md" />
+                                <DateField value={localSprint.endAt!} onChange={(date) => handleDateChange('endAt', date)} minDate={minEndDate} />
                             </div>
                         </div>
+                        {dateError && <p className="text-red-600 text-xs -mt-2 col-span-2">{dateError}</p>}
+
                         <div className="!mt-8">
                              <h3 className="text-lg font-semibold border-b pb-2 text-[#3B3936]">{t('assignEpics')}</h3>
                         </div>
@@ -169,7 +187,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                 </main>
                 <footer className="p-4 border-t bg-gray-50 flex justify-end gap-2">
                     <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">{t('cancel')}</button>
-                    <button type="button" onClick={handleSave} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58]">{t('save')}</button>
+                    <button type="button" onClick={handleSave} disabled={!!dateError || !!nameError} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58] disabled:bg-gray-400">{t('save')}</button>
                 </footer>
             </div>
         </div>
