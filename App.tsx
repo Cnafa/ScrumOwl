@@ -38,6 +38,7 @@ const App: React.FC = () => {
     
     // App Flow State
     const [viewState, setViewState] = useState<'LANDING' | 'APP'>('LANDING');
+    const prevIsAuthenticated = useRef(isAuthenticated);
 
     // ONB-01: Onboarding state management
     type OnboardingStatus = 'UNKNOWN' | 'NEEDS_ONBOARDING' | 'PENDING_APPROVAL' | 'COMPLETED';
@@ -97,6 +98,35 @@ const App: React.FC = () => {
             logout();
         }
     );
+
+    // US-44: Redirect to landing page on logout
+    useEffect(() => {
+        // Only trigger the redirect to landing if the user was previously authenticated and now is not (i.e., they logged out).
+        // This prevents an infinite loop when an unauthenticated user tries to navigate from the landing page to the app.
+        if (prevIsAuthenticated.current && !isAuthenticated && viewState === 'APP') {
+            setViewState('LANDING');
+        }
+
+        // Update the ref to the current authentication state for the next render.
+        prevIsAuthenticated.current = isAuthenticated;
+    }, [isAuthenticated, viewState]);
+
+    // US-44: Listen for logout events from other tabs
+    useEffect(() => {
+        const channel = new BroadcastChannel('auth');
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'LOGOUT') {
+                logout();
+            }
+        };
+        channel.addEventListener('message', handleMessage);
+
+        return () => {
+            channel.removeEventListener('message', handleMessage);
+            channel.close();
+        };
+    }, [logout]);
+
 
     // Check for dev route on mount
     useEffect(() => {
@@ -637,6 +667,7 @@ const App: React.FC = () => {
                 selectedSprint={selectedSprint}
                 setSelectedSprintId={setSelectedSprintId}
                 availableActiveSprints={availableActiveSprints}
+                onLogout={logout}
             />
             
             {selectedWorkItem && (

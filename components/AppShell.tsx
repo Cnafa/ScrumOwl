@@ -51,6 +51,7 @@ interface AppShellProps {
     selectedSprint: Sprint | null | undefined;
     setSelectedSprintId: (sprintId: string | null) => void;
     availableActiveSprints: Sprint[];
+    onLogout: () => void;
 }
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
@@ -340,7 +341,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     onMarkAllNotificationsRead={props.onMarkAllNotificationsRead}
                     onShowNotification={props.onShowNotification}
                     onOpenSettings={props.onOpenSettings}
-                    onLogout={() => { /* Implement logout logic */ }}
+                    onLogout={props.onLogout}
                     realtimeStatus={props.realtimeStatus}
                     onNewItem={() => props.onNewItem()}
                     availableSprints={props.availableActiveSprints}

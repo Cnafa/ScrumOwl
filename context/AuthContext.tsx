@@ -39,6 +39,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     setUser(null);
     setLastAuthTime(null);
+    // Broadcast to other tabs to log them out too.
+    try {
+        const channel = new BroadcastChannel('auth');
+        channel.postMessage({ type: 'LOGOUT' });
+        channel.close();
+    } catch (e) {
+        console.warn('BroadcastChannel API not supported, logout may not sync across tabs.', e);
+    }
   };
 
   const updateLastAuthTime = () => {
