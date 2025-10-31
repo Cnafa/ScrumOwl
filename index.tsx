@@ -5,24 +5,30 @@ import { AuthProvider } from './context/AuthContext';
 import { LocaleProvider } from './context/LocaleContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { BoardProvider } from './context/BoardContext';
-// FIX: Add NavigationProvider to wrap the App component
 import { NavigationProvider } from './context/NavigationContext';
+import { ErrorBoundary } from './components/system/ErrorBoundary';
+import { bootstrapApp } from './app/bootstrap';
+
+// Initialize crash logger and global hooks
+bootstrapApp();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <LocaleProvider>
-      <SettingsProvider>
-        <AuthProvider>
-          <BoardProvider>
-            <NavigationProvider>
-              <App />
-            </NavigationProvider>
-          </BoardProvider>
-        </AuthProvider>
-      </SettingsProvider>
-    </LocaleProvider>
+    <ErrorBoundary>
+      <LocaleProvider>
+        <SettingsProvider>
+          <AuthProvider>
+            <BoardProvider>
+              <NavigationProvider>
+                <App />
+              </NavigationProvider>
+            </BoardProvider>
+          </AuthProvider>
+        </SettingsProvider>
+      </LocaleProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

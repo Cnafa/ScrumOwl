@@ -17,6 +17,7 @@ import { useBoard } from './context/BoardContext';
 import { ToastManager } from './components/ToastManager';
 import { useLocale } from './context/LocaleContext';
 import { ALL_USERS } from './constants';
+import DevCrashInspector from './pages/DevCrashInspector';
 
 const App: React.FC = () => {
     const { isAuthenticated, user } = useAuth();
@@ -42,8 +43,18 @@ const App: React.FC = () => {
     const [highlightSection, setHighlightSection] = useState<string | undefined>(undefined);
     const coalescingRef = useRef<Map<string, { data: ToastNotification, timer: number }>>(new Map());
 
+    // Dev route state
+    const [isDevRoute, setIsDevRoute] = useState(false);
+
     // FIX: Move sprint selection state up from AppShell to App
     const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
+
+    // Check for dev route on mount
+    useEffect(() => {
+        if (window.location.pathname === '/dev/crash') {
+            setIsDevRoute(true);
+        }
+    }, []);
 
     // Fetch initial data
     useEffect(() => {
@@ -361,6 +372,10 @@ const App: React.FC = () => {
     const handleDismissToast = (toastId: string) => {
         setToastQueue(prev => prev.filter(t => t.id !== toastId));
     };
+
+    if (isDevRoute) {
+        return <DevCrashInspector />;
+    }
 
     if (!isAuthenticated) {
         return <LoginScreen />;
