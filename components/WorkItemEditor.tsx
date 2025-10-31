@@ -1,3 +1,4 @@
+
 // components/WorkItemEditor.tsx
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -208,6 +209,14 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
 
   const handleAddAssignee = (user: User) => {
     const currentAssignees = localWorkItem.assignees || [];
+
+    // Prevent adding if already assigned
+    if (currentAssignees.find(a => a.id === user.id)) {
+      setAssigneeSearch('');
+      setIsAssigneeDropdownOpen(false);
+      return;
+    }
+
     if (currentAssignees.length >= 10) return;
     const newAssignees = [...currentAssignees, user];
     const newPrimary = localWorkItem.assignee || user;

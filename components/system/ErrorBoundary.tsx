@@ -1,7 +1,6 @@
 import React, { ErrorInfo, ReactNode } from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 
-// FIX: Added explicit interfaces for props and state to ensure correct type inference within the class component.
 interface Props {
   children?: ReactNode;
 }
@@ -11,20 +10,21 @@ interface State {
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  public state: State = { hasError: false };
+  // FIX: Removed 'public' keyword for idiomatic React code style.
+  state: State = { hasError: false };
 
-  public static getDerivedStateFromError(_error: Error): State {
+  static getDerivedStateFromError(_error: Error): State {
     return { hasError: true };
   }
 
-  public componentDidCatch(error: Error, info: ErrorInfo) {
+  componentDidCatch(error: Error, info: ErrorInfo) {
     try {
       (window as any).__lastReactComponentStack = info?.componentStack;
     } catch {}
     logCrash(error);
   }
 
-  public render() {
+  render() {
     if (this.state.hasError) {
       return (
         <div
