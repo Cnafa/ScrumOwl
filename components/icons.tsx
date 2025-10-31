@@ -62,6 +62,15 @@ export const ScrumOwlLogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props)
     <svg viewBox="0 0 100 100" {...props}><circle cx="50" cy="50" r="45" fill="#486966"/><circle cx="50" cy="50" r="35" fill="#F0F4F4"/><circle cx="40" cy="45" r="10" fill="white"/><circle cx="60" cy="45" r="10" fill="white"/><circle cx="40" cy="45" r="5" fill="black"/><circle cx="60" cy="45" r="5" fill="black"/><path d="M 50 60 Q 50 70 55 65 L 45 65 Q 50 70 50 60" fill="#BD2A2E"/></svg>
 );
 
+// US-38: New icons for Manage Views modal
+export const MagnifyingGlassIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35" /></Icon>);
+export const StarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></Icon>);
+export const PencilIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></Icon>);
+export const DocumentDuplicateIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></Icon>);
+export const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></Icon>);
+export const LockClosedIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<Icon {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></Icon>);
+
+
 // Deprecated text icons for tiptap toolbar
 export const BoldIcon: React.FC<{className?: string}> = ({className}) => (<strong className={className}>B</strong>)
 export const ItalicIcon: React.FC<{className?: string}> = ({className}) => (<em className={className}>I</em>)
