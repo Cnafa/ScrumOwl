@@ -204,6 +204,7 @@ export enum EpicStatus {
     ON_HOLD = 'ON_HOLD',
     DONE = 'DONE',
     ARCHIVED = 'ARCHIVED',
+    DELETED = 'DELETED',
 }
 
 export interface Epic {
@@ -340,6 +341,7 @@ export enum SprintState {
     PLANNED = 'PLANNED',
     ACTIVE = 'ACTIVE',
     CLOSED = 'CLOSED',
+    DELETED = 'DELETED',
 }
 
 export interface Sprint {

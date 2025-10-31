@@ -9,12 +9,13 @@ interface SprintsViewProps {
     sprints: Sprint[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
     onDeleteSprint: (sprintId: string) => void;
+    onRestoreSprint: (sprintId: string) => void;
     epics: Epic[];
 }
 
-type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST';
+type Tab = 'ACTIVE' | 'UPCOMING' | 'PAST' | 'DELETED';
 
-export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint, onDeleteSprint, epics }) => {
+export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint, onDeleteSprint, onRestoreSprint, epics }) => {
     const { t } = useLocale();
     const { can } = useBoard();
     const [activeTab, setActiveTab] = useState<Tab>('ACTIVE');
@@ -22,7 +23,6 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
     const canManage = can('sprint.manage');
 
     const filteredSprints = useMemo(() => {
-        const now = new Date();
         switch (activeTab) {
             case 'ACTIVE':
                 return sprints.filter(s => s.state === SprintState.ACTIVE);
@@ -30,6 +30,8 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
                 return sprints.filter(s => s.state === SprintState.PLANNED).sort((a,b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
             case 'PAST':
                  return sprints.filter(s => s.state === SprintState.CLOSED).sort((a,b) => new Date(b.endAt).getTime() - new Date(a.endAt).getTime());
+            case 'DELETED':
+                 return sprints.filter(s => s.state === SprintState.DELETED).sort((a,b) => new Date(b.endAt).getTime() - new Date(a.endAt).getTime());
             default:
                 return [];
         }
@@ -55,9 +57,13 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
     };
 
     const handleDelete = (sprintId: string) => {
-        if (window.confirm('Are you sure you want to delete this sprint? Work items will be unassigned from it.')) {
+        if (window.confirm('Are you sure you want to delete this sprint? Work items will remain, but will be unassigned from it.')) {
             onDeleteSprint(sprintId);
         }
+    };
+
+    const handleRestore = (sprintId: string) => {
+        onRestoreSprint(sprintId);
     };
 
     const TabButton: React.FC<{ tab: Tab, label: string }> = ({ tab, label }) => (
@@ -85,6 +91,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
                     <TabButton tab="ACTIVE" label="Active" />
                     <TabButton tab="UPCOMING" label="Upcoming" />
                     <TabButton tab="PAST" label="Past" />
+                    <TabButton tab="DELETED" label="Deleted" />
                 </nav>
             </div>
             
@@ -101,7 +108,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                        {filteredSprints.map(sprint => (
-                           <tr key={sprint.id}>
+                           <tr key={sprint.id} className={sprint.state === SprintState.DELETED ? 'bg-red-50' : ''}>
                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{sprint.name}</td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                    {new Date(sprint.startAt).toLocaleDateString()} - {new Date(sprint.endAt).toLocaleDateString()}
@@ -109,14 +116,19 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, onSaveSprint,
                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{sprint.epicIds.length}</td>
                                <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-xs">{sprint.goal}</td>
                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium space-x-3">
-                                   {canManage && (
+                                   {canManage && activeTab !== 'DELETED' && (
                                        <button onClick={() => setEditingSprint(sprint)} className="text-indigo-600 hover:text-indigo-900">
                                            Edit
                                        </button>
                                    )}
-                                   {canManage && (sprint.state === SprintState.ACTIVE || sprint.state === SprintState.PLANNED) && (
+                                   {canManage && (activeTab === 'ACTIVE' || activeTab === 'UPCOMING') && (
                                        <button onClick={() => handleDelete(sprint.id)} className="text-red-600 hover:text-red-900">
                                            Delete
+                                       </button>
+                                   )}
+                                   {canManage && activeTab === 'DELETED' && (
+                                       <button onClick={() => handleRestore(sprint.id)} className="text-green-600 hover:text-green-900">
+                                            Restore
                                        </button>
                                    )}
                                </td>

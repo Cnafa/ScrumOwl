@@ -33,6 +33,7 @@ interface AppShellProps {
     sprints: Sprint[];
     onSaveSprint: (sprint: Partial<Sprint>) => void;
     onDeleteSprint: (sprintId: string) => void;
+    onRestoreSprint: (sprintId: string) => void;
     onSelectWorkItem: (workItem: WorkItem) => void;
     notifications: Notification[];
     onMarkAllNotificationsRead: () => void;
@@ -43,6 +44,7 @@ interface AppShellProps {
     onEditEpic: (epic: Epic) => void;
     onUpdateEpicStatus: (epicId: string, newStatus: EpicStatus) => void;
     onDeleteEpic: (epicId: string) => void;
+    onRestoreEpic: (epicId: string) => void;
     onEditWorkItem: (workItem: WorkItem) => void;
     realtimeStatus: any; // ConnectionStatus
     // FIX: Add sprint state props from App
@@ -315,6 +317,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         sprints={props.sprints}
                         onSaveSprint={props.onSaveSprint}
                         onDeleteSprint={props.onDeleteSprint}
+                        onRestoreSprint={props.onRestoreSprint}
                         epics={enrichedEpics}
                     />
                 );
@@ -329,6 +332,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         onSelectWorkItem={props.onSelectWorkItem}
                         onUpdateStatus={props.onUpdateEpicStatus}
                         onDeleteEpic={props.onDeleteEpic}
+                        onRestoreEpic={props.onRestoreEpic}
                     />
                  );
             case 'EVENTS':

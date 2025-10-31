@@ -341,12 +341,19 @@ const App: React.FC = () => {
     };
 
     const handleDeleteEpic = useCallback((epicId: string) => {
-        setEpics(prev => prev.filter(e => e.id !== epicId));
-        setWorkItems(prev => prev.map(item => 
-            item.epicId === epicId 
-                ? { ...item, epicId: undefined, epicInfo: undefined } 
+        // Soft-delete the epic
+        setEpics(prev => prev.map(e => e.id === epicId ? { ...e, status: EpicStatus.DELETED } : e));
+    
+        // Unassign work items from this epic
+        setWorkItems(prev => prev.map(item =>
+            item.epicId === epicId
+                ? { ...item, epicId: undefined, epicInfo: undefined }
                 : item
         ));
+    }, []);
+
+    const handleRestoreEpic = useCallback((epicId: string) => {
+        setEpics(prev => prev.map(e => e.id === epicId ? { ...e, status: EpicStatus.ACTIVE } : e));
     }, []);
 
     // FIX-07: Handle saving sprints and automatically assigning work items.
@@ -394,16 +401,32 @@ const App: React.FC = () => {
     };
 
     const handleDeleteSprint = useCallback((sprintId: string) => {
-        const sprintToDelete = sprints.find(s => s.id === sprintId);
-        if (!sprintToDelete) return;
+        let sprintNameToRemove = '';
+    
+        // Find the sprint name and update the sprints state using a functional update
+        setSprints(prevSprints => {
+            const sprintToDelete = prevSprints.find(s => s.id === sprintId);
+            if (sprintToDelete) {
+                sprintNameToRemove = sprintToDelete.name;
+            }
+            return prevSprints.map(s => 
+                s.id === sprintId ? { ...s, state: SprintState.DELETED } : s
+            );
+        });
+    
+        // Unassign work items from the deleted sprint if a name was found
+        if (sprintNameToRemove) {
+            setWorkItems(prevWorkItems => prevWorkItems.map(item =>
+                item.sprint === sprintNameToRemove
+                    ? { ...item, sprint: '' }
+                    : item
+            ));
+        }
+    }, []);
 
-        setSprints(prev => prev.filter(s => s.id !== sprintId));
-        setWorkItems(prev => prev.map(item => 
-            item.sprint === sprintToDelete.name 
-                ? { ...item, sprint: '' } 
-                : item
-        ));
-    }, [sprints]);
+    const handleRestoreSprint = useCallback((sprintId: string) => {
+        setSprints(prev => prev.map(s => s.id === sprintId ? { ...s, state: SprintState.PLANNED } : s));
+    }, []);
 
     const handleMarkAllNotificationsRead = () => {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -503,6 +526,7 @@ const App: React.FC = () => {
                 sprints={sprints}
                 onSaveSprint={handleSaveSprint}
                 onDeleteSprint={handleDeleteSprint}
+                onRestoreSprint={handleRestoreSprint}
                 onSelectWorkItem={handleSelectWorkItem}
                 notifications={notifications}
                 onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
@@ -513,6 +537,7 @@ const App: React.FC = () => {
                 onEditEpic={handleEditEpic}
                 onUpdateEpicStatus={handleUpdateEpicStatus}
                 onDeleteEpic={handleDeleteEpic}
+                onRestoreEpic={handleRestoreEpic}
                 onEditWorkItem={handleEditWorkItem}
                 realtimeStatus={connectionStatus}
                 selectedSprint={selectedSprint}
