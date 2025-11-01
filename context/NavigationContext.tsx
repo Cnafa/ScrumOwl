@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useMemo } from 'react';
+import { useLocale } from './LocaleContext';
 
-type View = 'KANBAN' | 'EPICS' | 'EVENTS' | 'REPORTS' | 'SETTINGS' | 'MEMBERS' | 'SPRINTS';
+type View = 'KANBAN' | 'ITEMS' | 'EPICS' | 'EVENTS' | 'REPORTS' | 'SETTINGS' | 'MEMBERS' | 'SPRINTS';
 
 interface NavigationContextType {
   currentView: View;
@@ -12,19 +13,21 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 
 export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<View>('KANBAN');
+  const { t } = useLocale();
 
   const breadcrumbs = useMemo(() => {
     switch (currentView) {
-        case 'KANBAN': return ['Sprint Board'];
-        case 'SPRINTS': return ['Sprints'];
-        case 'EPICS': return ['Epics'];
-        case 'EVENTS': return ['Events'];
-        case 'REPORTS': return ['Reports'];
-        case 'SETTINGS': return ['Settings'];
-        case 'MEMBERS': return ['Members & Roles'];
+        case 'KANBAN': return [t('sprintBoard')];
+        case 'ITEMS': return [t('itemsView')];
+        case 'SPRINTS': return [t('sprints')];
+        case 'EPICS': return [t('epics')];
+        case 'EVENTS': return [t('eventsView')];
+        case 'REPORTS': return [t('reportsDashboard')];
+        case 'SETTINGS': return [t('settings')];
+        case 'MEMBERS': return [t('membersAndRoles')];
         default: return [];
     }
-  }, [currentView]);
+  }, [currentView, t]);
 
   const value = useMemo(() => ({
     currentView,

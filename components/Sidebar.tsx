@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
 import { useLocale } from '../context/LocaleContext';
 import { SavedView } from '../types';
-import { ScrumOwlLogo, UsersIcon, LayoutKanbanIcon, RepeatIcon, MountainIcon, CalendarRangeIcon, BarChart3Icon, UsersRoundIcon, BookmarkCheckIcon, ChevronLeftIcon } from './icons';
+import { ScrumOwlLogo, UsersIcon, LayoutKanbanIcon, RepeatIcon, MountainIcon, CalendarRangeIcon, BarChart3Icon, UsersRoundIcon, BookmarkCheckIcon, ChevronLeftIcon, FileTextIcon } from './icons';
 import { useBoard } from '../context/BoardContext';
 import { BoardSwitcher } from './BoardSwitcher';
 
 interface NavItemProps {
-    view: 'KANBAN' | 'EPICS' | 'EVENTS' | 'REPORTS' | 'MEMBERS' | 'SPRINTS';
+    view: 'KANBAN' | 'ITEMS' | 'EPICS' | 'EVENTS' | 'REPORTS' | 'MEMBERS' | 'SPRINTS';
     label: string;
     icon: React.ReactNode;
     isCollapsed: boolean;
@@ -64,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, pinnedV
 
             <nav className="flex-1 p-2 space-y-1.5">
                 <NavItem view="KANBAN" label={t('sprintBoard')} isCollapsed={isCollapsed} icon={<LayoutKanbanIcon />}/>
+                <NavItem view="ITEMS" label={t('itemsView')} isCollapsed={isCollapsed} icon={<FileTextIcon />}/>
                 {can('sprint.manage') && (
                     <NavItem view="SPRINTS" label={t('sprints')} isCollapsed={isCollapsed} icon={<RepeatIcon />}/>
                 )}

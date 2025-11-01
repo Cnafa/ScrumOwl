@@ -5,6 +5,7 @@ import { Topbar } from './Topbar';
 import { FilterBar } from './FilterBar';
 import { KanbanBoard } from './KanbanBoard';
 import { EpicsView } from './EpicsView';
+import { ItemsView } from './ItemsView';
 import { MembersView } from './MembersView';
 import { EventsView } from './EventsView';
 import { SprintsView } from './SprintsView';
@@ -23,6 +24,7 @@ import { useLocale } from '../context/LocaleContext';
 
 interface AppShellProps {
     workItems: WorkItem[];
+    onItemUpdate: (item: WorkItem) => void;
     epics: Epic[];
     teams: Team[];
     setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
@@ -252,6 +254,14 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         onNewItem={props.onNewItem}
                     />
                 );
+            case 'ITEMS':
+                return <ItemsView 
+                    workItems={props.workItems} 
+                    epics={enrichedEpics}
+                    sprints={props.sprints}
+                    onItemUpdate={props.onItemUpdate}
+                    onSelectWorkItem={props.onSelectWorkItem}
+                />;
             case 'SPRINTS':
                 return (
                     <SprintsView 

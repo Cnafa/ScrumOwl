@@ -855,6 +855,7 @@ const App: React.FC = () => {
         <div className={`h-screen w-screen font-sans ${locale === 'fa-IR' ? 'font-vazir' : 'font-sans'}`}>
             <AppShell 
                 workItems={workItems}
+                onItemUpdate={handleItemUpdate}
                 epics={epics}
                 teams={teams}
                 setTeams={setTeams}
