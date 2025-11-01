@@ -70,7 +70,7 @@ const UserSelect: React.FC<{
         <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto text-start">
           <ul>
             {users.map(user => (
-              <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
+              <li key={user.id} onClick={() => { onChange(user.id); setIsOpen(false); }} className="px-3 py-2 text-sm text-slate-900 cursor-pointer hover:bg-gray-100 flex items-center gap-2">
                 <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
                 <span>{user.name}</span>
               </li>
@@ -360,7 +360,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                   <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto text-start">
                     <ul>
                       {availableAssignees.map(user => (
-                        <li key={user.id} onClick={() => handleAddAssignee(user)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2">
+                        <li key={user.id} onClick={() => handleAddAssignee(user)} className="px-3 py-2 text-sm text-slate-900 cursor-pointer hover:bg-gray-100 flex items-center gap-2">
                           <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
                           <span>{user.name}</span>
                         </li>

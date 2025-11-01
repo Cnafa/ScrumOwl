@@ -147,8 +147,8 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                                <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                                {isWorkItemDropdownOpen && (
                                    <ul className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                                       <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100">{t('eventEditor_noWorkItem')}</li>
-                                       {filteredWorkItems.map(item => <li key={item.id} onClick={() => handleSelectWorkItem(item)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"><span className="font-semibold">[{item.id}]</span> {item.title}</li>)}
+                                       <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm text-slate-900 cursor-pointer hover:bg-gray-100">{t('eventEditor_noWorkItem')}</li>
+                                       {filteredWorkItems.map(item => <li key={item.id} onClick={() => handleSelectWorkItem(item)} className="px-3 py-2 text-sm text-slate-900 cursor-pointer hover:bg-gray-100"><span className="font-semibold">[{item.id}]</span> {item.title}</li>)}
                                    </ul>
                                )}
                            </div>
@@ -162,13 +162,13 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                                  </div>
                                  <div className="p-2 max-h-40 overflow-y-auto">
                                      {attendeeTab === 'users' && ALL_USERS.map(user => (
-                                         <label key={user.id} className="flex items-center gap-2 p-1">
+                                         <label key={user.id} className="flex items-center gap-2 p-1 text-slate-900">
                                              <input type="checkbox" checked={selectedUserIds.has(user.id)} onChange={() => setSelectedUserIds(prev => { const n = new Set(prev); n.has(user.id) ? n.delete(user.id) : n.add(user.id); return n; })} />
                                              {user.name}
                                          </label>
                                      ))}
                                      {attendeeTab === 'teams' && teams.map(team => (
-                                         <label key={team.id} className="flex items-center gap-2 p-1">
+                                         <label key={team.id} className="flex items-center gap-2 p-1 text-slate-900">
                                              <input type="checkbox" checked={selectedTeamIds.has(team.id)} onChange={() => setSelectedTeamIds(prev => { const n = new Set(prev); n.has(team.id) ? n.delete(team.id) : n.add(team.id); return n; })} />
                                              {team.name} ({team.members.length})
                                          </label>

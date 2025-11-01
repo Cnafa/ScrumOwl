@@ -245,9 +245,7 @@ const App: React.FC = () => {
 
     }, [user, t]);
     
-    // FIX: Destructure connectionStatus from the useRealtime hook.
-    // BUG-FIX: Disabled mock real-time generator to prevent fake notifications.
-    const { connectionStatus } = useRealtime(false, workItems, user, handleRealtimeMessage);
+    const { connectionStatus } = useRealtime(settings.enableRealtime, workItems, user, handleRealtimeMessage);
 
     // Automatically update sprint states based on dates
     useEffect(() => {

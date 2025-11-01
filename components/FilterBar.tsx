@@ -81,7 +81,7 @@ const MultiSelectDropdown: React.FC<{
                 {searchable && <div className="p-1 border-b"><input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={searchPlaceholder || t('search')} className="w-full px-2 py-1 border rounded-md text-xs"/></div>}
                 <ul className="max-h-60 overflow-auto p-1">
                     {filteredItems.map(item => (
-                        <li key={item.id} className="px-2 py-1 text-xs cursor-pointer hover:bg-gray-100 rounded-md flex items-center gap-2">
+                        <li key={item.id} className="px-2 py-1 text-xs text-slate-900 cursor-pointer hover:bg-gray-100 rounded-md flex items-center gap-2">
                             <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => handleToggle(item.id)} />
                             {item.content}
                         </li>

@@ -53,10 +53,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
     logCrash(error);
   }
 
-  // FIX: To resolve "Property 'props' does not exist on type 'ErrorBoundary'", the render
-  // method is converted to an arrow function. This ensures 'this' is correctly bound, which
-  // can fix type resolution issues with some build tool configurations.
-  render = () => {
+  // FIX: Converted `render` from an arrow function to a standard class method.
+  // The arrow function syntax, while a valid way to bind `this`, was causing a
+  // type error with `this.props`. Using a standard method declaration relies on
+  // React's built-in handling of `this` for lifecycle methods, which is more
+  // reliable across different build tool configurations.
+  render() {
     if (this.state.hasError) {
       return <ErrorFallback />;
     }
