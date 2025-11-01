@@ -9,8 +9,8 @@ import { BugPoolSection } from './BugPoolSection';
 
 interface KanbanBoardProps {
   workItems: WorkItem[];
-  setWorkItems: React.Dispatch<React.SetStateAction<WorkItem[]>>;
   onSelectWorkItem: (workItem: WorkItem) => void;
+  onItemStatusChange: (itemId: string, newStatus: Status) => void;
   groupBy: 'status' | 'epic';
   epics: Epic[];
   collapsedEpics: Set<string>;
@@ -38,8 +38,8 @@ const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ 
     workItems, 
-    setWorkItems, 
-    onSelectWorkItem, 
+    onSelectWorkItem,
+    onItemStatusChange, 
     groupBy, 
     epics, 
     collapsedEpics, 
@@ -149,11 +149,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
     const allowedTransitions = WORKFLOW_RULES[item.status];
     if (allowedTransitions && allowedTransitions.includes(newStatus)) {
-        setWorkItems((prevItems) =>
-            prevItems.map((i) =>
-                i.id === workItemId ? { ...i, status: newStatus, isUpdated: true } : { ...i, isUpdated: false }
-            )
-        );
+        onItemStatusChange(workItemId, newStatus);
     } else if (item.status !== newStatus) {
         console.warn("Invalid status transition attempted.");
     }

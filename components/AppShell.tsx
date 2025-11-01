@@ -23,7 +23,6 @@ import { useLocale } from '../context/LocaleContext';
 
 interface AppShellProps {
     workItems: WorkItem[];
-    setWorkItems: React.Dispatch<React.SetStateAction<WorkItem[]>>;
     epics: Epic[];
     teams: Team[];
     setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
@@ -43,6 +42,7 @@ interface AppShellProps {
     onDeleteSprint: (sprint: Sprint) => void; // EP-DEL-001
     onRestoreSprint: (sprintId: string) => void; // EP-DEL-001
     onEditWorkItem: (workItem: WorkItem) => void;
+    onItemStatusChange: (itemId: string, newStatus: Status) => void;
     realtimeStatus: any; // ConnectionStatus
     // FIX: Add sprint state props from App
     selectedSprint: Sprint | null | undefined;
@@ -241,7 +241,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 return (
                     <KanbanBoard
                         workItems={filteredWorkItems}
-                        setWorkItems={props.setWorkItems}
+                        onItemStatusChange={props.onItemStatusChange}
                         onSelectWorkItem={props.onSelectWorkItem}
                         groupBy={groupBy}
                         epics={enrichedEpics}

@@ -14,6 +14,7 @@ interface WorkItemDetailModalProps {
   onClose: () => void;
   onEdit: (workItem: WorkItem) => void;
   onItemUpdate: (item: WorkItem) => void;
+  onNewComment: (commentText: string) => void;
   highlightSection?: string;
 }
 
@@ -42,7 +43,7 @@ const UserDisplay: React.FC<{ user?: User }> = ({ user }) => {
     );
 };
 
-export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, sprints, onClose, onEdit, onItemUpdate, highlightSection }) => {
+export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, sprints, onClose, onEdit, onItemUpdate, onNewComment, highlightSection }) => {
   const { t } = useLocale();
   const { user } = useAuth();
   const { can } = useBoard();
@@ -91,6 +92,7 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
         }
       };
       setActivities(prev => [newComment, ...prev]);
+      onNewComment(comment.trim());
       setComment('');
     }
   };

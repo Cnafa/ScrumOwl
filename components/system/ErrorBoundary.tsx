@@ -1,5 +1,4 @@
-
-
+// components/system/ErrorBoundary.tsx
 
 import React, { ErrorInfo, ReactNode } from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
@@ -56,7 +55,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     logCrash(error);
   }
 
-  // FIX: The 'render' method was defined as an arrow function, which can cause 'this' context issues. It has been reverted to a standard class method, which React binds correctly.
+  // FIX: Reverted the `render` method to a standard class method. The previous implementation as an arrow function property is unconventional for lifecycle methods and was likely causing a type inference issue with `this`, resulting in the error.
   render() {
     if (this.state.hasError) {
       return <ErrorFallback />;

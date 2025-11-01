@@ -1,12 +1,10 @@
-
-
 // FIX: Create the App component which was missing.
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from './context/AuthContext';
 import LoginScreen from './components/LoginScreen';
 import { AppShell } from './components/AppShell';
 // FIX: Import Status, Priority, and WorkItemType enums to fix type errors.
-import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState, Board, JoinRequest, InviteCode, CalendarEvent, SavedView, ViewVisibility } from './types';
+import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState, Board, JoinRequest, InviteCode, CalendarEvent, SavedView, ViewVisibility, ItemUpdateEventType, User } from './types';
 import { WorkItemDetailModal } from './components/WorkItemDetailModal';
 import { WorkItemEditor } from './components/WorkItemEditor';
 import { UserSettingsModal } from './components/UserSettingsModal';
@@ -33,6 +31,7 @@ import * as calendarService from './services/calendarService';
 import { EventEditorModal } from './components/EventEditorModal';
 import { EventViewModal } from './components/EventViewModal';
 import { load, save } from './services/persistence';
+import { isEqual } from 'lodash-es';
 
 
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
@@ -253,7 +252,7 @@ const App: React.FC = () => {
         if (!user) return;
         
         // Relevance Guard
-        const isRelevant = user.id === event.item.createdBy || user.id === event.item.assigneeId || event.watchers.includes(user.id);
+        const isRelevant = user.id === event.item.createdBy || user.id === (event.item.assigneeId) || event.watchers.includes(user.id);
         if (!isRelevant) return;
 
         const { item, change } = event;
@@ -303,6 +302,54 @@ const App: React.FC = () => {
     }, [user, t]);
     
     const { connectionStatus } = useRealtime(settings.enableRealtime, workItems, user, handleRealtimeMessage);
+
+    const dispatchUpdateNotification = useCallback((change: { field: string, from: any, to: any }, item: WorkItem) => {
+        if (!user) return;
+
+        // In a real app, the actor would be the current user, and the notification
+        // would be sent to other relevant users via a backend. For this demo,
+        // we simulate an event coming from another user to show the toast.
+        const mockActor = ALL_USERS.find(u => u.id !== user.id) || user;
+
+        let eventType: ItemUpdateEventType;
+        const changePayload: any = { field: change.field, from: change.from, to: change.to };
+
+        switch (change.field) {
+            case 'status':
+                eventType = 'item.status_changed';
+                break;
+            case 'assignee':
+                eventType = 'item.assignee_changed';
+                changePayload.from = (change.from as User)?.name;
+                changePayload.to = (change.to as User)?.name;
+                break;
+            case 'dueDate':
+                eventType = 'item.due_changed';
+                break;
+            case 'comment':
+                eventType = 'item.comment_added';
+                break;
+            default:
+                eventType = 'item.field_updated';
+        }
+
+        const event: ItemUpdateEvent = {
+            type: eventType,
+            item: {
+                id: item.id,
+                boardId: item.boardId,
+                title: item.title,
+                assigneeId: item.assignee?.id || '',
+                createdBy: item.reporter.id,
+            },
+            change: changePayload,
+            watchers: item.watchers || [],
+            at: new Date().toISOString(),
+            actor: mockActor,
+        };
+        
+        handleRealtimeMessage(event);
+    }, [user, handleRealtimeMessage]);
 
     // Automatically update sprint states based on dates
     useEffect(() => {
@@ -467,6 +514,18 @@ const App: React.FC = () => {
             } as WorkItem;
             setWorkItems(prev => [newWorkItem, ...prev]);
         } else {
+            const originalItem = workItems.find(item => item.id === itemToSave.id);
+            if (originalItem) {
+                if (itemToSave.status && itemToSave.status !== originalItem.status) {
+                    dispatchUpdateNotification({ field: 'status', from: originalItem.status, to: itemToSave.status }, itemToSave as WorkItem);
+                }
+                if (itemToSave.assignee && itemToSave.assignee.id !== originalItem.assignee?.id) {
+                     dispatchUpdateNotification({ field: 'assignee', from: originalItem.assignee, to: itemToSave.assignee }, itemToSave as WorkItem);
+                }
+                if (itemToSave.dueDate !== originalItem.dueDate) {
+                     dispatchUpdateNotification({ field: 'dueDate', from: originalItem.dueDate, to: itemToSave.dueDate }, itemToSave as WorkItem);
+                }
+            }
             setWorkItems(prev => prev.map(item => item.id === itemWithTeamInfo.id ? { ...item, ...itemWithTeamInfo, updatedAt: new Date().toISOString() } as WorkItem : item));
         }
         setEditingWorkItem(null);
@@ -474,6 +533,15 @@ const App: React.FC = () => {
     };
 
     const handleItemUpdate = (updatedItem: WorkItem) => {
+        const originalItem = workItems.find(item => item.id === updatedItem.id);
+        if (originalItem && !isEqual(originalItem.checklist, updatedItem.checklist)) {
+            const completedBefore = originalItem.checklist.filter(i => i.isCompleted).length;
+            const completedAfter = updatedItem.checklist.filter(i => i.isCompleted).length;
+            if (completedAfter !== completedBefore) {
+                dispatchUpdateNotification({ field: 'checklist', from: `${completedBefore}/${originalItem.checklist.length}`, to: `${completedAfter}/${updatedItem.checklist.length}` }, updatedItem);
+            }
+        }
+
         const updatedItemWithTimestamp = { ...updatedItem, updatedAt: new Date().toISOString() };
         setWorkItems(prev => prev.map(item => item.id === updatedItemWithTimestamp.id ? updatedItemWithTimestamp : item));
         if (selectedWorkItem && selectedWorkItem.id === updatedItem.id) {
@@ -481,6 +549,28 @@ const App: React.FC = () => {
         }
     };
     
+    const handleItemStatusChange = (itemId: string, newStatus: Status) => {
+        const originalItem = workItems.find(i => i.id === itemId);
+        if (originalItem && originalItem.status !== newStatus) {
+            const updatedItem = { ...originalItem, status: newStatus, isUpdated: true, updatedAt: new Date().toISOString() };
+            
+            dispatchUpdateNotification({ field: 'status', from: originalItem.status, to: newStatus }, updatedItem);
+            
+            setWorkItems(prevItems =>
+                prevItems.map(i =>
+                    i.id === itemId ? updatedItem : { ...i, isUpdated: false }
+                )
+            );
+        }
+    };
+
+    const handleNewComment = (itemId: string, commentText: string) => {
+        const item = workItems.find(i => i.id === itemId);
+        if (item) {
+            dispatchUpdateNotification({ field: 'comment', from: null, to: commentText }, item);
+        }
+    };
+
     const handleNewEpic = () => {
         if (!activeBoard) return;
         setEditingEpic({ boardId: activeBoard.id, impact: 5, confidence: 5, ease: 5, attachments: [], status: EpicStatus.ACTIVE });
@@ -765,7 +855,6 @@ const App: React.FC = () => {
         <div className={`h-screen w-screen font-sans ${locale === 'fa-IR' ? 'font-vazir' : 'font-sans'}`}>
             <AppShell 
                 workItems={workItems}
-                setWorkItems={setWorkItems}
                 epics={epics}
                 teams={teams}
                 setTeams={setTeams}
@@ -785,6 +874,7 @@ const App: React.FC = () => {
                 onDeleteSprint={(sprint) => setDeletingSprint(sprint)}
                 onRestoreSprint={handleRestoreSprint}
                 onEditWorkItem={handleEditWorkItem}
+                onItemStatusChange={handleItemStatusChange}
                 realtimeStatus={connectionStatus}
                 selectedSprint={selectedSprint}
                 setSelectedSprintId={setSelectedSprintId}
@@ -805,6 +895,7 @@ const App: React.FC = () => {
                     onClose={() => setSelectedWorkItem(null)} 
                     onEdit={handleEditWorkItem}
                     onItemUpdate={handleItemUpdate}
+                    onNewComment={(commentText) => handleNewComment(selectedWorkItem.id, commentText)}
                     highlightSection={highlightSection}
                 />
             )}
