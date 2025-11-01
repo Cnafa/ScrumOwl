@@ -21,6 +21,7 @@ interface KanbanBoardProps {
 }
 
 const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed: boolean, itemsCount: number }> = ({ epic, onToggle, isCollapsed, itemsCount }) => {
+    const { t } = useLocale();
     return (
         <button 
             onClick={onToggle} 
@@ -28,7 +29,7 @@ const EpicGroupHeader: React.FC<{ epic?: Epic; onToggle: () => void; isCollapsed
         >
              <ChevronRightIcon className={`h-4 w-4 transition-transform text-slate-500 rtl:scale-x-[-1] ${isCollapsed ? '' : 'rotate-90'}`} />
             {epic ? <div className="w-2 h-5 rounded-full" style={{backgroundColor: epic.color}}></div> : <MountainIcon className="w-5 h-5 text-slate-500" />}
-            <span className="font-semibold text-slate-800 text-sm">{epic ? epic.name : 'Items without Epic'}</span>
+            <span className="font-semibold text-slate-800 text-sm">{epic ? epic.name : t('kanban_itemsWithoutEpic')}</span>
             <span className="text-xs font-normal text-slate-500">({itemsCount})</span>
         </button>
     );
@@ -106,7 +107,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
              <div className="flex-1 flex items-center justify-center">
                 <div className="text-center p-8 bg-white/60 rounded-lg">
                     <h3 className="text-base font-semibold text-slate-800">{t('no_active_sprint_title')}</h3>
-                    <p className="mt-2 text-sm text-slate-600">Select an active sprint to view its items.</p>
+                    <p className="mt-2 text-sm text-slate-600">{t('kanban_noActiveSprint_selectPrompt')}</p>
                     <button onClick={() => setCurrentView('SPRINTS')} className="mt-2 text-sm text-primary hover:underline">
                         {t('no_active_sprint_cta')}
                     </button>
@@ -120,8 +121,8 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         return (
             <div className="flex-1 flex items-center justify-center">
                 <div className="text-center p-8 bg-white/60 rounded-lg">
-                    <h3 className="text-base font-semibold text-slate-800">This sprint is empty</h3>
-                    <p className="mt-2 text-sm text-slate-600">Get started by creating a new work item.</p>
+                    <h3 className="text-base font-semibold text-slate-800">{t('kanban_emptySprint_title')}</h3>
+                    <p className="mt-2 text-sm text-slate-600">{t('kanban_emptySprint_body')}</p>
                     <button onClick={() => onNewItem()} className="mt-4 py-2 px-4 text-sm font-medium rounded-md text-white bg-[#486966] hover:bg-[#3a5a58]">
                         {t('newItem')}
                     </button>

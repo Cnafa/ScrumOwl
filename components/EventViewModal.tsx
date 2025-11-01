@@ -76,7 +76,7 @@ export const EventViewModal: React.FC<EventViewModalProps> = ({ event, workItems
                             <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                         </a>
                     )}
-                    <DetailField label="Time">
+                    <DetailField label={t('eventView_time')}>
                         {formattedDate(event.start, event.end)}
                     </DetailField>
                     
@@ -87,7 +87,7 @@ export const EventViewModal: React.FC<EventViewModalProps> = ({ event, workItems
                     )}
 
                     {linkedWorkItem && (
-                        <DetailField label="Linked Work Item">
+                        <DetailField label={t('eventView_linkedItem')}>
                             <button 
                                 onClick={() => onOpenWorkItem(linkedWorkItem.id)}
                                 className="inline-flex items-center gap-1.5 text-sm text-[#486966] hover:underline"
@@ -105,7 +105,7 @@ export const EventViewModal: React.FC<EventViewModalProps> = ({ event, workItems
                         </div>
                     </DetailField>
 
-                     <DetailField label="Created By">
+                     <DetailField label={t('eventView_createdBy')}>
                         <UserChip user={event.createdBy} />
                     </DetailField>
                 </main>

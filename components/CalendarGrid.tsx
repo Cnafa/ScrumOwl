@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { CalendarEvent } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon } from './icons';
+import { useLocale } from '../context/LocaleContext';
 
 interface CalendarGridProps {
     events: CalendarEvent[];
@@ -9,6 +10,7 @@ interface CalendarGridProps {
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onSelectEvent }) => {
+    const { locale, t } = useLocale();
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const firstDayOfMonth = useMemo(() => new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), [currentDate]);
@@ -41,13 +43,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onSelectEven
         setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
     };
 
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDays = useMemo(() => {
+        const format = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+        const days = [];
+        // Start with a Sunday
+        const date = new Date(2023, 0, 1);
+        for (let i = 0; i < 7; i++) {
+            days.push(format.format(date));
+            date.setDate(date.getDate() + 1);
+        }
+        return days;
+    }, [locale]);
 
     return (
         <div className="h-full flex flex-col bg-white">
             <header className="flex items-center justify-between p-2 border-b">
                 <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100"><ChevronLeftIcon className="w-5 h-5"/></button>
-                <h2 className="font-semibold">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
+                <h2 className="font-semibold">{currentDate.toLocaleString(locale, { month: 'long', year: 'numeric' })}</h2>
                 <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100"><ChevronRightIcon className="w-5 h-5"/></button>
             </header>
 
@@ -77,7 +89,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({ events, onSelectEven
                                     </button>
                                 ))}
                                 {dayEvents.length > 3 && (
-                                    <div className="text-xs text-center text-gray-500 pt-1">+{dayEvents.length - 3} more</div>
+                                    <div className="text-xs text-center text-gray-500 pt-1">{t('calendar_moreEvents').replace('{count}', (dayEvents.length - 3).toString())}</div>
                                 )}
                             </div>
                         </div>

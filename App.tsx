@@ -91,8 +91,8 @@ const App: React.FC = () => {
             setToastQueue(prev => [{
                 id: `toast-idle-warning-${Date.now()}`,
                 itemId: '',
-                title: 'Session Expiring Soon',
-                changes: ['You will be logged out in 1 hour due to inactivity.'],
+                title: t('session_warning_title'),
+                changes: [t('session_warning_body')],
             }, ...prev]);
         },
         () => { // onIdleLogout
@@ -551,125 +551,108 @@ const App: React.FC = () => {
         // 1. Find newly added epics
         let newlyAddedEpicIds: string[] = [];
         const originalSprint = sprintToSave.id ? sprints.find(s => s.id === sprintToSave.id) : null;
-
-        if (originalSprint) { // Existing sprint
-            const originalEpicIds = new Set(originalSprint.epicIds);
-            newlyAddedEpicIds = (sprintToSave.epicIds || []).filter(id => !originalEpicIds.has(id));
-        } else { // New sprint
-            newlyAddedEpicIds = sprintToSave.epicIds || [];
-        }
-
-        // 2. Business Rule: If an epic is assigned to a sprint, automatically assign its items.
-        if (newlyAddedEpicIds.length > 0) {
-            setWorkItems(prevWorkItems =>
-                prevWorkItems.map(item =>
-                    item.epicId && newlyAddedEpicIds.includes(item.epicId)
-                        ? { ...item, sprint: sprintName, sprintId: sprintId }
-                        : item
-                )
-            );
+        if (sprintToSave.epicIds) {
+            const originalEpicIds = new Set(originalSprint?.epicIds || []);
+            newlyAddedEpicIds = sprintToSave.epicIds.filter(id => !originalEpicIds.has(id));
         }
         
-        // 3. Update sprints state
-        if (sprintToSave.id) { // Update existing
-            setSprints(prev => prev.map(s => s.id === sprintToSave.id ? { ...s, ...sprintToSave } as Sprint : s));
-        } else { // Create new
-            const newSprint: Sprint = {
-                id: sprintId,
-                boardId: activeBoard!.id,
-                number: sprints.reduce((max, s) => Math.max(s.number, max), 0) + 1,
-                ...sprintToSave
-            } as Sprint;
-            setSprints(prev => [newSprint, ...prev]);
+        // 2. Prepare the final sprint object
+        const finalSprint: Sprint = {
+            boardId: activeBoard!.id,
+            number: isNew ? sprints.length + 1 : (originalSprint?.number || sprints.length + 1),
+            ...sprintToSave,
+            id: sprintId,
+            name: sprintName,
+        } as Sprint;
+
+        // 3. Update work items if there are newly added epics
+        if (newlyAddedEpicIds.length > 0) {
+            setWorkItems(prevItems =>
+                prevItems.map(item => {
+                    const isInNewEpic = item.epicId && newlyAddedEpicIds.includes(item.epicId);
+                    const isUnassigned = !item.sprintId;
+                    const isNotDone = item.status !== Status.DONE;
+
+                    if (isInNewEpic && isUnassigned && isNotDone) {
+                        return { ...item, sprintId: finalSprint.id, sprint: finalSprint.name };
+                    }
+                    return item;
+                })
+            );
+        }
+
+        // 4. Save the sprint itself
+        if (isNew) {
+            setSprints(prev => [...prev, finalSprint]);
+        } else {
+            setSprints(prev => prev.map(s => s.id === finalSprint.id ? finalSprint : s));
         }
     };
-
-    const handleMarkAllNotificationsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    
+    const onMarkAllNotificationsRead = () => {
+        setNotifications(prev => prev.map(n => ({...n, isRead: true})));
     };
 
-    // US-42: Refactored notification handler to open VIEW modals instead of EDIT modals.
-    const handleShowNotification = (notification: Notification) => {
-        const { target } = notification;
-        if (!target) return;
-
-        // Close any open modals
-        setSelectedWorkItem(null);
-        setEditingWorkItem(null);
-        setEditingEpic(null);
-        setIsReadOnlyView(false);
-
-        // Set highlight for the modal that is about to open
-        setHighlightSection(target.section); 
-
-        if (target.entity === 'work_item') {
-            const item = workItems.find(w => w.id === target.id);
+    const onShowNotification = (notification: Notification) => {
+        if (notification.target?.entity === 'work_item' && notification.target.id) {
+            const item = workItems.find(w => w.id === notification.target!.id);
             if (item) {
-                setSelectedWorkItem(item); // This opens WorkItemDetailModal (the VIEW modal)
+                handleOpenItemForView(item.id, notification.target.section);
             } else {
-                setToastQueue(prev => [{ id: `toast-notfound-${Date.now()}`, itemId: '', title: 'Item not found', changes: [`The requested item ${target.id} could not be found.`], highlightSection: undefined }, ...prev]);
+                 setToastQueue(prev => [{
+                    id: `toast-not-found-${Date.now()}`,
+                    itemId: '',
+                    title: t('item_not_found_title'),
+                    changes: [t('item_not_found_body').replace('{itemId}', notification.target!.id)],
+                }, ...prev]);
             }
-        } else if (target.entity === 'epic') {
-             const epic = epics.find(e => e.id === target.id);
-             if (epic) {
-                 setIsReadOnlyView(true); // Trigger read-only mode
-                 setEditingEpic(epic); // This opens EpicEditor in view mode
-                 setIsNewEpic(false); 
-             } else {
-                setToastQueue(prev => [{ id: `toast-notfound-${Date.now()}`, itemId: '', title: 'Epic not found', changes: [`The requested epic ${target.id} could not be found.`], highlightSection: undefined }, ...prev]);
-             }
         }
+        setNotifications(prev => prev.map(n => n.id === notification.id ? {...n, isRead: true} : n));
     };
-    
-    const { isIdle, handleContinue, handleSave, handleIgnore } = useIdleReminder(
-        !!editingWorkItem,
-        () => {
-            if (editingWorkItem) handleSaveWorkItem(editingWorkItem);
-        },
-        settings.enableFinishDraftReminder,
-    );
-    
-    const handleDismissToast = (toastId: string) => {
-        setToastQueue(prev => prev.filter(t => t.id !== toastId));
-    };
-
-    // ONB-02: Onboarding action handlers
-    const handleCreateBoard = (boardName: string) => {
-        const newBoard = createBoard(boardName);
-        setActiveBoard(newBoard.id);
-        setOnboardingStatus('COMPLETED');
-        setOnboardingModal(null);
-    };
-
-    const handleJoinRequest = () => {
-        setOnboardingStatus('PENDING_APPROVAL');
-        setOnboardingModal(null);
-    };
-    
-    // --- Render Logic ---
-
-    if (isLegalPage) {
-        return <LegalPage />;
-    }
-
-    if (viewState === 'LANDING') {
-        return <LandingPage onStart={() => setViewState('APP')} />;
-    }
 
     if (isDevRoute) {
         return <DevCrashInspector />;
     }
 
+    if (isLegalPage) {
+        return <LegalPage />;
+    }
+
     if (!isAuthenticated) {
+        if (viewState === 'LANDING') {
+            return <LandingPage onStart={() => setViewState('APP')} />;
+        }
         return <LoginScreen />;
     }
-    
+
     if (onboardingStatus === 'NEEDS_ONBOARDING') {
         return (
             <>
-                <OnboardingScreen onShowCreate={() => setOnboardingModal('CREATE_BOARD')} onShowJoin={() => setOnboardingModal('JOIN_BOARD')} />
-                {onboardingModal === 'CREATE_BOARD' && <CreateBoardModal onClose={() => setOnboardingModal(null)} onCreate={handleCreateBoard} />}
-                {onboardingModal === 'JOIN_BOARD' && <JoinBoardModal onClose={() => setOnboardingModal(null)} onJoinRequest={handleJoinRequest} />}
+                <OnboardingScreen 
+                    onShowCreate={() => setOnboardingModal('CREATE_BOARD')}
+                    onShowJoin={() => setOnboardingModal('JOIN_BOARD')}
+                />
+                {onboardingModal === 'CREATE_BOARD' && (
+                    <CreateBoardModal 
+                        onClose={() => setOnboardingModal(null)}
+                        onCreate={(boardName) => {
+                            const newBoard = createBoard(boardName);
+                            setActiveBoard(newBoard.id);
+                            setOnboardingStatus('COMPLETED');
+                            setOnboardingModal(null);
+                        }}
+                    />
+                )}
+                 {onboardingModal === 'JOIN_BOARD' && (
+                    <JoinBoardModal
+                        onClose={() => setOnboardingModal(null)}
+                        onJoinRequest={(code) => {
+                            console.log('TELEMETRY: user.join_request', { code }); // Simulate telemetry
+                            setOnboardingStatus('PENDING_APPROVAL');
+                            setOnboardingModal(null);
+                        }}
+                    />
+                )}
             </>
         );
     }
@@ -678,22 +661,13 @@ const App: React.FC = () => {
         return <PendingApprovalScreen />;
     }
 
-    if (onboardingStatus === 'COMPLETED' && !activeBoard) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <p>Loading board...</p>
-            </div>
-        );
-    }
-
-    if (!activeBoard) {
-        // This case should ideally not be hit if logic is correct, but it's a safe fallback.
-         return <div className="flex items-center justify-center h-screen"><p>No active board. Please select a board.</p></div>
+    if (onboardingStatus === 'UNKNOWN' || !activeBoard) {
+        return <div className="flex h-screen w-screen items-center justify-center">Loading...</div>;
     }
 
     return (
-        <div className={`h-screen w-screen bg-[#F0F4F4] text-[#3B3936] flex flex-col overflow-hidden ${locale === 'fa-IR' ? 'font-vazir' : 'font-sans'}`}>
-            <AppShell
+        <div className={`h-screen w-screen font-sans ${locale === 'fa-IR' ? 'font-vazir' : 'font-sans'}`}>
+            <AppShell 
                 workItems={workItems}
                 setWorkItems={setWorkItems}
                 epics={epics}
@@ -703,8 +677,8 @@ const App: React.FC = () => {
                 onSaveSprint={handleSaveSprint}
                 onSelectWorkItem={handleSelectWorkItem}
                 notifications={notifications}
-                onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
-                onShowNotification={handleShowNotification}
+                onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+                onShowNotification={onShowNotification}
                 onOpenSettings={() => setIsSettingsModalOpen(true)}
                 onNewItem={handleNewItem}
                 onNewEpic={handleNewEpic}
@@ -723,9 +697,9 @@ const App: React.FC = () => {
             />
             
             {selectedWorkItem && (
-                <WorkItemDetailModal
-                    workItem={selectedWorkItem}
-                    onClose={() => setSelectedWorkItem(null)}
+                <WorkItemDetailModal 
+                    workItem={selectedWorkItem} 
+                    onClose={() => setSelectedWorkItem(null)} 
                     onEdit={handleEditWorkItem}
                     onItemUpdate={handleItemUpdate}
                     highlightSection={highlightSection}
@@ -733,40 +707,43 @@ const App: React.FC = () => {
             )}
             
             {editingWorkItem && (
-                <WorkItemEditor
-                    workItem={editingWorkItem}
+                <WorkItemEditor 
+                    workItem={editingWorkItem} 
+                    onSave={handleSaveWorkItem} 
+                    onCancel={() => setEditingWorkItem(null)} 
+                    isNew={isNewItem}
                     epics={activeEpics}
                     teams={teams}
-                    sprints={sprints.filter(s => s.state !== SprintState.DELETED)}
-                    onSave={handleSaveWorkItem}
-                    onCancel={() => setEditingWorkItem(null)}
-                    isNew={isNewItem}
+                    sprints={sprints}
                     highlightSection={highlightSection}
                     boardUsers={boardUsers}
                 />
             )}
-            
-            {editingEpic && (
+
+             {editingEpic && (
                 <EpicEditor
                     epic={editingEpic}
                     onSave={handleSaveEpic}
-                    onCancel={() => { setEditingEpic(null); setIsReadOnlyView(false); }}
+                    onCancel={() => setEditingEpic(null)}
                     isNew={isNewEpic}
                     highlightSection={highlightSection}
-                    readOnly={isReadOnlyView}
                 />
             )}
 
+            {isSettingsModalOpen && (
+                <UserSettingsModal onClose={() => setIsSettingsModalOpen(false)} />
+            )}
+
             {deletingEpic && (
-                <DeleteEpicModal
+                <DeleteEpicModal 
                     epic={deletingEpic}
                     workItems={workItems}
                     onClose={() => setDeletingEpic(null)}
                     onConfirm={handleConfirmDeleteEpic}
                 />
             )}
-
-            {deletingSprint && (
+            
+             {deletingSprint && (
                 <DeleteSprintModal
                     sprint={deletingSprint}
                     sprints={sprints}
@@ -775,33 +752,17 @@ const App: React.FC = () => {
                 />
             )}
 
-            {isSettingsModalOpen && (
-                <UserSettingsModal onClose={() => setIsSettingsModalOpen(false)} />
-            )}
-            
             <ToastManager
                 toasts={toastQueue}
-                onDismiss={handleDismissToast}
+                onDismiss={(id) => setToastQueue(q => q.filter(t => t.id !== id))}
                 onOpen={handleOpenItemForView}
             />
 
             {isReAuthModalOpen && (
                 <ReAuthModal
-                    onClose={() => {
-                        setIsReAuthModalOpen(false);
-                        setActionToReAuth(null);
-                    }}
+                    onClose={() => setIsReAuthModalOpen(false)}
                     onSuccess={handleReAuthSuccess}
                 />
-            )}
-            
-             {isIdle && (
-                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 py-2 px-4 rounded-md shadow-lg text-sm z-[100] flex items-center gap-4">
-                    <p>You've been idle for a while. Want to save your draft?</p>
-                    <button onClick={handleSave} className="font-bold underline">Save now</button>
-                    <button onClick={handleContinue} className="font-bold underline">Continue editing</button>
-                    <button onClick={handleIgnore} className="text-xs underline">Ignore</button>
-                </div>
             )}
         </div>
     );

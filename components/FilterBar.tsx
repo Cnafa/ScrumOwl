@@ -158,7 +158,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="flex items-center gap-2">
         <MultiSelectDropdown
-            buttonContent={filterSet.assigneeIds.length > 0 ? `${filterSet.assigneeIds.length} Assignee(s)`: t('allAssignees')}
+            buttonContent={filterSet.assigneeIds.length > 0 ? t('filterbar_assignees_plural').replace('{count}', filterSet.assigneeIds.length.toString()) : t('allAssignees')}
             items={ALL_USERS.map(u => ({ id: u.id, name: u.name, content: <><img src={u.avatarUrl} alt={u.name} className="w-4 h-4 rounded-full" /><span>{u.name}</span></> }))}
             selectedIds={filterSet.assigneeIds}
             onSelectionChange={(ids) => onFilterChange({...filterSet, assigneeIds: ids})}
@@ -167,20 +167,20 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         />
         {filterSet.assigneeIds.length > 0 && (
             <div className="flex items-center text-xs p-0.5 bg-slate-200 rounded-md">
-                <button onClick={() => onFilterChange({...filterSet, assigneeMatch: 'any'})} className={`px-1.5 py-0.5 rounded ${filterSet.assigneeMatch === 'any' ? 'bg-white shadow-sm' : 'text-slate-600'}`}>Any</button>
-                <button onClick={() => onFilterChange({...filterSet, assigneeMatch: 'all'})} className={`px-1.5 py-0.5 rounded ${filterSet.assigneeMatch === 'all' ? 'bg-white shadow-sm' : 'text-slate-600'}`}>All</button>
+                <button onClick={() => onFilterChange({...filterSet, assigneeMatch: 'any'})} className={`px-1.5 py-0.5 rounded ${filterSet.assigneeMatch === 'any' ? 'bg-white shadow-sm' : 'text-slate-600'}`}>{t('filterbar_match_any')}</button>
+                <button onClick={() => onFilterChange({...filterSet, assigneeMatch: 'all'})} className={`px-1.5 py-0.5 rounded ${filterSet.assigneeMatch === 'all' ? 'bg-white shadow-sm' : 'text-slate-600'}`}>{t('filterbar_match_all')}</button>
             </div>
         )}
         
         <MultiSelectDropdown
-            buttonContent={filterSet.teamIds.length > 0 ? `${filterSet.teamIds.length} Team(s)` : t('allTeams')}
+            buttonContent={filterSet.teamIds.length > 0 ? t('filterbar_teams_plural').replace('{count}', filterSet.teamIds.length.toString()) : t('allTeams')}
             items={teams.map(t => ({ id: t.id, name: t.name, content: t.name }))}
             selectedIds={filterSet.teamIds}
             onSelectionChange={(ids) => onFilterChange({...filterSet, teamIds: ids})}
         />
 
         <MultiSelectDropdown
-            buttonContent={filterSet.typeIds.length > 0 ? `${filterSet.typeIds.length} Type(s)` : t('allTypes')}
+            buttonContent={filterSet.typeIds.length > 0 ? t('filterbar_types_plural').replace('{count}', filterSet.typeIds.length.toString()) : t('allTypes')}
             items={FILTERABLE_TYPES.map(type => ({id: type, name: type, content: type}))}
             selectedIds={filterSet.typeIds}
             onSelectionChange={(ids) => onFilterChange({...filterSet, typeIds: ids})}
@@ -192,8 +192,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onChange={(e) => onGroupByChange(e.target.value as 'status' | 'epic')}
           className="w-32 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="status">{t('groupBy')}: {t('status')}</option>
-          <option value="epic">{t('groupBy')}: {t('epic')}</option>
+          <option value="status">{t('filterbar_groupBy_status')}</option>
+          <option value="epic">{t('filterbar_groupBy_epic')}</option>
         </select>
 
         {activeSprint && groupBy === 'epic' && (

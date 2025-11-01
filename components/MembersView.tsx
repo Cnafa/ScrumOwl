@@ -8,6 +8,7 @@ import { Team, InviteCode, JoinRequest, BoardMember, User } from '../types';
 import { useBoard } from '../context/BoardContext';
 import { ROLES } from '../constants';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../context/LocaleContext';
 
 type Tab = 'MEMBERS' | 'TEAMS' | 'JOIN_REQUESTS' | 'INVITE_CODES';
 
@@ -19,6 +20,7 @@ interface MembersViewProps {
 export const MembersView: React.FC<MembersViewProps> = ({ teams, setTeams }) => {
     const { activeBoardMembers: initialMembers } = useBoard();
     const { user } = useAuth();
+    const { t } = useLocale();
     const [activeTab, setActiveTab] = useState<Tab>('MEMBERS');
     
     // Manage local state for admin data to make it mutable
@@ -89,13 +91,13 @@ export const MembersView: React.FC<MembersViewProps> = ({ teams, setTeams }) => 
 
     return (
         <div className="p-4 bg-white rounded-lg shadow space-y-4">
-            <h2 className="text-xl font-bold text-[#3B3936]">Members & Roles</h2>
+            <h2 className="text-xl font-bold text-[#3B3936]">{t('membersAndRoles')}</h2>
             <div className="border-b border-gray-200">
                 <nav className="flex space-x-2">
-                    <TabButton tab="MEMBERS" label="Members" />
-                    <TabButton tab="TEAMS" label="Teams" />
-                    <TabButton tab="JOIN_REQUESTS" label="Join Requests" />
-                    <TabButton tab="INVITE_CODES" label="Invite Codes" />
+                    <TabButton tab="MEMBERS" label={t('membersView_tab_members')} />
+                    <TabButton tab="TEAMS" label={t('teams')} />
+                    <TabButton tab="JOIN_REQUESTS" label={t('membersView_tab_joinRequests')} />
+                    <TabButton tab="INVITE_CODES" label={t('membersView_tab_inviteCodes')} />
                 </nav>
             </div>
             <div>

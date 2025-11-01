@@ -1,3 +1,4 @@
+// components/EventEditorModal.tsx
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { CalendarEvent, WorkItem, User, Team, Conflict } from '../types';
 import { XMarkIcon } from './icons';
@@ -75,7 +76,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
         
         if (newEventData.start && newEventData.end) {
             if (newEventData.end < newEventData.start) {
-                setDateError("End time cannot be before start time.");
+                setDateError(t('eventEditor_error_endDate'));
             }
         }
         
@@ -146,7 +147,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                                <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                                {isWorkItemDropdownOpen && (
                                    <ul className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                                       <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100">None</li>
+                                       <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100">{t('eventEditor_noWorkItem')}</li>
                                        {filteredWorkItems.map(item => <li key={item.id} onClick={() => handleSelectWorkItem(item)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100"><span className="font-semibold">[{item.id}]</span> {item.title}</li>)}
                                    </ul>
                                )}

@@ -44,7 +44,7 @@ export const BugPoolSection: React.FC<BugPoolSectionProps> = ({
             >
                 <ChevronRightIcon className={`h-4 w-4 transition-transform text-slate-500 ${isCollapsed ? '' : 'rotate-90'}`} />
                 <BugIcon className="w-5 h-5 text-red-600" />
-                <span className="font-semibold text-slate-800 text-sm">Bug Pool</span>
+                <span className="font-semibold text-slate-800 text-sm">{t('bugpool_title')}</span>
 
                 <div className="flex items-center gap-2">
                     <span
@@ -53,14 +53,14 @@ export const BugPoolSection: React.FC<BugPoolSectionProps> = ({
                         }`}
                         title={`${openBugs.length} open bugs`}
                     >
-                        Open: {openBugs.length}
+                        {t('bugpool_open')}: {openBugs.length}
                     </span>
                     {urgentOpenBugs.length > 0 && (
                          <span
                             className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-500 text-white"
                             title={`${urgentOpenBugs.length} urgent bugs`}
                         >
-                            Urgent: {urgentOpenBugs.length}
+                            {t('bugpool_urgent')}: {urgentOpenBugs.length}
                         </span>
                     )}
                 </div>
@@ -76,7 +76,7 @@ export const BugPoolSection: React.FC<BugPoolSectionProps> = ({
                                 checked={onlyUrgent}
                                 onChange={(e) => setOnlyUrgent(e.target.checked)}
                             />
-                            Show only urgent bugs
+                            {t('bugpool_showUrgentOnly')}
                         </label>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 p-2">

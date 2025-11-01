@@ -283,8 +283,8 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                      return (
                         <div className="flex-1 flex items-center justify-center">
                             <div className="text-center p-8 bg-white/60 rounded-lg">
-                                <h3 className="text-base font-semibold text-slate-800">No Active Sprints</h3>
-                                <p className="mt-2 text-sm text-slate-600">You do not have any items assigned to you in currently active sprints.</p>
+                                <h3 className="text-base font-semibold text-slate-800">{t('appshell_noActiveSprints_title')}</h3>
+                                <p className="mt-2 text-sm text-slate-600">{t('appshell_noActiveSprints_body')}</p>
                             </div>
                         </div>
                     );

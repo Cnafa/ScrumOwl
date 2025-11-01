@@ -96,7 +96,7 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss, onOpen, 
                             onClick={handleUndo}
                             className="text-xs font-bold text-white bg-[#486966] hover:bg-[#3a5a58] px-3 py-1 rounded-md"
                         >
-                            Undo
+                            {t('toast_undo')}
                         </button>
                     ) : toast.itemId ? (
                         <button

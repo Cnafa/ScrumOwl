@@ -1,6 +1,7 @@
 // components/JoinRequestsTab.tsx
 import React from 'react';
 import { JoinRequest } from '../types';
+import { useLocale } from '../context/LocaleContext';
 
 interface JoinRequestsTabProps {
     requests: JoinRequest[];
@@ -9,9 +10,10 @@ interface JoinRequestsTabProps {
 }
 
 export const JoinRequestsTab: React.FC<JoinRequestsTabProps> = ({ requests, onApprove, onReject }) => {
+    const { t } = useLocale();
     return (
         <div>
-            <h3 className="text-lg font-semibold mb-4">Pending Join Requests ({requests.length})</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('joinRequests_title').replace('{count}', requests.length.toString())}</h3>
              {requests.length > 0 ? (
                 <div className="bg-white shadow overflow-hidden sm:rounded-md">
                     <ul className="divide-y divide-gray-200">
@@ -26,8 +28,8 @@ export const JoinRequestsTab: React.FC<JoinRequestsTabProps> = ({ requests, onAp
                                         </div>
                                     </div>
                                     <div className="ml-2 flex-shrink-0 flex gap-2">
-                                        <button onClick={() => onApprove(req)} className="px-3 py-1 text-xs font-semibold rounded-md bg-green-100 text-green-800 hover:bg-green-200">Approve</button>
-                                        <button onClick={() => onReject(req)} className="px-3 py-1 text-xs font-semibold rounded-md bg-red-100 text-red-800 hover:bg-red-200">Reject</button>
+                                        <button onClick={() => onApprove(req)} className="px-3 py-1 text-xs font-semibold rounded-md bg-green-100 text-green-800 hover:bg-green-200">{t('joinRequests_approve')}</button>
+                                        <button onClick={() => onReject(req)} className="px-3 py-1 text-xs font-semibold rounded-md bg-red-100 text-red-800 hover:bg-red-200">{t('joinRequests_reject')}</button>
                                     </div>
                                 </div>
                             </li>
@@ -35,7 +37,7 @@ export const JoinRequestsTab: React.FC<JoinRequestsTabProps> = ({ requests, onAp
                     </ul>
                 </div>
             ) : (
-                <p className="text-sm text-center text-gray-500 py-8">There are no pending join requests.</p>
+                <p className="text-sm text-center text-gray-500 py-8">{t('joinRequests_empty')}</p>
             )}
         </div>
     );

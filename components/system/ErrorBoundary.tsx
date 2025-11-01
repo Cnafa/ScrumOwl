@@ -1,5 +1,9 @@
 import React, { ErrorInfo, ReactNode } from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
+// FIX: The useLocale hook cannot be used here because the LocaleProvider is a child
+// of the ErrorBoundary. If an error occurs within the provider, this fallback
+// would also fail.
+// import { useLocale } from "../../context/LocaleContext";
 
 interface Props {
   children?: ReactNode;
@@ -9,27 +13,10 @@ interface State {
   hasError: boolean;
 }
 
-export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Replaced state class property with a constructor to resolve prop access issues.
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(_error: Error): State {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    try {
-      (window as any).__lastReactComponentStack = info?.componentStack;
-    } catch {}
-    logCrash(error);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
+const ErrorFallback: React.FC = () => {
+    // FIX: Replaced t() with hardcoded English strings. Using hooks that depend on
+    // context is unsafe in a top-level error boundary's fallback UI.
+    return (
         <div
           role="alert"
           className="p-4 border-2 border-red-500 bg-red-50 m-4 rounded-lg text-center"
@@ -47,7 +34,31 @@ export class ErrorBoundary extends React.Component<Props, State> {
             Reload Page
           </button>
         </div>
-      );
+    );
+}
+
+
+export class ErrorBoundary extends React.Component<Props, State> {
+  // FIX: Use state property initializer to fix type errors with 'this.state'
+  state: State = { hasError: false };
+
+  static getDerivedStateFromError(_error: Error): State {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    try {
+      (window as any).__lastReactComponentStack = info?.componentStack;
+    } catch {}
+    logCrash(error);
+  }
+
+  // FIX: To resolve "Property 'props' does not exist on type 'ErrorBoundary'", the render
+  // method is converted to an arrow function. This ensures 'this' is correctly bound, which
+  // can fix type resolution issues with some build tool configurations.
+  render = () => {
+    if (this.state.hasError) {
+      return <ErrorFallback />;
     }
     return this.props.children;
   }

@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Team, User } from '../types';
 import { XMarkIcon } from './icons';
+import { useLocale } from '../context/LocaleContext';
 
 interface ManageTeamMembersModalProps {
     team: Team;
@@ -23,6 +24,7 @@ const UserListItem: React.FC<{ user: User, onAction: () => void, actionIcon: Rea
 );
 
 export const ManageTeamMembersModal: React.FC<ManageTeamMembersModalProps> = ({ team, onSave, onClose, allMembers }) => {
+    const { t } = useLocale();
     const [teamMemberIds, setTeamMemberIds] = useState<Set<string>>(new Set(team.members));
     const [search, setSearch] = useState('');
 
@@ -57,7 +59,7 @@ export const ManageTeamMembersModal: React.FC<ManageTeamMembersModalProps> = ({ 
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-xl font-bold text-[#3B3936]">Manage Members for <span className="text-[#486966]">{team.name}</span></h2>
+                    <h2 className="text-xl font-bold text-[#3B3936]">{t('manageMembers_title').replace('{teamName}', '')} <span className="text-[#486966]">{team.name}</span></h2>
                     <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-gray-200">
                         <XMarkIcon className="w-6 h-6 text-[#889C9B]" />
                     </button>
@@ -65,9 +67,9 @@ export const ManageTeamMembersModal: React.FC<ManageTeamMembersModalProps> = ({ 
                 <main className="p-6 flex-1 overflow-hidden grid grid-cols-2 gap-4">
                     {/* Available Members */}
                     <div className="flex flex-col border rounded-md">
-                         <h3 className="p-3 text-sm font-semibold border-b">Board Members</h3>
+                         <h3 className="p-3 text-sm font-semibold border-b">{t('manageMembers_boardMembers')}</h3>
                          <div className="p-2">
-                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members..." className="w-full px-2 py-1 border rounded" />
+                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('manageMembers_search')} className="w-full px-2 py-1 border rounded" />
                          </div>
                          <ul className="flex-1 overflow-y-auto p-2">
                             {availableMembers.map(user => (
@@ -82,9 +84,9 @@ export const ManageTeamMembersModal: React.FC<ManageTeamMembersModalProps> = ({ 
                     </div>
                      {/* Team Members */}
                     <div className="flex flex-col border rounded-md">
-                         <h3 className="p-3 text-sm font-semibold border-b">Team Members ({teamMembers.length})</h3>
+                         <h3 className="p-3 text-sm font-semibold border-b">{t('manageMembers_teamMembers').replace('{count}', teamMembers.length.toString())}</h3>
                          <div className="p-2">
-                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search members..." className="w-full px-2 py-1 border rounded" />
+                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('manageMembers_search')} className="w-full px-2 py-1 border rounded" />
                          </div>
                          <ul className="flex-1 overflow-y-auto p-2">
                             {teamMembers.map(user => (
@@ -99,8 +101,8 @@ export const ManageTeamMembersModal: React.FC<ManageTeamMembersModalProps> = ({ 
                     </div>
                 </main>
                 <footer className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-                    <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">Cancel</button>
-                    <button type="button" onClick={handleSave} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58]">Save Changes</button>
+                    <button type="button" onClick={onClose} className="py-2 px-4 border border-[#889C9B] rounded-md text-sm font-medium text-[#3B3936] hover:bg-gray-100">{t('cancel')}</button>
+                    <button type="button" onClick={handleSave} className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#486966] hover:bg-[#3a5a58]">{t('saveChanges')}</button>
                 </footer>
             </div>
         </div>

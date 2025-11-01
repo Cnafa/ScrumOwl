@@ -1,4 +1,3 @@
-
 // components/WorkItemEditor.tsx
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -49,6 +48,7 @@ const UserSelect: React.FC<{
   disabled?: boolean;
   users: User[];
 }> = ({ icon, selectedUser, onChange, highlightKey, disabled, users }) => {
+  const { t } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   useClickOutside(dropdownRef, () => setIsOpen(false));
@@ -63,7 +63,7 @@ const UserSelect: React.FC<{
             <span className="text-sm">{selectedUser.name}</span>
           </>
         ) : (
-          <span className="text-sm text-slate-400">Select user...</span>
+          <span className="text-sm text-slate-400">{t('workItemEditor_selectUser')}</span>
         )}
       </button>
       {isOpen && (
@@ -250,7 +250,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   
   const handleGenerateSummary = async () => {
     if (!localWorkItem.title || !localWorkItem.description) {
-      alert("Please provide a title and description before generating a summary.");
+      alert(t('workItemEditor_alert_summary_titleDesc'));
       return;
     }
     setIsGeneratingSummary(true);
@@ -259,7 +259,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
       setLocalWorkItem(prev => ({ ...prev, summary }));
     } catch (error) {
       console.error("Failed to generate summary:", error);
-      alert("Could not generate summary. Please try again.");
+      alert(t('workItemEditor_alert_summary_fail'));
     } finally {
       setIsGeneratingSummary(false);
     }
@@ -306,7 +306,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                 />
                 <button type="button" onClick={handleGenerateSummary} disabled={isGeneratingSummary}
                     className="mt-1 text-xs text-primary hover:underline disabled:text-slate-400">
-                    {isGeneratingSummary ? 'Generating...' : t('generateSummary')}
+                    {isGeneratingSummary ? t('workItemEditor_generating') : t('generateSummary')}
                 </button>
               </div>
             </FieldWrapper>

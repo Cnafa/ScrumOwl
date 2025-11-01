@@ -2,6 +2,7 @@
 import React from 'react';
 import { useBoard } from '../context/BoardContext';
 import { BoardMember, Role } from '../types';
+import { useLocale } from '../context/LocaleContext';
 
 interface MembersTabProps {
     boardMembers: BoardMember[];
@@ -10,9 +11,10 @@ interface MembersTabProps {
 
 export const MembersTab: React.FC<MembersTabProps> = ({ boardMembers, setBoardMembers }) => {
     const { roles, can } = useBoard();
+    const { t } = useLocale();
     const canManageMembers = can('member.manage');
 
-    const getRoleName = (roleId: string) => roles.find(r => r.id === roleId)?.name || 'Unknown Role';
+    const getRoleName = (roleId: string) => roles.find(r => r.id === roleId)?.name || t('membersTab_unknownRole');
     
     const editableRoles = roles.filter(r => r.name !== 'Owner');
 
@@ -27,7 +29,7 @@ export const MembersTab: React.FC<MembersTabProps> = ({ boardMembers, setBoardMe
             const newRole = roles.find(r => r.id === newRoleId);
             if (newRole?.name !== 'Admin' && newRole?.name !== 'Owner') {
                 // In a real app, a global toast would show this error.
-                alert("Action failed: Cannot demote the last administrator.");
+                alert(t('membersTab_error_lastAdmin'));
                 return;
             }
         }
@@ -38,23 +40,21 @@ export const MembersTab: React.FC<MembersTabProps> = ({ boardMembers, setBoardMe
     return (
         <div>
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Board Members</h3>
+                <h3 className="text-lg font-semibold">{t('membersTab_title')}</h3>
                 <div className="text-right">
                     <button disabled className="py-2 px-4 text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed">
-                        Invite Member
+                        {t('membersTab_invite_button')}
                     </button>
-                     <p className="text-xs text-gray-500 mt-1">
-                        Use the <strong>Invite Codes</strong> tab to add new members.
-                    </p>
+                     <p className="text-xs text-gray-500 mt-1" dangerouslySetInnerHTML={{ __html: t('membersTab_invite_desc') }} />
                 </div>
             </div>
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                        <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('membersTab_header_name')}</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('membersTab_header_email')}</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('membersTab_header_role')}</th>
+                        <th scope="col" className="relative px-6 py-3"><span className="sr-only">{t('actions')}</span></th>
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
