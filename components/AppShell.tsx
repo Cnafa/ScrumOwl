@@ -18,9 +18,6 @@ import { ManageViewsModal } from './ManageViewsModal';
 import { faker } from 'https://cdn.skypack.dev/@faker-js/faker';
 import { ALL_USERS, WORK_ITEM_TYPES, ALL_TEAMS } from '../constants';
 import { TodaysMeetingsBanner } from './TodaysMeetingsBanner';
-import * as calendarService from '../services/calendarService';
-import { EventEditorModal } from './EventEditorModal';
-import { EventViewModal } from './EventViewModal';
 import { useBoard } from '../context/BoardContext';
 import { useLocale } from '../context/LocaleContext';
 
@@ -52,6 +49,10 @@ interface AppShellProps {
     setSelectedSprintId: (sprintId: string | null) => void;
     availableActiveSprints: Sprint[];
     onLogout: () => void;
+    events: CalendarEvent[];
+    todaysEvents: CalendarEvent[];
+    onViewEvent: (event: CalendarEvent) => void;
+    onAddNewEvent: () => void;
 }
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
@@ -73,31 +74,13 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [collapsedEpics, setCollapsedEpics] = useState<Set<string>>(new Set());
     const [includeUnassignedEpicItems, setIncludeUnassignedEpicItems] = useState(false);
 
-    // FIX-08 & FE-EV-02 State Management
-    const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
-    const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
-    const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
-    const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
-
     const boardUsers = useMemo(() => activeBoardMembers.map(m => m.user), [activeBoardMembers]);
-
-    const fetchAllEvents = useCallback(async () => {
-        if (!user || props.workItems.length === 0) return;
-        calendarService.initializeCalendarEvents(props.workItems);
-        const [fetchedAll, fetchedToday] = await Promise.all([
-            calendarService.getEvents('all', user),
-            calendarService.getTodaysEvents(user),
-        ]);
-        setAllEvents(fetchedAll);
-        setTodaysEvents(fetchedToday);
-    }, [user, props.workItems]);
 
      useEffect(() => {
         if (user) {
             // US-43: Removed fake saved view generation.
-            fetchAllEvents();
         }
-    }, [user, fetchAllEvents]);
+    }, [user]);
 
     const { selectedSprint } = props;
 
@@ -120,25 +103,34 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     }, [props.epics, props.workItems]);
 
     const sprintAndEpicFilteredItems = useMemo(() => {
+        // If not on the Kanban view or no sprint is selected, show nothing.
         if (currentView !== 'KANBAN' || !selectedSprint) {
-            return props.workItems;
+            return [];
         }
 
-        // When grouping by status, show all items in the sprint for a complete overview.
+        // First, get all items belonging to the selected sprint.
+        const itemsInSprint = props.workItems.filter(item => item.sprintId === selectedSprint.id);
+
+        // If grouping by status, no further epic filtering is needed.
         if (groupBy === 'status') {
-          return props.workItems.filter(item => item.sprintId === selectedSprint.id);
+          return itemsInSprint;
         }
     
-        // When grouping by epic, apply the epic-based filtering logic
+        // When grouping by epic, apply the more complex filtering logic.
         const sprintEpicIds = new Set(selectedSprint.epicIds);
         
-        return props.workItems.filter(item => {
-            if (item.sprintId !== selectedSprint.id) return false;
-    
-            const hasAssignedEpic = item.epicId && sprintEpicIds.has(item.epicId);
-            const isUnassignedAndIncluded = includeUnassignedEpicItems && !item.epicId;
-    
-            return hasAssignedEpic || isUnassignedAndIncluded;
+        return itemsInSprint.filter(item => {
+            // Check if the item's epic is one of the epics planned for this sprint.
+            const isPlannedEpicItem = item.epicId && sprintEpicIds.has(item.epicId);
+
+            // Items belonging to planned epics should always be shown in this view.
+            if (isPlannedEpicItem) {
+                return true;
+            }
+            
+            // For all other items (no epic, or an epic not planned for the sprint),
+            // their visibility is controlled by the "include items without epic" checkbox.
+            return includeUnassignedEpicItems;
         });
     }, [props.workItems, selectedSprint, currentView, includeUnassignedEpicItems, groupBy]);
 
@@ -238,44 +230,6 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
     const pinnedViews = useMemo(() => savedViews.filter(v => v.isPinned && v.ownerId === user?.id), [savedViews, user]);
     
-    // FE-EV-02: Event modal handlers
-    const handleViewEvent = (event: CalendarEvent) => {
-        setViewingEvent(event);
-    };
-    
-    const handleEditEvent = (event: CalendarEvent) => {
-        setViewingEvent(null);
-        setEditingEvent(event);
-    };
-    
-    const handleAddNewEvent = () => {
-        if (!user) return;
-        const start = new Date();
-        const end = new Date();
-        end.setHours(start.getHours() + 1);
-        setEditingEvent({
-            title: '',
-            start,
-            end,
-            allDay: false,
-            attendees: [user],
-            teamIds: []
-        });
-    };
-
-    const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
-        if (!user) return;
-        if (eventData.id) {
-            const originalEvent = allEvents.find(e => e.id === eventData.id)!;
-            await calendarService.updateEvent({ ...originalEvent, ...eventData } as CalendarEvent, props.teams);
-        } else {
-            await calendarService.createEvent(eventData as any, user, props.teams);
-        }
-        setEditingEvent(null);
-        await fetchAllEvents();
-    };
-
-
     const renderContent = () => {
         switch (currentView) {
             case 'KANBAN':
@@ -329,7 +283,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                     />
                  );
             case 'EVENTS':
-                return <EventsView workItems={props.workItems} teams={props.teams} events={allEvents} onViewEvent={handleViewEvent} onAddNewEvent={handleAddNewEvent} />;
+                return <EventsView workItems={props.workItems} teams={props.teams} events={props.events} onViewEvent={props.onViewEvent} onAddNewEvent={props.onAddNewEvent} />;
             case 'REPORTS':
                 return (
                     <ReportsDashboard 
@@ -387,10 +341,10 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 )}
 
                 <main className="flex-1 p-3 overflow-auto flex flex-col">
-                    {currentView === 'KANBAN' && todaysEvents.length > 0 && (
+                    {currentView === 'KANBAN' && props.todaysEvents.length > 0 && (
                         <TodaysMeetingsBanner
-                            events={todaysEvents}
-                            onOpenEvent={handleViewEvent}
+                            events={props.todaysEvents}
+                            onOpenEvent={props.onViewEvent}
                         />
                     )}
                     {renderContent()}
@@ -416,32 +370,6 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 onDuplicate={handleDuplicateView}
                 onSelectView={handleSelectView}
             />
-
-            {viewingEvent && (
-                <EventViewModal
-                    event={viewingEvent}
-                    workItems={props.workItems}
-                    onClose={() => setViewingEvent(null)}
-                    onEdit={handleEditEvent}
-                    onOpenWorkItem={(itemId) => {
-                        const item = props.workItems.find(wi => wi.id === itemId);
-                        if (item) {
-                            setViewingEvent(null); // Close current modal
-                            props.onSelectWorkItem(item); // Open read-only detail modal
-                        }
-                    }}
-                />
-            )}
-
-            {editingEvent && (
-                <EventEditorModal
-                    event={editingEvent}
-                    workItems={props.workItems}
-                    teams={props.teams}
-                    onSave={handleSaveEvent}
-                    onClose={() => setEditingEvent(null)}
-                />
-            )}
         </div>
     );
 };

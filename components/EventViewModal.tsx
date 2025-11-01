@@ -24,7 +24,7 @@ const DetailField: React.FC<{ label: string; children: React.ReactNode; classNam
 const UserChip: React.FC<{ user: User }> = ({ user }) => (
     <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
         <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full" />
-        <span className="text-sm">{user.name}</span>
+        <span className="text-sm text-slate-800">{user.name}</span>
     </div>
 );
 

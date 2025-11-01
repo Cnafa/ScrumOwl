@@ -1,10 +1,11 @@
+
 // FIX: Create the App component which was missing.
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from './context/AuthContext';
 import LoginScreen from './components/LoginScreen';
 import { AppShell } from './components/AppShell';
 // FIX: Import Status, Priority, and WorkItemType enums to fix type errors.
-import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState, Board, JoinRequest, InviteCode } from './types';
+import { WorkItem, Notification, ItemUpdateEvent, Epic, Team, Status, Priority, WorkItemType, Sprint, ToastNotification, EpicStatus, SprintState, Board, JoinRequest, InviteCode, CalendarEvent } from './types';
 import { WorkItemDetailModal } from './components/WorkItemDetailModal';
 import { WorkItemEditor } from './components/WorkItemEditor';
 import { UserSettingsModal } from './components/UserSettingsModal';
@@ -15,7 +16,7 @@ import { useIdleReminder } from './hooks/useIdleReminder';
 import { useBoard } from './context/BoardContext';
 import { ToastManager } from './components/ToastManager';
 import { useLocale } from './context/LocaleContext';
-import { ALL_USERS } from './constants';
+import { ALL_USERS, EPIC_COLORS } from './constants';
 import DevCrashInspector from './pages/DevCrashInspector';
 import OnboardingScreen from './components/OnboardingScreen';
 import CreateBoardModal from './components/CreateBoardModal';
@@ -27,6 +28,10 @@ import LandingPage from './components/LandingPage';
 import { useSessionIdleTimer } from './hooks/useSessionIdleTimer';
 import { ReAuthModal } from './components/ReAuthModal';
 import LegalPage from './components/LegalPage';
+import * as calendarService from './services/calendarService';
+import { EventEditorModal } from './components/EventEditorModal';
+import { EventViewModal } from './components/EventViewModal';
+
 
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 
@@ -53,6 +58,8 @@ const App: React.FC = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
     const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
+    const [allEvents, setAllEvents] = useState<CalendarEvent[]>([]);
+    const [todaysEvents, setTodaysEvents] = useState<CalendarEvent[]>([]);
     
     // UI state
     const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
@@ -64,6 +71,9 @@ const App: React.FC = () => {
     const [toastQueue, setToastQueue] = useState<ToastNotification[]>([]);
     const [highlightSection, setHighlightSection] = useState<string | undefined>(undefined);
     const coalescingRef = useRef<Map<string, { data: ToastNotification, timer: number }>>(new Map());
+    const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null);
+    const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | null>(null);
+
 
     // Re-authentication state
     const [isReAuthModalOpen, setIsReAuthModalOpen] = useState(false);
@@ -155,6 +165,17 @@ const App: React.FC = () => {
         }
     }, [isAuthenticated, boards, activeBoard, setActiveBoard]);
 
+    const fetchAllEvents = useCallback(async () => {
+        if (!user || workItems.length === 0) return;
+        calendarService.initializeCalendarEvents(workItems);
+        const [fetchedAll, fetchedToday] = await Promise.all([
+            calendarService.getEvents('all', user),
+            calendarService.getTodaysEvents(user),
+        ]);
+        setAllEvents(fetchedAll);
+        setTodaysEvents(fetchedToday);
+    }, [user, workItems]);
+
     // Fetch initial data
     useEffect(() => {
         if (isAuthenticated && onboardingStatus === 'COMPLETED') {
@@ -167,6 +188,7 @@ const App: React.FC = () => {
             setNotifications([]);
             setJoinRequests([]);
             setInviteCodes([]);
+            fetchAllEvents();
 
             if (!activeBoard && boards.length > 0) {
                 setActiveBoard(boards[0].id);
@@ -182,9 +204,11 @@ const App: React.FC = () => {
             setToastQueue([]);
             setJoinRequests([]);
             setInviteCodes([]);
+            setAllEvents([]);
+            setTodaysEvents([]);
             setOnboardingStatus('UNKNOWN');
         }
-    }, [isAuthenticated, onboardingStatus, activeBoard, setActiveBoard, boards.length]);
+    }, [isAuthenticated, onboardingStatus, activeBoard, setActiveBoard, boards.length, fetchAllEvents]);
 
     useEffect(() => {
         document.documentElement.lang = locale;
@@ -438,20 +462,28 @@ const App: React.FC = () => {
 
     const handleSaveEpic = (epicToSave: Partial<Epic>) => {
         const score = ((epicToSave.impact || 0) + (epicToSave.confidence || 0) + (epicToSave.ease || 0)) / 3;
-        const epicWithScore = { ...epicToSave, iceScore: parseFloat(score.toFixed(2)) };
+        const iceScore = parseFloat(score.toFixed(2));
 
-         if (isNewEpic) {
+        if (isNewEpic) {
             const newEpic: Epic = {
                 id: `epic-${Math.floor(Math.random() * 100) + 10}`,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                attachments: [],
+                attachments: epicToSave.attachments || [],
                 status: EpicStatus.ACTIVE,
-                ...epicWithScore
-            } as Epic;
+                color: EPIC_COLORS[epics.length % EPIC_COLORS.length],
+                boardId: epicToSave.boardId!,
+                name: epicToSave.name || 'Untitled Epic',
+                description: epicToSave.description || '',
+                aiSummary: epicToSave.aiSummary || '',
+                ease: epicToSave.ease || 5,
+                impact: epicToSave.impact || 5,
+                confidence: epicToSave.confidence || 5,
+                iceScore: iceScore,
+            };
             setEpics(prev => [newEpic, ...prev]);
         } else {
-            setEpics(prev => prev.map(item => item.id === epicWithScore.id ? { ...item, ...epicWithScore, updatedAt: new Date().toISOString() } as Epic : item));
+            setEpics(prev => prev.map(item => item.id === epicToSave.id ? { ...item, ...epicToSave, iceScore, updatedAt: new Date().toISOString() } as Epic : item));
         }
         setEditingEpic(null);
         setIsNewEpic(false);
@@ -539,29 +571,28 @@ const App: React.FC = () => {
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
         const isNew = !sprintToSave.id;
         const sprintId = isNew ? `sprint-${Date.now()}` : sprintToSave.id!;
-        const sprintName = sprintToSave.name || (sprintToSave.id ? sprints.find(s => s.id === sprintToSave.id)?.name : '');
-
-        if (!sprintName) {
-            console.error("Sprint save failed: sprint name is missing.");
-            return;
-        }
-
+        const sprintName = sprintToSave.name || 'Untitled Sprint';
+        
         // 1. Find newly added epics
         let newlyAddedEpicIds: string[] = [];
-        const originalSprint = sprintToSave.id ? sprints.find(s => s.id === sprintToSave.id) : null;
+        const originalSprint = isNew ? null : sprints.find(s => s.id === sprintId);
         if (sprintToSave.epicIds) {
             const originalEpicIds = new Set(originalSprint?.epicIds || []);
             newlyAddedEpicIds = sprintToSave.epicIds.filter(id => !originalEpicIds.has(id));
         }
-        
+
         // 2. Prepare the final sprint object
         const finalSprint: Sprint = {
+            id: sprintId,
             boardId: activeBoard!.id,
             number: isNew ? sprints.length + 1 : (originalSprint?.number || sprints.length + 1),
-            ...sprintToSave,
-            id: sprintId,
             name: sprintName,
-        } as Sprint;
+            goal: sprintToSave.goal || '',
+            startAt: sprintToSave.startAt!,
+            endAt: sprintToSave.endAt!,
+            state: sprintToSave.state!,
+            epicIds: sprintToSave.epicIds!,
+        };
 
         // 3. Update work items if there are newly added epics
         if (newlyAddedEpicIds.length > 0) {
@@ -606,6 +637,42 @@ const App: React.FC = () => {
             }
         }
         setNotifications(prev => prev.map(n => n.id === notification.id ? {...n, isRead: true} : n));
+    };
+
+    const handleViewEvent = (event: CalendarEvent) => {
+        setViewingEvent(event);
+    };
+    
+    const handleEditEvent = (event: CalendarEvent) => {
+        setViewingEvent(null);
+        setEditingEvent(event);
+    };
+    
+    const handleAddNewEvent = () => {
+        if (!user) return;
+        const start = new Date();
+        const end = new Date();
+        end.setHours(start.getHours() + 1);
+        setEditingEvent({
+            title: '',
+            start,
+            end,
+            allDay: false,
+            attendees: [user],
+            teamIds: []
+        });
+    };
+
+    const handleSaveEvent = async (eventData: Partial<CalendarEvent>) => {
+        if (!user) return;
+        if (eventData.id) {
+            const originalEvent = allEvents.find(e => e.id === eventData.id)!;
+            await calendarService.updateEvent({ ...originalEvent, ...eventData } as CalendarEvent, teams);
+        } else {
+            await calendarService.createEvent(eventData as any, user, teams);
+        }
+        setEditingEvent(null);
+        await fetchAllEvents();
     };
 
     if (isDevRoute) {
@@ -692,6 +759,10 @@ const App: React.FC = () => {
                 setSelectedSprintId={setSelectedSprintId}
                 availableActiveSprints={availableActiveSprints}
                 onLogout={logout}
+                events={allEvents}
+                todaysEvents={todaysEvents}
+                onViewEvent={handleViewEvent}
+                onAddNewEvent={handleAddNewEvent}
             />
             
             {selectedWorkItem && (
@@ -747,6 +818,32 @@ const App: React.FC = () => {
                     sprints={sprints}
                     onClose={() => setDeletingSprint(null)}
                     onConfirm={handleConfirmDeleteSprint}
+                />
+            )}
+
+            {viewingEvent && (
+                <EventViewModal
+                    event={viewingEvent}
+                    workItems={workItems}
+                    onClose={() => setViewingEvent(null)}
+                    onEdit={handleEditEvent}
+                    onOpenWorkItem={(itemId) => {
+                        const item = workItems.find(wi => wi.id === itemId);
+                        if (item) {
+                            setViewingEvent(null); // Close current modal
+                            handleSelectWorkItem(item); // Open read-only detail modal
+                        }
+                    }}
+                />
+            )}
+
+            {editingEvent && (
+                <EventEditorModal
+                    event={editingEvent}
+                    workItems={workItems}
+                    teams={teams}
+                    onSave={handleSaveEvent}
+                    onClose={() => setEditingEvent(null)}
                 />
             )}
 

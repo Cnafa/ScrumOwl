@@ -121,7 +121,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                         )}
                         <div>
                             <label htmlFor="title" className="block text-sm font-medium text-[#486966] mb-1">{t('title')}</label>
-                            <input type="text" id="title" name="title" value={localEvent.title || ''} onChange={(e) => handleFieldChange('title', e.target.value)} required className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                            <input type="text" id="title" name="title" value={localEvent.title || ''} onChange={(e) => handleFieldChange('title', e.target.value)} required className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900"/>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div>
@@ -135,16 +135,16 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                         </div>
                          <div>
                             <label htmlFor="description" className="block text-sm font-medium text-[#486966] mb-1">{t('description')}</label>
-                            <textarea id="description" name="description" value={localEvent.description || ''} onChange={(e) => handleFieldChange('description', e.target.value)} rows={3} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                            <textarea id="description" name="description" value={localEvent.description || ''} onChange={(e) => handleFieldChange('description', e.target.value)} rows={3} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900"/>
                         </div>
                         <div>
                            <label htmlFor="onlineLink" className="block text-sm font-medium text-[#486966] mb-1">{t('online_meeting_link')}</label>
-                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={(e) => handleFieldChange('onlineLink', e.target.value)} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={(e) => handleFieldChange('onlineLink', e.target.value)} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900"/>
                         </div>
                         <div ref={workItemDropdownRef}>
                            <label htmlFor="linkedWorkItemId" className="block text-sm font-medium text-[#486966] mb-1">{t('linkToWorkItem')}</label>
                            <div className="relative">
-                               <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                               <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900"/>
                                {isWorkItemDropdownOpen && (
                                    <ul className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                                        <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm text-slate-900 cursor-pointer hover:bg-gray-100">{t('eventEditor_noWorkItem')}</li>

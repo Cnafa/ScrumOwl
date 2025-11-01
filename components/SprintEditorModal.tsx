@@ -1,3 +1,4 @@
+
 // components/SprintEditorModal.tsx
 import React, { useState, useMemo } from 'react';
 import { Sprint, Epic, EpicStatus } from '../types';
@@ -20,7 +21,7 @@ const EpicListItem: React.FC<{ epic: Epic, onAction: () => void, actionIcon: Rea
             <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div className="w-2 h-4 rounded-full flex-shrink-0" style={{backgroundColor: epic.color}} />
                 <div className="flex-1 truncate">
-                    <p className="text-sm truncate" title={epic.name}>{epic.name}</p>
+                    <p className="text-sm truncate text-slate-800" title={epic.name}>{epic.name}</p>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span className="font-bold">ICE: {(epic.iceScore || 0).toFixed(1)}</span>
                         <span>|</span>
@@ -122,20 +123,20 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-xl font-bold text-[#3B3936]">{sprint.id ? (readOnly ? `View: ${sprint.name}` : `Edit ${sprint.name}`) : t('newSprint')}</h2>
+                    <h2 className="text-xl font-bold text-[#3B3936]">{sprint.id ? (readOnly ? t('sprintEditor_viewTitle').replace('{sprintName}', sprint.name!) : t('sprintEditor_editTitle').replace('{sprintName}', sprint.name!)) : t('newSprint')}</h2>
                     <button type="button" onClick={onClose}><XMarkIcon className="w-5 h-5" /></button>
                 </header>
                 <main className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
                     {/* Sprint Details Form */}
                     <div className="space-y-4 overflow-y-auto pr-2">
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-[#486966] mb-1">Sprint Name</label>
-                            <input type="text" id="name" name="name" value={localSprint.name || ''} onChange={handleChange} required disabled={readOnly} className={`w-full px-3 py-2 h-10 bg-white border rounded-md ${nameError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#B2BEBF] focus:ring-2 focus:ring-[#486966]'} disabled:bg-gray-100 disabled:cursor-not-allowed`} />
-                            {nameError && <p className="text-red-600 text-xs mt-1">{nameError}</p>}
+                            <label htmlFor="name" className="block text-sm font-medium text-[#486966] mb-1">{t('sprintName')}</label>
+                            <input type="text" id="name" name="name" value={localSprint.name || ''} onChange={handleChange} required disabled={readOnly} className={`w-full px-3 py-2 h-10 bg-white border rounded-md text-slate-900 ${nameError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#B2BEBF] focus:ring-2 focus:ring-[#486966]'} disabled:bg-gray-100 disabled:cursor-not-allowed`} />
+                            {nameError && <p className="text-red-600 text-xs mt-1">{t('sprintEditor_error_nameEmpty')}</p>}
                         </div>
                         <div>
-                            <label htmlFor="goal" className="block text-sm font-medium text-[#486966] mb-1">{t('goal')} (Optional)</label>
-                            <textarea id="goal" name="goal" value={localSprint.goal || ''} onChange={handleChange} rows={3} disabled={readOnly} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed" />
+                            <label htmlFor="goal" className="block text-sm font-medium text-[#486966] mb-1">{t('sprintEditor_goal_optional')}</label>
+                            <textarea id="goal" name="goal" value={localSprint.goal || ''} onChange={handleChange} rows={3} disabled={readOnly} className="w-full px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900 disabled:bg-gray-100 disabled:cursor-not-allowed" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -147,7 +148,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                                 <DateField value={localSprint.endAt!} onChange={(date) => handleDateChange('endAt', date)} minDate={minEndDate} disabled={readOnly} />
                             </div>
                         </div>
-                        {dateError && <p className="text-red-600 text-xs -mt-2 col-span-2">{dateError}</p>}
+                        {dateError && <p className="text-red-600 text-xs -mt-2 col-span-2">{t('sprintEditor_error_endDate')}</p>}
 
                         <div className="!mt-8">
                              <h3 className="text-lg font-semibold border-b pb-2 text-[#3B3936]">{t('assignEpics')}</h3>
@@ -156,7 +157,7 @@ export const SprintEditorModal: React.FC<SprintEditorModalProps> = ({ sprint, al
                     {/* Epic Assignment */}
                     <div className="flex flex-col border rounded-md overflow-hidden">
                         <div className="p-2 border-b flex items-center gap-4">
-                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search epics..." disabled={readOnly} className="w-full px-2 py-1 border rounded disabled:bg-gray-100" />
+                            <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('sprintEditor_searchEpics')} disabled={readOnly} className="w-full px-2 py-1 border rounded text-slate-900 disabled:bg-gray-100" />
                              <label className="flex items-center gap-2 text-sm whitespace-nowrap">
                                 <input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} disabled={readOnly} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                                 {t('show_completed_epics')}
