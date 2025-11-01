@@ -58,25 +58,20 @@ export const getVelocityData = (workItems: WorkItem[], sprints: Sprint[]) => {
 
 
 // --- Epics Progress Logic ---
-export const getEpicProgressData = (epics: Epic[], workItems: WorkItem[]): EpicProgressReportData[] => {
-    return epics.map(epic => {
-        const childItems = workItems.filter(item => item.epicId === epic.id);
-        const totalItems = childItems.length;
-        const doneItems = childItems.filter(item => item.status === Status.DONE).length;
-        
-        const totalEstimation = childItems.reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
-        const doneEstimation = childItems
-            .filter(item => item.status === Status.DONE)
-            .reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
-            
-        const progress = totalEstimation > 0 ? (doneEstimation / totalEstimation) * 100 : 0;
+export const getEpicProgressData = (enrichedEpics: Epic[]): EpicProgressReportData[] => {
+    return enrichedEpics.map(epic => {
+        const totalItems = epic.totalItemsCount || 0;
+        const doneItems = totalItems - (epic.openItemsCount || 0);
+        const totalEstimation = epic.totalEstimation || 0;
+        const progress = epic.percentDoneWeighted || 0;
+        const doneEstimation = totalEstimation * (progress / 100);
         
         return {
             epic,
             totalItems,
             doneItems,
             totalEstimation,
-            doneEstimation,
+            doneEstimation: Math.round(doneEstimation),
             progress,
         };
     }).sort((a,b) => b.epic.iceScore - a.epic.iceScore);

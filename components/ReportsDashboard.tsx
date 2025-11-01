@@ -113,7 +113,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
         return {
             [ReportType.BURNDOWN]: analytics.getBurndownData(sprintFilter, props.workItems),
             [ReportType.VELOCITY]: analytics.getVelocityData(props.workItems, props.sprints),
-            [ReportType.EPIC_PROGRESS]: analytics.getEpicProgressData(props.epics, props.workItems),
+            [ReportType.EPIC_PROGRESS]: analytics.getEpicProgressData(props.epics),
             [ReportType.ASSIGNEE_WORKLOAD]: analytics.getAssigneeWorkloadData(props.workItems, props.users),
         };
     }, [props.workItems, props.epics, props.users, props.sprints, sprintFilter]);
