@@ -424,17 +424,39 @@ const App: React.FC = () => {
     const enrichedEpics = useMemo(() => {
         return epics.map(epic => {
             const childItems = workItems.filter(item => item.epicId === epic.id);
-            const openItems = childItems.filter(item => item.status !== Status.DONE);
-            const totalEstimation = childItems.reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
-            const doneEstimation = childItems.filter(i => i.status === Status.DONE).reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
-            const percentDoneWeighted = totalEstimation > 0 ? (doneEstimation / totalEstimation) * 100 : (childItems.length > 0 && openItems.length === 0) ? 100 : 0;
+            const totalItemsCount = childItems.length;
+
+            if (totalItemsCount === 0) {
+                return {
+                    ...epic,
+                    openItemsCount: 0,
+                    totalItemsCount: 0,
+                    totalEstimation: 0,
+                    percentDoneWeighted: 0,
+                };
+            }
+
+            const doneItems = childItems.filter(item => item.status === Status.DONE);
+            const openItemsCount = totalItemsCount - doneItems.length;
             
+            const totalEstimation = childItems.reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
+            const doneEstimation = doneItems.reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
+            
+            let percentDoneWeighted = 0;
+            // Prioritize estimation points for progress calculation
+            if (totalEstimation > 0) {
+                percentDoneWeighted = (doneEstimation / totalEstimation) * 100;
+            } else {
+                // Fallback to item count if no estimations are present
+                percentDoneWeighted = (doneItems.length / totalItemsCount) * 100;
+            }
+
             return { 
                 ...epic, 
-                openItemsCount: openItems.length, 
-                totalItemsCount: childItems.length,
+                openItemsCount, 
+                totalItemsCount,
                 totalEstimation,
-                percentDoneWeighted
+                percentDoneWeighted,
             };
         });
     }, [epics, workItems]);
@@ -510,6 +532,7 @@ const App: React.FC = () => {
             labels: [],
             watchers: [user.id], // Creator watches by default
             description: '', // FIX: Initialize description to prevent .replace on undefined error
+            estimationPoints: 0, // FIX: Initialize estimation points to 0
             // FIX: Assign the new item to the currently selected sprint
             sprintId: selectedSprint ? selectedSprint.id : undefined,
         });

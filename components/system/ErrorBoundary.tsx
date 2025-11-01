@@ -41,7 +41,7 @@ const ErrorFallback: React.FC = () => {
 
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Replaced the class property for state with a constructor to ensure `this.props` is properly initialized by calling `super(props)`. This resolves the error where `this.props` was not found on the component instance.
+  // FIX: Replaced class property state initialization with a constructor to ensure `this.props` is available and `this.state` is correctly initialized, resolving compilation errors.
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };

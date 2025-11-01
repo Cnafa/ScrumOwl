@@ -192,8 +192,15 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setLocalWorkItem(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    
+    let finalValue: any = value;
+    if (type === 'number') {
+        const parsed = parseInt(value, 10);
+        finalValue = isNaN(parsed) ? 0 : parsed;
+    }
+    
+    setLocalWorkItem(prev => ({ ...prev, [name]: finalValue }));
   };
   
   const handleDescriptionChange = (html: string) => {
@@ -426,7 +433,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             <SideFieldWrapper label={t('estimationPoints')} highlightKey="estimationPoints">
               <div className="relative">
                   <div className="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none text-slate-500"><TimerIcon className="w-4 h-4" /></div>
-                  <input type="number" name="estimationPoints" value={(localWorkItem as any).estimationPoints || ''} onChange={handleChange} className="w-full text-sm ps-9 pe-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <input type="number" name="estimationPoints" value={localWorkItem.estimationPoints ?? ''} onChange={handleChange} className="w-full text-sm ps-9 pe-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
             </SideFieldWrapper>
             
