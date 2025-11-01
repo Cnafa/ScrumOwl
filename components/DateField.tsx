@@ -1,7 +1,53 @@
 // components/DateField.tsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useLocale } from '../context/LocaleContext';
 
 // --- Helper Functions & Hooks ---
+
+// Jalali-Gregorian conversion functions (based on a standard algorithm)
+function toJalali(gy: number, gm: number, gd: number): [number, number, number] {
+    const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    const gy2 = (gm > 2) ? (gy + 1) : gy;
+    let days = 355666 + (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) + Math.floor((gy2 + 399) / 400) + gd + g_d_m[gm - 1];
+    let jy = -1595 + (33 * Math.floor(days / 12053));
+    days %= 12053;
+    jy += 4 * Math.floor(days / 1461);
+    days %= 1461;
+    if (days > 365) {
+        jy += Math.floor((days - 1) / 365);
+        days = (days - 1) % 365;
+    }
+    const jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+    const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+    return [jy, jm, jd];
+}
+
+function toGregorian(jy: number, jm: number, jd: number): [number, number, number] {
+    jy += 1595;
+    let days = -355668 + (365 * jy) + (Math.floor(jy / 33) * 8) + Math.floor(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+    let gy = 400 * Math.floor(days / 146097);
+    days %= 146097;
+    if (days > 36524) {
+        gy += 100 * Math.floor(--days / 36524);
+        days %= 36524;
+        if (days >= 365) days++;
+    }
+    gy += 4 * Math.floor(days / 1461);
+    days %= 1461;
+    if (days > 365) {
+        gy += Math.floor((days - 1) / 365);
+        days = (days - 1) % 365;
+    }
+    // FIX: Changed `gd` to `let` as it is reassigned in the following loop.
+    let gd = days + 1;
+    const sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let gm = 0;
+    for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm];
+    return [gy, gm, gd];
+}
+
+const isLeapJalali = (jy: number) => (((((jy + 1595) % 33) * 8 + 5) % 33) < 8);
+const JALALI_MONTH_LENGTHS = [0, 31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
 
 const CalendarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -89,25 +135,66 @@ const CalendarPopover: React.FC<{
     maxDate?: Date;
     showTime?: boolean;
 }> = ({ displayDate, setDisplayDate, onSelect, selectedDate, minDate, maxDate, showTime }) => {
-    const month = displayDate.getMonth();
-    const year = displayDate.getFullYear();
+    const { locale } = useLocale();
+    const isJalali = locale === 'fa-IR';
 
-    const daysInMonth = useMemo(() => {
-        const date = new Date(year, month, 1);
-        const days = [];
-        const firstDayIndex = date.getDay();
-        
-        // Add padding for previous month
-        for (let i = 0; i < firstDayIndex; i++) {
-            days.push(null);
+    const { year, month, daysInGrid, header, weekDays } = useMemo(() => {
+        const [gYear, gMonth, gDay] = [displayDate.getFullYear(), displayDate.getMonth(), displayDate.getDate()];
+        if (isJalali) {
+            const [jYear, jMonth] = toJalali(gYear, gMonth + 1, gDay);
+            const firstDayGregorian = new Date(...toGregorian(jYear, jMonth, 1));
+            const firstDayOfWeek = firstDayGregorian.getDay(); // 0 (Sun) to 6 (Sat)
+            const shamsiOffset = (firstDayOfWeek + 1) % 7;
+            
+            let monthLength = JALALI_MONTH_LENGTHS[jMonth];
+            if (jMonth === 12 && isLeapJalali(jYear)) monthLength = 30;
+
+            const days = Array(shamsiOffset).fill(null);
+            for (let i = 1; i <= monthLength; i++) {
+                const [gy, gm, gd] = toGregorian(jYear, jMonth, i);
+                days.push(new Date(gy, gm - 1, gd));
+            }
+            
+            const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { month: 'long', year: 'numeric' });
+            
+            const weekDayFormat = new Intl.DateTimeFormat('fa-IR', { weekday: 'short' });
+            const shamsiWeekDays = Array.from({ length: 7 }, (_, i) => {
+                 // Saturday in Jalali is start of week
+                 const d = new Date(2023, 0, 7 + i);
+                 return weekDayFormat.format(d);
+            });
+            
+            return { year: jYear, month: jMonth, daysInGrid: days, header: formatter.format(displayDate), weekDays: shamsiWeekDays };
+        } else {
+            const date = new Date(gYear, gMonth, 1);
+            const days = [];
+            const firstDayIndex = date.getDay();
+            for (let i = 0; i < firstDayIndex; i++) days.push(null);
+            while (date.getMonth() === gMonth) {
+                days.push(new Date(date));
+                date.setDate(date.getDate() + 1);
+            }
+            const formatter = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+            const weekDayFormat = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+            const gregorianWeekDays = Array.from({length: 7}, (_, i) => {
+                 const d = new Date(2023, 0, 1 + i); // Starts Sunday
+                 return weekDayFormat.format(d);
+            });
+
+            return { year: gYear, month: gMonth, daysInGrid: days, header: formatter.format(displayDate), weekDays: gregorianWeekDays };
         }
-        
-        while (date.getMonth() === month) {
-            days.push(new Date(date));
-            date.setDate(date.getDate() + 1);
+    }, [displayDate, isJalali, locale]);
+
+    const changeMonth = (delta: number) => {
+        if (isJalali) {
+            const [jYear, jMonth] = toJalali(displayDate.getFullYear(), displayDate.getMonth() + 1, 1);
+            const newJMonth = jMonth + delta;
+            const [gy, gm, gd] = toGregorian(jYear, newJMonth, 1);
+            setDisplayDate(new Date(gy, gm - 1, gd));
+        } else {
+            setDisplayDate(new Date(year, displayDate.getMonth() + delta, 1));
         }
-        return days;
-    }, [month, year]);
+    };
     
     const isSameDay = (d1: Date, d2: Date) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
     
@@ -122,18 +209,19 @@ const CalendarPopover: React.FC<{
     return (
         <div className="absolute top-full mt-2 w-72 bg-white rounded-lg z-[90] shadow-[4px_4px_0px_#889C9B] border-2 border-[#3B3936]">
             <div className="flex justify-between items-center p-2">
-                <button onClick={() => setDisplayDate(new Date(year, month - 1))} className="p-1 rounded-full hover:bg-gray-100">&lt;</button>
-                <span className="font-semibold">{displayDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                <button onClick={() => setDisplayDate(new Date(year, month + 1))} className="p-1 rounded-full hover:bg-gray-100">&gt;</button>
+                <button onClick={() => changeMonth(-1)} className="p-1 rounded-full hover:bg-gray-100">&lt;</button>
+                <span className="font-semibold">{header}</span>
+                <button onClick={() => changeMonth(1)} className="p-1 rounded-full hover:bg-gray-100">&gt;</button>
             </div>
             <div className="grid grid-cols-7 text-center text-xs text-gray-500 pb-1">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d}>{d}</div>)}
+                {weekDays.map((d, i) => <div key={i}>{d}</div>)}
             </div>
             <div className="grid grid-cols-7 p-1">
-                {daysInMonth.map((day, i) => {
+                {daysInGrid.map((day, i) => {
                     if (!day) return <div key={`pad-${i}`}></div>;
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isDisabled = (minDate && day < minDate) || (maxDate && day > maxDate);
+                    const dayNumber = isJalali ? toJalali(day.getFullYear(), day.getMonth() + 1, day.getDate())[2] : day.getDate();
                     return (
                         <button
                             key={day.toISOString()}
@@ -141,7 +229,7 @@ const CalendarPopover: React.FC<{
                             onClick={() => handleSelectDate(day)}
                             className={`p-1 text-center rounded aspect-square hover:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed ${isSelected ? 'bg-[#486966] text-white' : 'text-gray-800'}`}
                         >
-                            {day.getDate()}
+                            {dayNumber}
                         </button>
                     );
                 })}
@@ -172,6 +260,7 @@ export const DateTimeField: React.FC<Omit<DateFieldProps, 'showTime'>> = (props)
 );
 
 const BaseDatePicker: React.FC<DateFieldProps> = ({ value, onChange, minDate, maxDate, showTime = false, className, disabled = false }) => {
+    const { locale } = useLocale();
     const [selectedDate, setSelectedDate] = useState<Date | null>(value ? new Date(value) : null);
     const [displayDate, setDisplayDate] = useState<Date>(value ? new Date(value) : new Date());
     const [isOpen, setIsOpen] = useState(false);
@@ -192,11 +281,15 @@ const BaseDatePicker: React.FC<DateFieldProps> = ({ value, onChange, minDate, ma
         }
     };
     
-    const formatOptions: Intl.DateTimeFormatOptions = showTime 
-        ? { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }
-        : { year: 'numeric', month: 'long', day: 'numeric' };
+    const displayFormat = useMemo(() => {
+        const baseLocale = locale === 'fa-IR' ? 'fa-IR-u-ca-persian' : 'en-CA';
+        const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
+        const finalOptions = showTime ? { ...dateOptions, ...timeOptions } : dateOptions;
+        return new Intl.DateTimeFormat(baseLocale, finalOptions);
+    }, [locale, showTime]);
 
-    const displayValue = selectedDate ? new Intl.DateTimeFormat('en-CA', formatOptions).format(selectedDate).replace(/, /g, ' ') : '';
+    const displayValue = selectedDate ? displayFormat.format(selectedDate) : '';
     
     return (
         <div className={`relative ${className}`} ref={wrapperRef}>

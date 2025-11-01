@@ -420,7 +420,26 @@ const App: React.FC = () => {
     }, [availableActiveSprints, selectedSprintId]);
     
     const selectedSprint = useMemo(() => sprints.find(s => s.id === selectedSprintId), [sprints, selectedSprintId]);
-    const activeEpics = useMemo(() => epics.filter(e => (e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD) && e.status !== EpicStatus.DELETED), [epics]);
+    
+    const enrichedEpics = useMemo(() => {
+        return epics.map(epic => {
+            const childItems = workItems.filter(item => item.epicId === epic.id);
+            const openItems = childItems.filter(item => item.status !== Status.DONE);
+            const totalEstimation = childItems.reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
+            const doneEstimation = childItems.filter(i => i.status === Status.DONE).reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
+            const percentDoneWeighted = totalEstimation > 0 ? (doneEstimation / totalEstimation) * 100 : (childItems.length > 0 && openItems.length === 0) ? 100 : 0;
+            
+            return { 
+                ...epic, 
+                openItemsCount: openItems.length, 
+                totalItemsCount: childItems.length,
+                totalEstimation,
+                percentDoneWeighted
+            };
+        });
+    }, [epics, workItems]);
+    
+    const activeEpics = useMemo(() => enrichedEpics.filter(e => (e.status === EpicStatus.ACTIVE || e.status === EpicStatus.ON_HOLD) && e.status !== EpicStatus.DELETED), [enrichedEpics]);
     const boardUsers = useMemo(() => activeBoardMembers.map(m => m.user), [activeBoardMembers]);
 
     // US-42: Clear highlight states when modals are closed
@@ -856,7 +875,7 @@ const App: React.FC = () => {
             <AppShell 
                 workItems={workItems}
                 onItemUpdate={handleItemUpdate}
-                epics={epics}
+                epics={enrichedEpics}
                 teams={teams}
                 setTeams={setTeams}
                 sprints={sprints}

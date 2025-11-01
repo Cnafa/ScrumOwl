@@ -79,25 +79,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
     const boardUsers = useMemo(() => activeBoardMembers.map(m => m.user), [activeBoardMembers]);
 
-    const { selectedSprint, savedViews, setSavedViews } = props;
-
-    const enrichedEpics = useMemo(() => {
-        return props.epics.map(epic => {
-            const childItems = props.workItems.filter(item => item.epicId === epic.id);
-            const openItems = childItems.filter(item => item.status !== Status.DONE);
-            const totalEstimation = childItems.reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
-            const doneEstimation = childItems.filter(i => i.status === Status.DONE).reduce((sum, item) => sum + (item.estimationPoints || 0), 0);
-            const percentDoneWeighted = totalEstimation > 0 ? (doneEstimation / totalEstimation) * 100 : (childItems.length > 0 && openItems.length === 0) ? 100 : 0;
-            
-            return { 
-                ...epic, 
-                openItemsCount: openItems.length, 
-                totalItemsCount: childItems.length,
-                totalEstimation,
-                percentDoneWeighted
-            };
-        });
-    }, [props.epics, props.workItems]);
+    const { selectedSprint, savedViews, setSavedViews, epics: enrichedEpics } = props;
 
     const sprintAndEpicFilteredItems = useMemo(() => {
         // If not on the Kanban view or no sprint is selected, show nothing.
