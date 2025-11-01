@@ -1,19 +1,10 @@
 // components/ItemsView.tsx
 import React, { useState, useMemo, useEffect } from 'react';
-import { WorkItem, Epic, Sprint, SprintState, User } from '../types';
+import { WorkItem, Epic, Sprint, SprintState, User, WorkItemType, Status } from '../types';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { MagnifyingGlassIcon, MountainIcon, MilestoneIcon } from './icons';
-
-type QuickScope = 'UNASSIGNED' | 'NO_EPIC' | 'NO_SPRINT' | 'MY_ITEMS' | 'ALL';
-
-interface ItemsViewProps {
-    workItems: WorkItem[];
-    epics: Epic[];
-    sprints: Sprint[];
-    onItemUpdate: (item: WorkItem) => void;
-    onSelectWorkItem: (item: WorkItem) => void;
-}
+import { KANBAN_COLUMNS, WORK_ITEM_TYPES } from '../constants';
 
 const useDebounce = <T,>(value: T, delay: number): T => {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -44,16 +35,54 @@ const AssigneeAvatars: React.FC<{ assignees: User[] }> = ({ assignees }) => {
     );
 };
 
+const QuickScopePill: React.FC<{ label: string, isActive: boolean, onClick: () => void }> = ({ label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`px-3 py-1 text-sm font-medium rounded-full ${isActive ? 'bg-primary text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+    >
+        {label}
+    </button>
+);
+
+// FIX: Define the missing ItemsViewProps interface.
+interface ItemsViewProps {
+    workItems: WorkItem[];
+    epics: Epic[];
+    sprints: Sprint[];
+    onItemUpdate: (item: WorkItem) => void;
+    onSelectWorkItem: (workItem: WorkItem) => void;
+}
+
 export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints, onItemUpdate, onSelectWorkItem }) => {
     const { t } = useLocale();
-    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [editingCell, setEditingCell] = useState<{ itemId: string; column: 'epic' | 'sprint' } | null>(null);
+    
+    const [quickScope, setQuickScope] = useState<'ALL' | 'NO_EPIC' | 'WITH_EPIC'>('ALL');
+    const [typeFilter, setTypeFilter] = useState<string>('ALL');
+    const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
     const debouncedSearch = useDebounce(searchQuery, 300);
 
     const filteredItems = useMemo(() => {
-        let items = workItems;
+        let items = [...workItems];
+
+        // Apply quick scope
+        if (quickScope === 'NO_EPIC') {
+            items = items.filter(item => !item.epicId);
+        } else if (quickScope === 'WITH_EPIC') {
+            items = items.filter(item => !!item.epicId);
+        }
+
+        // Apply type filter
+        if (typeFilter !== 'ALL') {
+            items = items.filter(item => item.type === typeFilter);
+        }
+
+        // Apply status filter
+        if (statusFilter !== 'ALL') {
+            items = items.filter(item => item.status === statusFilter);
+        }
 
         // Apply search query
         if (debouncedSearch) {
@@ -67,7 +96,7 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
         // Sort by updatedAt descending
         return items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-    }, [workItems, debouncedSearch]);
+    }, [workItems, debouncedSearch, quickScope, typeFilter, statusFilter]);
 
     const handleInlineSave = (item: WorkItem, column: 'epic' | 'sprint', value: string) => {
         let updatedItem = { ...item };
@@ -87,17 +116,31 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
         <div className="p-4 bg-white rounded-lg shadow h-full flex flex-col">
             <header className="flex-shrink-0 pb-4 border-b">
                 <h2 className="text-xl font-bold text-[#3B3936]">{t('itemsView')}</h2>
-                <div className="mt-4 flex flex-wrap items-center justify-end gap-4">
-                    {/* Search Input */}
-                    <div className="relative w-full sm:w-64">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="search"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('searchPlaceholder')}
-                            className="w-full text-sm pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary placeholder-slate-500"
-                        />
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                     <div className="flex items-center gap-2">
+                        <QuickScopePill label={t('items_quickScope_all')} isActive={quickScope === 'ALL'} onClick={() => setQuickScope('ALL')} />
+                        <QuickScopePill label={t('items_quickScope_noEpic')} isActive={quickScope === 'NO_EPIC'} onClick={() => setQuickScope('NO_EPIC')} />
+                        <QuickScopePill label={t('items_quickScope_withEpic')} isActive={quickScope === 'WITH_EPIC'} onClick={() => setQuickScope('WITH_EPIC')} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="text-sm px-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="ALL">{t('all_item_types')}</option>
+                            {WORK_ITEM_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="text-sm px-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="ALL">{t('all_statuses')}</option>
+                            {KANBAN_COLUMNS.map(col => <option key={col.status} value={col.status}>{col.title}</option>)}
+                        </select>
+                        <div className="relative w-full sm:w-64">
+                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="search"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder={t('searchPlaceholder')}
+                                className="w-full text-sm pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary placeholder-slate-500"
+                            />
+                        </div>
                     </div>
                 </div>
             </header>
@@ -106,7 +149,6 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50 sticky top-0">
                         <tr>
-                            {/* FIX: Corrected the translation key from 'updatedAt' to 'lastModified'. */}
                             {['ID', t('title'), t('type'), t('status'), t('assignee'), t('epic'), t('sprint'), t('priority'), t('lastModified')].map(header => (
                                 <th key={header} scope="col" className="px-3 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
                             ))}
@@ -133,7 +175,7 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
                                             {epics.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                                         </select>
                                     ) : (
-                                        <button onClick={() => setEditingCell({ itemId: item.id, column: 'epic' })} className="flex items-center gap-1.5 rounded-full px-2 py-0.5 hover:bg-slate-200 w-full text-start truncate max-w-[150px]">
+                                        <button onClick={() => setEditingCell({ itemId: item.id, column: 'epic' })} className="flex items-center gap-1.5 rounded-full px-2 py-0.5 hover:bg-slate-200 w-full text-start truncate max-w-[150px] text-slate-800">
                                             {item.epicInfo ? <><div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.epicInfo.color }}></div> <span className="truncate">{item.epicInfo.name}</span></> : <span className="text-slate-400">{t('items_assignEpic')}</span>}
                                         </button>
                                     )}
@@ -151,7 +193,7 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
                                             {selectableSprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                         </select>
                                     ) : (
-                                        <button onClick={() => setEditingCell({ itemId: item.id, column: 'sprint' })} className="flex items-center gap-1.5 rounded-full px-2 py-0.5 hover:bg-slate-200 w-full text-start truncate max-w-[150px]">
+                                        <button onClick={() => setEditingCell({ itemId: item.id, column: 'sprint' })} className="flex items-center gap-1.5 rounded-full px-2 py-0.5 hover:bg-slate-200 w-full text-start truncate max-w-[150px] text-slate-800">
                                             {item.sprintId ? <><MilestoneIcon className="w-3 h-3 text-slate-500" /> <span className="truncate">{sprints.find(s=>s.id === item.sprintId)?.name || '...'}</span></> : <span className="text-slate-400">{t('items_assignSprint')}</span>}
                                         </button>
                                     )}

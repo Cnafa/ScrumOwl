@@ -41,8 +41,11 @@ const ErrorFallback: React.FC = () => {
 
 
 export class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Use state property initializer to fix type errors with 'this.state'
-  state: State = { hasError: false };
+  // FIX: Use a constructor to initialize state, ensuring proper component setup and resolving potential `this` context issues in some environments.
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(_error: Error): State {
     return { hasError: true };
@@ -55,7 +58,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
     logCrash(error);
   }
 
-  // FIX: The `render` method in a React class component should be a standard method, not an arrow function property. React correctly binds `this` for lifecycle methods like `render`, which resolves the TypeScript error.
   render() {
     if (this.state.hasError) {
       return <ErrorFallback />;

@@ -293,7 +293,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                 return (
                     <ReportsDashboard 
                         workItems={props.workItems}
-                        epics={props.epics}
+                        epics={enrichedEpics}
                         teams={props.teams}
                         users={boardUsers}
                         sprints={props.sprints}

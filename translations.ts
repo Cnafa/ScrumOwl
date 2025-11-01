@@ -421,6 +421,11 @@ export const translations = {
     workItemEditor_generating: 'Generating...',
     workItemEditor_selectUser: 'Select user...',
     yesDiscard: 'Yes, Discard',
+    items_quickScope_withEpic: 'With Epic',
+    filter_by_type: 'Filter by type...',
+    filter_by_status: 'Filter by status...',
+    all_statuses: 'All Statuses',
+    all_item_types: 'All Item Types',
   },
   'fa-IR': {
     // General
@@ -843,5 +848,10 @@ export const translations = {
     workItemEditor_generating: 'در حال تولید...',
     workItemEditor_selectUser: 'انتخاب کاربر...',
     yesDiscard: 'بله، لغو کن',
+    items_quickScope_withEpic: 'فقط با اپیک',
+    filter_by_type: 'فیلتر بر اساس نوع...',
+    filter_by_status: 'فیلتر بر اساس وضعیت...',
+    all_statuses: 'همه وضعیت‌ها',
+    all_item_types: 'همه انواع آیتم',
   },
 };
