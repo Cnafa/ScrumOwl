@@ -79,10 +79,10 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
 
             <div className="border-b border-gray-200">
                  <nav className="flex space-x-2">
-                    <TabButton tab="ACTIVE" label="Active" />
-                    <TabButton tab="UPCOMING" label="Upcoming" />
-                    <TabButton tab="PAST" label="Past" />
-                    {canManage && <TabButton tab="DELETED" label="Deleted" />}
+                    <TabButton tab="ACTIVE" label={t('sprint_tab_active')} />
+                    <TabButton tab="UPCOMING" label={t('sprint_tab_upcoming')} />
+                    <TabButton tab="PAST" label={t('sprint_tab_past')} />
+                    {canManage && <TabButton tab="DELETED" label={t('sprint_tab_deleted')} />}
                 </nav>
             </div>
             
@@ -90,11 +90,11 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                  <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Sprint Name</th>
-                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Dates</th>
-                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Epics</th>
-                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Goal</th>
-                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('sprintName')}</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('sprintDates')}</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('epics')}</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('goal')}</th>
+                            <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase">{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -114,10 +114,10 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                                    {canManage && activeTab !== 'PAST' && activeTab !== 'DELETED' && (
                                     <>
                                        <button onClick={(e) => { e.stopPropagation(); setEditingSprint(sprint); }} className="text-indigo-600 hover:text-indigo-900 px-2">
-                                           Edit
+                                           {t('edit')}
                                        </button>
                                        <button onClick={(e) => { e.stopPropagation(); onDeleteSprint(sprint); }} className="text-red-600 hover:text-red-900 px-2">
-                                           Delete
+                                           {t('delete')}
                                        </button>
                                     </>
                                    )}
@@ -130,7 +130,7 @@ export const SprintsView: React.FC<SprintsViewProps> = ({ sprints, workItems, on
                            </tr>
                        ))}
                        {filteredSprints.length === 0 && (
-                           <tr><td colSpan={5} className="text-center py-6 text-sm text-gray-500">No sprints in this category.</td></tr>
+                           <tr><td colSpan={5} className="text-center py-6 text-sm text-gray-500">{t('noSprintsInCategory')}</td></tr>
                        )}
                     </tbody>
                  </table>

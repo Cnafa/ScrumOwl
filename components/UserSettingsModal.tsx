@@ -40,24 +40,24 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = ({ onClose })
                 </header>
                 <main className="p-6 space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-[#3B3936]">Notification Email</label>
+                        <label className="block text-sm font-medium text-[#3B3936]">{t('notificationEmail')}</label>
                         <p className="text-sm text-gray-700 mt-1 p-2 bg-gray-100 rounded-md select-all">{user?.email}</p>
-                        <p className="text-xs text-gray-500 mt-1">Notifications are sent to your sign-in Gmail and cannot be changed.</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('notificationEmailDesc')}</p>
                     </div>
 
                     <hr />
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="enableRealtime" className="text-sm font-medium text-[#3B3936]">Enable Real-time Updates</label>
+                            <label htmlFor="enableRealtime" className="text-sm font-medium text-[#3B3936]">{t('settingsEnableRealtime')}</label>
                             <input type="checkbox" id="enableRealtime" name="enableRealtime" checked={localSettings.enableRealtime} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                         </div>
                         <div className="flex items-center justify-between">
-                            <label htmlFor="enableIdleReminder" className="text-sm font-medium text-[#3B3936]">Enable Idle Reminder (pre-US-18)</label>
+                            <label htmlFor="enableIdleReminder" className="text-sm font-medium text-[#3B3936]">{t('settingsEnableIdle')}</label>
                             <input type="checkbox" id="enableIdleReminder" name="enableIdleReminder" checked={localSettings.enableIdleReminder} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                         </div>
                         <div className="flex items-center justify-between">
-                            <label htmlFor="enableFinishDraftReminder" className="text-sm font-medium text-[#3B3936]">Enable "Finish This Draft" Reminder (US-18)</label>
+                            <label htmlFor="enableFinishDraftReminder" className="text-sm font-medium text-[#3B3936]">{t('settingsEnableFinishDraft')}</label>
                             <input type="checkbox" id="enableFinishDraftReminder" name="enableFinishDraftReminder" checked={localSettings.enableFinishDraftReminder} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-[#486966] focus:ring-[#486966]" />
                         </div>
                     </div>

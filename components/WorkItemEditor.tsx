@@ -301,7 +301,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
               <div>
                 <textarea
                     name="summary" value={localWorkItem.summary || ''} onChange={handleChange}
-                    placeholder="A concise AI-generated summary will appear here." rows={2}
+                    placeholder={t('summaryPlaceholder')} rows={2}
                     className="w-full px-2 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button type="button" onClick={handleGenerateSummary} disabled={isGeneratingSummary}
@@ -389,21 +389,21 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             
             <SideFieldWrapper label={t('teams')} highlightKey="teamId">
               <SelectWithIcon icon={<UsersRoundIcon className="w-4 h-4" />} name="teamId" value={localWorkItem.teamId || ''} onChange={e => handleSelectTeam(teams.find(t => t.id === e.target.value))}>
-                  <option value="">No Team</option>
+                  <option value="">{t('noTeam')}</option>
                   {teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}
               </SelectWithIcon>
             </SideFieldWrapper>
             
             <SideFieldWrapper label={t('epic')} highlightKey="epicId">
               <SelectWithIcon icon={<MountainIcon className="w-4 h-4" />} name="epicId" value={localWorkItem.epicId || ''} onChange={e => handleSelectEpic(epics.find(epic => epic.id === e.target.value))}>
-                   <option value="">No Epic</option>
+                   <option value="">{t('noEpic')}</option>
                   {epics.map(item => <option key={item.id} value={item.id}>[{item.id}] {item.name}</option>)}
               </SelectWithIcon>
             </SideFieldWrapper>
 
             <SideFieldWrapper label={t('sprint')} highlightKey="sprint">
                <SelectWithIcon icon={<MilestoneIcon className="w-4 h-4" />} name="sprintId" value={localWorkItem.sprintId || ''} onChange={handleSprintChange}>
-                    <option value="">No Sprint</option>
+                    <option value="">{t('noSprint')}</option>
                     {selectableSprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </SelectWithIcon>
             </SideFieldWrapper>

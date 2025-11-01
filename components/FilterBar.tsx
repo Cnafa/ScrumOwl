@@ -50,11 +50,13 @@ const MultiSelectDropdown: React.FC<{
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   searchable?: boolean;
-}> = ({ buttonContent, items, selectedIds, onSelectionChange, searchable = false }) => {
+  searchPlaceholder?: string;
+}> = ({ buttonContent, items, selectedIds, onSelectionChange, searchable = false, searchPlaceholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   useClickOutside(dropdownRef, () => setIsOpen(false));
+  const { t } = useLocale();
 
   const filteredItems = useMemo(() => {
     if (!searchable || !search) return items;
@@ -76,7 +78,7 @@ const MultiSelectDropdown: React.FC<{
         </button>
         {isOpen && (
             <div className="absolute z-10 w-64 mt-1 bg-white border rounded-md shadow-lg text-start">
-                {searchable && <div className="p-1 border-b"><input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full px-2 py-1 border rounded-md text-xs"/></div>}
+                {searchable && <div className="p-1 border-b"><input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={searchPlaceholder || t('search')} className="w-full px-2 py-1 border rounded-md text-xs"/></div>}
                 <ul className="max-h-60 overflow-auto p-1">
                     {filteredItems.map(item => (
                         <li key={item.id} className="px-2 py-1 text-xs cursor-pointer hover:bg-gray-100 rounded-md flex items-center gap-2">
@@ -156,11 +158,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       <div className="flex items-center gap-2">
         <MultiSelectDropdown
-            buttonContent={filterSet.assigneeIds.length > 0 ? `${filterSet.assigneeIds.length} Assignee(s)`: 'All Assignees'}
+            buttonContent={filterSet.assigneeIds.length > 0 ? `${filterSet.assigneeIds.length} Assignee(s)`: t('allAssignees')}
             items={ALL_USERS.map(u => ({ id: u.id, name: u.name, content: <><img src={u.avatarUrl} alt={u.name} className="w-4 h-4 rounded-full" /><span>{u.name}</span></> }))}
             selectedIds={filterSet.assigneeIds}
             onSelectionChange={(ids) => onFilterChange({...filterSet, assigneeIds: ids})}
             searchable
+            searchPlaceholder={t('search')}
         />
         {filterSet.assigneeIds.length > 0 && (
             <div className="flex items-center text-xs p-0.5 bg-slate-200 rounded-md">
@@ -170,7 +173,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
         
         <MultiSelectDropdown
-            buttonContent={filterSet.teamIds.length > 0 ? `${filterSet.teamIds.length} Team(s)` : 'All Teams'}
+            buttonContent={filterSet.teamIds.length > 0 ? `${filterSet.teamIds.length} Team(s)` : t('allTeams')}
             items={teams.map(t => ({ id: t.id, name: t.name, content: t.name }))}
             selectedIds={filterSet.teamIds}
             onSelectionChange={(ids) => onFilterChange({...filterSet, teamIds: ids})}

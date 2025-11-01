@@ -100,7 +100,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
                     <header className="flex items-center justify-between p-4 border-b">
-                        <h2 className="text-xl font-bold text-[#3B3936]">{event?.id ? 'Edit Event' : 'New Event'}</h2>
+                        <h2 className="text-xl font-bold text-[#3B3936]">{event?.id ? t('editEvent') : t('newEvent')}</h2>
                         <button type="button" onClick={onClose}><XMarkIcon className="w-6 h-6 text-[#889C9B]" /></button>
                     </header>
                     <main className="p-6 space-y-4 flex-1 overflow-y-auto">
@@ -124,11 +124,11 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                              <div>
-                                <label htmlFor="start" className="block text-sm font-medium text-[#486966] mb-1">Start Time</label>
+                                <label htmlFor="start" className="block text-sm font-medium text-[#486966] mb-1">{t('startTime')}</label>
                                 <DateTimeField value={localEvent.start || null} onChange={(date) => handleDateChange('start', date)} />
                             </div>
                             <div>
-                                <label htmlFor="end" className="block text-sm font-medium text-[#486966] mb-1">End Time</label>
+                                <label htmlFor="end" className="block text-sm font-medium text-[#486966] mb-1">{t('endTime')}</label>
                                 <DateTimeField value={localEvent.end || null} onChange={(date) => handleDateChange('end', date)} minDate={localEvent.start || undefined} />
                             </div>
                         </div>
@@ -141,9 +141,9 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                            <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={(e) => handleFieldChange('onlineLink', e.target.value)} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                         </div>
                         <div ref={workItemDropdownRef}>
-                           <label htmlFor="linkedWorkItemId" className="block text-sm font-medium text-[#486966] mb-1">Link to Work Item</label>
+                           <label htmlFor="linkedWorkItemId" className="block text-sm font-medium text-[#486966] mb-1">{t('linkToWorkItem')}</label>
                            <div className="relative">
-                               <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder="Search by ID or title..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
+                               <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md"/>
                                {isWorkItemDropdownOpen && (
                                    <ul className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                                        <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100">None</li>

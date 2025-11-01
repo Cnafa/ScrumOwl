@@ -106,7 +106,7 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
       <div ref={editorContainerRef} className="bg-[#F0F4F4] rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col" onMouseDown={e => e.stopPropagation()}>
         <header className="flex items-center justify-between p-4 border-b bg-white/60 rounded-t-lg">
           <h2 className="text-xl font-bold text-[#3B3936]">
-            {isNew ? 'Create New Epic' : readOnly ? `Viewing Epic ${originalEpic.id}` : `Editing Epic ${originalEpic.id}`}
+            {isNew ? t('createNewEpic') : readOnly ? `Viewing Epic ${originalEpic.id}` : `Editing Epic ${originalEpic.id}`}
           </h2>
           <button onClick={onCancel} className="p-1 rounded-full hover:bg-gray-200">
             <XMarkIcon className="w-6 h-6 text-[#889C9B]" />
@@ -120,7 +120,7 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
               name="name"
               value={localEpic.name || ''}
               onChange={handleChange}
-              placeholder="Epic Name"
+              placeholder={t('epicName')}
               disabled={readOnly}
               className="w-full text-lg font-semibold px-2 py-1 border-b-2 border-transparent focus:border-[#486966] focus:outline-none bg-transparent text-[#3B3936] rounded disabled:bg-gray-100"
               data-highlight-key="name"
@@ -166,8 +166,8 @@ export const EpicEditor: React.FC<EpicEditorProps> = ({ epic, onSave, onCancel, 
           </div>
           
           <div className="flex-1 overflow-y-auto pr-2 space-y-4 bg-white/50 p-4 rounded-lg">
-            <h3 className="font-semibold border-b pb-2 text-[#3B3936]">ICE Scoring</h3>
-            <p className="text-xs text-gray-500">Rate the Impact, Confidence, and Ease to calculate a priority score.</p>
+            <h3 className="font-semibold border-b pb-2 text-[#3B3936]">{t('iceScoring')}</h3>
+            <p className="text-xs text-gray-500">{t('iceScoringDesc')}</p>
             <ScoreSlider label={t('impact')} value={localEpic.impact || 5} onChange={val => setLocalEpic(p => ({...p, impact: val}))} highlightKey="impact" disabled={readOnly} />
             <ScoreSlider label={t('confidence')} value={localEpic.confidence || 5} onChange={val => setLocalEpic(p => ({...p, confidence: val}))} highlightKey="confidence" disabled={readOnly} />
             <ScoreSlider label={t('ease')} value={localEpic.ease || 5} onChange={val => setLocalEpic(p => ({...p, ease: val}))} highlightKey="ease" disabled={readOnly} />

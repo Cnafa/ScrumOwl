@@ -47,14 +47,14 @@ export const SaveViewModal: React.FC<SaveViewModalProps> = ({ isOpen, onClose, o
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-xl font-bold text-[#3B3936]">Save View</h2>
+                    <h2 className="text-xl font-bold text-[#3B3936]">{t('saveView')}</h2>
                     <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-gray-200">
                         <XMarkIcon className="w-6 h-6 text-[#889C9B]" />
                     </button>
                 </header>
                 <main className="p-6 space-y-4">
                     <div>
-                        <label htmlFor="viewName" className="block text-sm font-medium text-[#486966] mb-1">View Name</label>
+                        <label htmlFor="viewName" className="block text-sm font-medium text-[#486966] mb-1">{t('viewName')}</label>
                         <input
                             type="text"
                             id="viewName"
@@ -67,20 +67,20 @@ export const SaveViewModal: React.FC<SaveViewModalProps> = ({ isOpen, onClose, o
                          {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
                     </div>
                      <div>
-                        <label className="block text-sm font-medium text-[#486966] mb-2">Visibility</label>
+                        <label className="block text-sm font-medium text-[#486966] mb-2">{t('visibility')}</label>
                         <div className="space-y-2">
                              <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 cursor-pointer">
                                 <input type="radio" name="visibility" value={ViewVisibility.PRIVATE} checked={visibility === ViewVisibility.PRIVATE} onChange={() => setVisibility(ViewVisibility.PRIVATE)} className="h-4 w-4 text-[#486966] focus:ring-[#486966] border-gray-300"/>
                                 <div>
-                                    <span className="text-sm font-medium text-gray-900">Private</span>
-                                    <p className="text-xs text-gray-500">Only you can see and edit this view.</p>
+                                    <span className="text-sm font-medium text-gray-900">{t('private')}</span>
+                                    <p className="text-xs text-gray-500">{t('visibilityPrivateDesc')}</p>
                                 </div>
                             </label>
                             <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 cursor-pointer">
                                 <input type="radio" name="visibility" value={ViewVisibility.GROUP} checked={visibility === ViewVisibility.GROUP} onChange={() => setVisibility(ViewVisibility.GROUP)} className="h-4 w-4 text-[#486966] focus:ring-[#486966] border-gray-300"/>
                                 <div>
-                                    <span className="text-sm font-medium text-gray-900">Group</span>
-                                    <p className="text-xs text-gray-500">Everyone in the group can see this view.</p>
+                                    <span className="text-sm font-medium text-gray-900">{t('group')}</span>
+                                    <p className="text-xs text-gray-500">{t('visibilityGroupDesc')}</p>
                                 </div>
                             </label>
                         </div>
