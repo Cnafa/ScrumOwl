@@ -1,7 +1,6 @@
 import { CalendarEvent, WorkItem, User, Conflict, Team } from '../types';
 import { ALL_USERS } from '../constants';
-
-let events: CalendarEvent[] = [];
+import { load, save } from './persistence';
 
 // --- Conflict Detection Logic (US-30) ---
 const isOverlap = (startA: Date, endA: Date, startB: Date, endB: Date): boolean => {
@@ -39,15 +38,17 @@ const updateAllConflicts = (allEvents: CalendarEvent[]): CalendarEvent[] => {
     });
 };
 
-// Initialize with some mock data
-export const initializeCalendarEvents = (workItems: WorkItem[]) => {
-    if (events.length === 0) {
-        events = [];
-    }
+const rehydrateDates = (events: CalendarEvent[]): CalendarEvent[] => {
+    return events.map(e => ({
+        ...e,
+        start: new Date(e.start),
+        end: new Date(e.end),
+    }));
 };
 
 export const getEvents = async (scope: 'my' | 'all', currentUser: User): Promise<CalendarEvent[]> => {
     await new Promise(res => setTimeout(res, 100));
+    const events = rehydrateDates(load<CalendarEvent[]>('events', []));
     if (scope === 'my') {
         return events.filter(e =>
             e.createdBy.id === currentUser.id || e.attendees.some(a => a.id === currentUser.id)
@@ -64,6 +65,8 @@ export const getTodaysEvents = async (currentUser: User): Promise<CalendarEvent[
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
+    
+    const events = rehydrateDates(load<CalendarEvent[]>('events', []));
 
     return events
         .filter(e => {
@@ -84,6 +87,7 @@ const expandTeamsToAttendees = (attendees: User[], teamIds: string[] = [], allTe
 
 export const createEvent = async (eventData: Omit<CalendarEvent, 'id' | 'createdBy' | 'hasConflict' | 'conflicts'>, createdBy: User, allTeams: Team[]): Promise<CalendarEvent> => {
     await new Promise(res => setTimeout(res, 300));
+    let events = rehydrateDates(load<CalendarEvent[]>('events', []));
 
     const finalAttendees = expandTeamsToAttendees(eventData.attendees, eventData.teamIds, allTeams);
 
@@ -94,30 +98,36 @@ export const createEvent = async (eventData: Omit<CalendarEvent, 'id' | 'created
         createdBy,
     };
     events.push(newEvent);
-    events = updateAllConflicts(events); // Recalculate all conflicts
+    events = updateAllConflicts(events);
+    save('events', events);
     return events.find(e => e.id === newEvent.id)!;
 };
 
 export const updateEvent = async (updatedEventData: CalendarEvent, allTeams: Team[]): Promise<CalendarEvent> => {
     await new Promise(res => setTimeout(res, 300));
+    let events = rehydrateDates(load<CalendarEvent[]>('events', []));
     const finalAttendees = expandTeamsToAttendees(updatedEventData.attendees, updatedEventData.teamIds, allTeams);
     const finalEvent = { ...updatedEventData, attendees: finalAttendees };
 
     events = events.map(e => e.id === finalEvent.id ? finalEvent : e);
     events = updateAllConflicts(events);
+    save('events', events);
     return events.find(e => e.id === finalEvent.id)!;
 };
 
 export const deleteEvent = async (eventId: string): Promise<void> => {
     await new Promise(res => setTimeout(res, 300));
+    let events = rehydrateDates(load<CalendarEvent[]>('events', []));
     events = events.filter(e => e.id !== eventId);
     events = updateAllConflicts(events);
+    save('events', events);
 };
 
 export const getConflictsPreview = async (eventData: Partial<CalendarEvent>, allTeams: Team[]): Promise<Conflict[]> => {
     await new Promise(res => setTimeout(res, 50));
     if (!eventData.start || !eventData.end) return [];
     
+    const events = rehydrateDates(load<CalendarEvent[]>('events', []));
     const finalAttendees = expandTeamsToAttendees(eventData.attendees || [], eventData.teamIds, allTeams);
 
     const eventToTest: CalendarEvent = {

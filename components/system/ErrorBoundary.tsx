@@ -1,5 +1,6 @@
 
 
+
 import React, { ErrorInfo, ReactNode } from "react";
 import { logCrash } from "../../libs/logging/crashLogger";
 // FIX: The useLocale hook cannot be used here because the LocaleProvider is a child
@@ -55,7 +56,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     logCrash(error);
   }
 
-  // FIX: Reverted the render method to a standard class method. The arrow function was causing a `this` context issue where `this.props` was not found. React correctly binds `this` for standard `render` methods.
+  // FIX: The 'render' method was defined as an arrow function, which can cause 'this' context issues. It has been reverted to a standard class method, which React binds correctly.
   render() {
     if (this.state.hasError) {
       return <ErrorFallback />;

@@ -1,10 +1,10 @@
 // services/analyticsService.ts
-import { WorkItem, Epic, User, Status, EpicProgressReportData, AssigneeWorkloadData } from '../types';
+import { WorkItem, Epic, User, Status, EpicProgressReportData, AssigneeWorkloadData, Sprint } from '../types';
 import { SPRINTS, WIP_LIMIT } from '../constants';
 
 // --- Burndown Chart Logic ---
 export const getBurndownData = (sprintId: string, workItems: WorkItem[]) => {
-    const sprintItems = workItems.filter(item => item.sprint === sprintId);
+    const sprintItems = workItems.filter(item => item.sprintId === sprintId);
     if (sprintItems.length === 0) return { labels: [], ideal: [], actual: [] };
     
     const sprintDuration = 14; // Assume 14 days for mock
@@ -33,23 +33,25 @@ export const getBurndownData = (sprintId: string, workItems: WorkItem[]) => {
 };
 
 // --- Velocity Chart Logic ---
-export const getVelocityData = (workItems: WorkItem[]) => {
+export const getVelocityData = (workItems: WorkItem[], sprints: Sprint[]) => {
+    const sprintNames = sprints.map(s => s.name);
     const velocityBySprint: Record<string, number> = {};
-    SPRINTS.forEach(sprint => {
-        velocityBySprint[sprint] = 0;
+    sprintNames.forEach(name => {
+        velocityBySprint[name] = 0;
     });
 
     workItems
-        .filter(item => item.status === Status.DONE && item.sprint)
+        .filter(item => item.status === Status.DONE && item.sprintId)
         .forEach(item => {
-            if (velocityBySprint.hasOwnProperty(item.sprint)) {
-                velocityBySprint[item.sprint] += item.estimationPoints || 0;
+            const sprintName = sprints.find(s => s.id === item.sprintId)?.name;
+            if (sprintName && velocityBySprint.hasOwnProperty(sprintName)) {
+                velocityBySprint[sprintName] += item.estimationPoints || 0;
             }
         });
         
     const labels = Object.keys(velocityBySprint);
     const data = Object.values(velocityBySprint);
-    const average = data.reduce((a, b) => a + b, 0) / data.length;
+    const average = data.length > 0 ? data.reduce((a, b) => a + b, 0) / data.length : 0;
 
     return { labels, data, average };
 };

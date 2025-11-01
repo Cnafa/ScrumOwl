@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, ReactNode, useMemo, useCall
 import { Board, BoardMember, Role, Permission } from '../types';
 import { ALL_USERS, ROLES } from '../constants';
 import { useAuth } from './AuthContext';
+import { load, save } from '../services/persistence';
 
 interface BoardContextType {
   boards: Board[];
@@ -18,9 +19,13 @@ const BoardContext = createContext<BoardContextType | undefined>(undefined);
 
 export const BoardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [boards, setBoards] = useState<Board[]>([]);
-  const [boardMembers, setBoardMembers] = useState<Record<string, BoardMember[]>>({});
-  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [boards, setBoards] = useState<Board[]>(() => load('boards', []));
+  const [boardMembers, setBoardMembers] = useState<Record<string, BoardMember[]>>(() => load('boardMembers', {}));
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(() => load('activeBoardId', null));
+
+  useEffect(() => { save('boards', boards); }, [boards]);
+  useEffect(() => { save('boardMembers', boardMembers); }, [boardMembers]);
+  useEffect(() => { save('activeBoardId', activeBoardId); }, [activeBoardId]);
 
   useEffect(() => {
       if (!user) {
@@ -28,6 +33,10 @@ export const BoardProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           setBoards([]);
           setBoardMembers({});
           setActiveBoardId(null);
+          // Also clear from storage
+          save('boards', []);
+          save('boardMembers', {});
+          save('activeBoardId', null);
       }
       // In a real app, this is where you'd fetch boards for the logged-in user.
       // For this demo, we start with a clean slate to trigger onboarding.

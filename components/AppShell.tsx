@@ -53,6 +53,8 @@ interface AppShellProps {
     todaysEvents: CalendarEvent[];
     onViewEvent: (event: CalendarEvent) => void;
     onAddNewEvent: () => void;
+    savedViews: SavedView[];
+    setSavedViews: React.Dispatch<React.SetStateAction<SavedView[]>>;
 }
 
 export const AppShell: React.FC<AppShellProps> = (props) => {
@@ -63,7 +65,6 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     
     // View Management State
-    const [savedViews, setSavedViews] = useState<SavedView[]>([]); // US-43: Initialize as empty
     const [isSaveViewModalOpen, setIsSaveViewModalOpen] = useState(false);
     const [isManageViewsModalOpen, setIsManageViewsModalOpen] = useState(false);
 
@@ -76,13 +77,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
 
     const boardUsers = useMemo(() => activeBoardMembers.map(m => m.user), [activeBoardMembers]);
 
-     useEffect(() => {
-        if (user) {
-            // US-43: Removed fake saved view generation.
-        }
-    }, [user]);
-
-    const { selectedSprint } = props;
+    const { selectedSprint, savedViews, setSavedViews } = props;
 
     const enrichedEpics = useMemo(() => {
         return props.epics.map(epic => {
@@ -291,6 +286,7 @@ export const AppShell: React.FC<AppShellProps> = (props) => {
                         epics={props.epics}
                         teams={props.teams}
                         users={boardUsers}
+                        sprints={props.sprints}
                     />
                 );
             case 'MEMBERS':

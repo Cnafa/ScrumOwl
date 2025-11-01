@@ -244,7 +244,6 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
     setLocalWorkItem(prev => ({
         ...prev,
         sprintId: selectedSprint?.id,
-        sprint: selectedSprint?.name || '',
     }));
   };
   

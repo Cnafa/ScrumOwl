@@ -72,7 +72,6 @@ export interface WorkItem {
   assignees: User[]; // All assignees, including the primary
   reporter: User;
   priority: Priority;
-  sprint: string;
   sprintId?: string;
   group: string;
   stack: string;

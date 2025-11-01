@@ -1,6 +1,6 @@
 // components/ReportsDashboard.tsx
 import React, { useState, useMemo } from 'react';
-import { WorkItem, Epic, Team, User, ReportType, AssigneeWorkloadData, EpicProgressReportData } from '../types';
+import { WorkItem, Epic, Team, User, ReportType, AssigneeWorkloadData, EpicProgressReportData, Sprint } from '../types';
 import * as analytics from '../services/analyticsService';
 import { useLocale } from '../context/LocaleContext';
 import { SPRINTS } from '../constants';
@@ -12,6 +12,7 @@ interface ReportsDashboardProps {
     epics: Epic[];
     teams: Team[];
     users: User[];
+    sprints: Sprint[];
 }
 
 // --- Chart Components ---
@@ -105,18 +106,17 @@ const SimpleBarChart: React.FC<{ data: { labels: string[], datasets: { label: st
 export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
     const { t } = useLocale();
     const [selectedReport, setSelectedReport] = useState<ReportType | null>(null);
-    const [sprintFilter, setSprintFilter] = useState<string>(SPRINTS[SPRINTS.length - 1]);
+    const [sprintFilter, setSprintFilter] = useState<string>(props.sprints[props.sprints.length - 1]?.id || '');
     const [drilldown, setDrilldown] = useState<{ title: string; items: WorkItem[] } | null>(null);
 
     const reportData = useMemo(() => {
         return {
             [ReportType.BURNDOWN]: analytics.getBurndownData(sprintFilter, props.workItems),
-            [ReportType.VELOCITY]: analytics.getVelocityData(props.workItems),
+            [ReportType.VELOCITY]: analytics.getVelocityData(props.workItems, props.sprints),
             [ReportType.EPIC_PROGRESS]: analytics.getEpicProgressData(props.epics, props.workItems),
-            // FIX: Pass the 'users' prop to getAssigneeWorkloadData as it expects two arguments.
             [ReportType.ASSIGNEE_WORKLOAD]: analytics.getAssigneeWorkloadData(props.workItems, props.users),
         };
-    }, [props.workItems, props.epics, props.users, sprintFilter]);
+    }, [props.workItems, props.epics, props.users, props.sprints, sprintFilter]);
 
     const renderDashboard = () => (
         <>
@@ -145,7 +145,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
                         <div className="mb-4">
                             <label className="text-sm">Sprint:</label>
                             <select value={sprintFilter} onChange={e => setSprintFilter(e.target.value)} className="ml-2 p-1 border rounded">
-                                {SPRINTS.map(s => <option key={s} value={s}>{s}</option>)}
+                                {props.sprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
                         <SimpleLineChart data={{
@@ -164,7 +164,13 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
                 content = (
                      <div>
                         <SimpleBarChart data={{ labels: velocity.labels, datasets: [{ label: t('report_completed_points'), data: velocity.data, color: '#486966' }] }} average={velocity.average} />
-                        <DataInspector headers={['Sprint', t('report_completed_points')]} data={velocity.labels.map((l, i) => [l, velocity.data[i]])} onRowClick={(row) => setDrilldown({title: `Items Done in ${row[0]}`, items: props.workItems.filter(item => item.sprint === row[0] && item.status === 'Done')})}/>
+                        <DataInspector headers={['Sprint', t('report_completed_points')]} data={velocity.labels.map((l, i) => [l, velocity.data[i]])} onRowClick={(row) => {
+                            const sprintName = row[0];
+                            const sprint = props.sprints.find(s => s.name === sprintName);
+                            if (sprint) {
+                                setDrilldown({title: `Items Done in ${sprintName}`, items: props.workItems.filter(item => item.sprintId === sprint.id && item.status === 'Done')})
+                            }
+                        }}/>
                     </div>
                 );
                 break;
@@ -191,7 +197,7 @@ export const ReportsDashboard: React.FC<ReportsDashboardProps> = (props) => {
                       d.inReview,
                       d.wipBreached ? t('report_wip_breached') : 'OK'
                     ])}
-                    onRowClick={(_, index) => setDrilldown({ title: `Workload for ${workload[index].assignee.name}`, items: props.workItems.filter(item => item.assignee.id === workload[index].assignee.id && item.status !== 'Done') })}
+                    onRowClick={(_, index) => setDrilldown({ title: `Workload for ${workload[index].assignee.name}`, items: props.workItems.filter(item => item.assignee?.id === workload[index].assignee.id && item.status !== 'Done') })}
                     highlightRow={(row, index) => workload[index].wipBreached}
                 />;
                 break;

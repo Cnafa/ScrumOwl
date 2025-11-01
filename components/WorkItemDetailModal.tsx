@@ -1,7 +1,7 @@
 // components/WorkItemDetailModal.tsx
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { WorkItem, ActivityItem, User, ChecklistItem } from '../types';
+import { WorkItem, ActivityItem, User, ChecklistItem, Sprint } from '../types';
 import { XMarkIcon, StarIcon } from './icons';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import { useBoard } from '../context/BoardContext';
 
 interface WorkItemDetailModalProps {
   workItem: WorkItem;
+  sprints: Sprint[];
   onClose: () => void;
   onEdit: (workItem: WorkItem) => void;
   onItemUpdate: (item: WorkItem) => void;
@@ -41,7 +42,7 @@ const UserDisplay: React.FC<{ user?: User }> = ({ user }) => {
     );
 };
 
-export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, onClose, onEdit, onItemUpdate, highlightSection }) => {
+export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workItem, sprints, onClose, onEdit, onItemUpdate, highlightSection }) => {
   const { t } = useLocale();
   const { user } = useAuth();
   const { can } = useBoard();
@@ -102,6 +103,11 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
     onItemUpdate(updatedWorkItem);
   };
   
+  const sprintName = useMemo(() => {
+    if (!workItem.sprintId) return 'N/A';
+    return sprints.find(s => s.id === workItem.sprintId)?.name || workItem.sprintId;
+  }, [workItem.sprintId, sprints]);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onMouseDown={onClose}>
       <div 
@@ -186,7 +192,7 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
                  </DetailField>
                  <DetailField label={'Reporter'} highlightKey="reporter"><UserDisplay user={workItem.reporter} /></DetailField>
                  <DetailField label={t('priority')} highlightKey="priority"><span className="font-bold">{workItem.priority}</span></DetailField>
-                 <DetailField label={'Sprint'} highlightKey="sprint">{workItem.sprint}</DetailField>
+                 <DetailField label={'Sprint'} highlightKey="sprint">{sprintName}</DetailField>
                  <DetailField label={'Group'} highlightKey="group">{workItem.group}</DetailField>
                  <DetailField label={t('type')} highlightKey="type">{workItem.type}</DetailField>
                  <DetailField label={t('stack')} highlightKey="stack">{workItem.stack || 'N/A'}</DetailField>
