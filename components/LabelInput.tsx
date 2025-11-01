@@ -48,7 +48,7 @@ export const LabelInput: React.FC<LabelInputProps> = ({ labels, onChange }) => {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t('addLabel')}
-          className="flex-grow px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
+          className="flex-grow px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#486966]"
         />
         <button type="button" onClick={handleAddLabel} className="flex-shrink-0 text-[#486966] hover:text-[#3a5a58]">
           <PlusCircleIcon className="w-6 h-6" />

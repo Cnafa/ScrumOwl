@@ -63,7 +63,7 @@ const UserSelect: React.FC<{
             <span className="text-sm">{selectedUser.name}</span>
           </>
         ) : (
-          <span className="text-sm text-slate-400">{t('workItemEditor_selectUser')}</span>
+          <span className="text-sm text-slate-500">{t('workItemEditor_selectUser')}</span>
         )}
       </button>
       {isOpen && (
@@ -301,7 +301,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                 <textarea
                     name="summary" value={localWorkItem.summary || ''} onChange={handleChange}
                     placeholder={t('summaryPlaceholder')} rows={2}
-                    className="w-full px-2 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-2 py-1.5 text-sm bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <button type="button" onClick={handleGenerateSummary} disabled={isGeneratingSummary}
                     className="mt-1 text-xs text-primary hover:underline disabled:text-slate-400">
@@ -352,7 +352,7 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
                     onChange={e => setAssigneeSearch(e.target.value)}
                     onFocus={() => setIsAssigneeDropdownOpen(true)}
                     placeholder={t('searchOrAddAssignee')}
-                    className="flex-grow text-sm focus:outline-none min-w-[100px] p-1 placeholder-slate-400"
+                    className="flex-grow text-sm focus:outline-none min-w-[100px] p-1 placeholder-slate-500"
                   />
                 </div>
                 {isAssigneeDropdownOpen && (

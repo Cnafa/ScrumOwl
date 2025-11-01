@@ -47,7 +47,6 @@ const AssigneeAvatars: React.FC<{ assignees: User[] }> = ({ assignees }) => {
 export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints, onItemUpdate, onSelectWorkItem }) => {
     const { t } = useLocale();
     const { user } = useAuth();
-    const [activeScope, setActiveScope] = useState<QuickScope>('UNASSIGNED');
     const [searchQuery, setSearchQuery] = useState('');
     const [editingCell, setEditingCell] = useState<{ itemId: string; column: 'epic' | 'sprint' } | null>(null);
 
@@ -56,27 +55,7 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
     const filteredItems = useMemo(() => {
         let items = workItems;
 
-        // 1. Apply quick scope
-        switch (activeScope) {
-            case 'UNASSIGNED':
-                items = items.filter(item => !item.epicId && !item.sprintId);
-                break;
-            case 'NO_EPIC':
-                items = items.filter(item => !item.epicId);
-                break;
-            case 'NO_SPRINT':
-                items = items.filter(item => !item.sprintId);
-                break;
-            case 'MY_ITEMS':
-                items = items.filter(item => user && item.assignees?.some(a => a.id === user.id));
-                break;
-            case 'ALL':
-            default:
-                // No scope filter
-                break;
-        }
-
-        // 2. Apply search query
+        // Apply search query
         if (debouncedSearch) {
             const lowerQuery = debouncedSearch.toLowerCase();
             items = items.filter(item => 
@@ -85,10 +64,10 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
             );
         }
         
-        // 3. Sort by updatedAt descending
+        // Sort by updatedAt descending
         return items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-    }, [workItems, activeScope, debouncedSearch, user]);
+    }, [workItems, debouncedSearch]);
 
     const handleInlineSave = (item: WorkItem, column: 'epic' | 'sprint', value: string) => {
         let updatedItem = { ...item };
@@ -108,15 +87,7 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
         <div className="p-4 bg-white rounded-lg shadow h-full flex flex-col">
             <header className="flex-shrink-0 pb-4 border-b">
                 <h2 className="text-xl font-bold text-[#3B3936]">{t('itemsView')}</h2>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-                    {/* Quick Scope Pills */}
-                    <div className="flex items-center gap-2">
-                        {(['UNASSIGNED', 'NO_EPIC', 'NO_SPRINT', 'MY_ITEMS', 'ALL'] as QuickScope[]).map(scope => (
-                            <button key={scope} onClick={() => setActiveScope(scope)} className={`px-3 py-1 text-sm font-medium rounded-full ${activeScope === scope ? 'bg-primary text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>
-                                {t(`items_quickScope_${scope.toLowerCase()}` as any)}
-                            </button>
-                        ))}
-                    </div>
+                <div className="mt-4 flex flex-wrap items-center justify-end gap-4">
                     {/* Search Input */}
                     <div className="relative w-full sm:w-64">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -125,7 +96,7 @@ export const ItemsView: React.FC<ItemsViewProps> = ({ workItems, epics, sprints,
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('searchPlaceholder')}
-                            className="w-full text-sm pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full text-sm pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary placeholder-slate-500"
                         />
                     </div>
                 </div>

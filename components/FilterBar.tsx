@@ -122,7 +122,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           value={filterSet.searchQuery}
           onChange={handleInputChange}
           placeholder={t('searchPlaceholder')}
-          className="w-64 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-64 px-2 py-1 bg-white border border-slate-300 rounded-md text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary"
         />
         
         {/* Active Filters as Chips */}

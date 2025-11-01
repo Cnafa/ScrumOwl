@@ -37,7 +37,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ onClose, onCreate }
                             placeholder={t('onboarding_create_modal_placeholder')}
                             required
                             autoFocus
-                            className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
+                            className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#486966]"
                         />
                     </div>
                 </main>

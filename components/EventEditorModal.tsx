@@ -139,12 +139,12 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({ event, workI
                         </div>
                         <div>
                            <label htmlFor="onlineLink" className="block text-sm font-medium text-[#486966] mb-1">{t('online_meeting_link')}</label>
-                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={(e) => handleFieldChange('onlineLink', e.target.value)} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900"/>
+                           <input type="url" id="onlineLink" name="onlineLink" value={localEvent.onlineLink || ''} onChange={(e) => handleFieldChange('onlineLink', e.target.value)} placeholder="https://meet.google.com/..." className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900 placeholder-slate-500"/>
                         </div>
                         <div ref={workItemDropdownRef}>
                            <label htmlFor="linkedWorkItemId" className="block text-sm font-medium text-[#486966] mb-1">{t('linkToWorkItem')}</label>
                            <div className="relative">
-                               <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900"/>
+                               <input type="text" id="linkedWorkItemId" value={workItemSearch} onChange={(e) => setWorkItemSearch(e.target.value)} onFocus={() => setIsWorkItemDropdownOpen(true)} placeholder={t('searchPlaceholder')} className="w-full h-10 px-3 py-2 bg-white border border-[#B2BEBF] rounded-md text-slate-900 placeholder-slate-500"/>
                                {isWorkItemDropdownOpen && (
                                    <ul className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
                                        <li onClick={() => handleSelectWorkItem(undefined)} className="px-3 py-2 text-sm text-slate-900 cursor-pointer hover:bg-gray-100">{t('eventEditor_noWorkItem')}</li>

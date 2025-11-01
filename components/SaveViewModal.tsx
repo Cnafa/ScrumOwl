@@ -62,7 +62,7 @@ export const SaveViewModal: React.FC<SaveViewModalProps> = ({ isOpen, onClose, o
                             onChange={(e) => { setName(e.target.value); setError(null); }}
                             required
                             autoFocus
-                            className={`w-full px-3 py-2 h-10 bg-white border rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 ${error ? 'border-red-500 ring-red-500' : 'border-[#B2BEBF] focus:ring-[#486966]'}`}
+                            className={`w-full px-3 py-2 h-10 bg-white border rounded-md text-black placeholder-slate-500 focus:outline-none focus:ring-2 ${error ? 'border-red-500 ring-red-500' : 'border-[#B2BEBF] focus:ring-[#486966]'}`}
                         />
                          {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
                     </div>

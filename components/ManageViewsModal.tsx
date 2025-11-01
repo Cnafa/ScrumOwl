@@ -168,7 +168,7 @@ export const ManageViewsModal: React.FC<ManageViewsModalProps> = (props) => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('search_views')}
-                            className="w-full text-sm pl-8 pr-2 py-1 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full text-sm pl-8 pr-2 py-1 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary placeholder-slate-500"
                         />
                     </div>
                 </header>

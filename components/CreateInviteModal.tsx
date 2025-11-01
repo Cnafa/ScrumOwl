@@ -59,7 +59,7 @@ const CreateInviteModal: React.FC<CreateInviteModalProps> = ({ roles, onClose, o
                             onChange={(e) => setMaxUses(e.target.value ? parseInt(e.target.value, 10) : null)}
                             placeholder={t('createInvite_maxUses_placeholder')}
                             min="0"
-                            className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
+                            className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#486966]"
                         />
                     </div>
                     <div>
@@ -70,7 +70,7 @@ const CreateInviteModal: React.FC<CreateInviteModalProps> = ({ roles, onClose, o
                             value={expiresAt || ''}
                             onChange={(e) => setExpiresAt(e.target.value || null)}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#486966]"
+                            className="w-full px-3 py-2 h-10 bg-white border border-[#B2BEBF] rounded-md text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#486966]"
                         />
                          <p className="text-xs text-gray-500 mt-1">{t('createInvite_expiresAt_desc')}</p>
                     </div>
