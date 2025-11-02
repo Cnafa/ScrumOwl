@@ -86,16 +86,19 @@ const App: React.FC = () => {
     useEffect(() => { save('inviteCodes', inviteCodes); }, [inviteCodes]);
     useEffect(() => { save('savedViews', savedViews); }, [savedViews]);
 
-    // One-time migration for workItem.sprint to sprintId
+    // One-time migrations
     useEffect(() => {
-        const items = load<WorkItem[] | any[]>('workItems', []);
-        const sprintsList = load<Sprint[]>('sprints', []);
-        if (items.length === 0 || sprintsList.length === 0) return;
+        let items = load<WorkItem[] | any[]>('workItems', []);
+        if (items.length === 0) return;
 
+        const sprintsList = load<Sprint[]>('sprints', []);
         let needsSave = false;
+        
         const migratedItems: WorkItem[] = items.map(item => {
-            const anyItem = item as any;
             let newItem = { ...item };
+            
+            // Migration 1: sprint -> sprintId
+            const anyItem = item as any;
             if (anyItem.sprint && !anyItem.sprintId) {
                 const matchingSprint = sprintsList.find(s => s.name === anyItem.sprint);
                 if (matchingSprint) {
@@ -107,6 +110,13 @@ const App: React.FC = () => {
                 needsSave = true;
                 delete (newItem as any).sprint;
             }
+
+            // Migration 2: Add sprintBinding (EP-SSR-01)
+            if (!newItem.sprintBinding) {
+                needsSave = true;
+                newItem.sprintBinding = 'manual';
+            }
+
             return newItem;
         });
 
@@ -533,8 +543,9 @@ const App: React.FC = () => {
             watchers: [user.id], // Creator watches by default
             description: '', // FIX: Initialize description to prevent .replace on undefined error
             estimationPoints: 0, // FIX: Initialize estimation points to 0
-            // FIX: Assign the new item to the currently selected sprint
+            // EP-SSR-01: New items have manual binding
             sprintId: selectedSprint ? selectedSprint.id : undefined,
+            sprintBinding: 'manual',
         });
         setIsNewItem(true);
     };
@@ -594,8 +605,13 @@ const App: React.FC = () => {
     const handleItemStatusChange = (itemId: string, newStatus: Status) => {
         const originalItem = workItems.find(i => i.id === itemId);
         if (originalItem && originalItem.status !== newStatus) {
-            const updatedItem = { ...originalItem, status: newStatus, isUpdated: true, updatedAt: new Date().toISOString() };
+            const updatedItem: WorkItem = { ...originalItem, status: newStatus, isUpdated: true, updatedAt: new Date().toISOString() };
             
+            // EP-SSR-01: Set doneInSprintId when item is completed, if not already set
+            if (newStatus === Status.DONE && !originalItem.doneInSprintId) {
+                updatedItem.doneInSprintId = originalItem.sprintId;
+            }
+
             dispatchUpdateNotification({ field: 'status', from: originalItem.status, to: newStatus }, updatedItem);
             
             setWorkItems(prevItems =>
@@ -731,18 +747,18 @@ const App: React.FC = () => {
     };
 
 
-    // FIX-07: Handle saving sprints and automatically assigning work items.
+    // EP-SSR-01: Handle saving sprints and applying inheritance policy.
     const handleSaveSprint = (sprintToSave: Partial<Sprint>) => {
         const isNew = !sprintToSave.id;
         const sprintId = isNew ? `sprint-${Date.now()}` : sprintToSave.id!;
         
-        // 1. Find newly added epics
-        let newlyAddedEpicIds: string[] = [];
         const originalSprint = isNew ? null : sprints.find(s => s.id === sprintId);
-        if (sprintToSave.epicIds) {
-            const originalEpicIds = new Set(originalSprint?.epicIds || []);
-            newlyAddedEpicIds = sprintToSave.epicIds.filter(id => !originalEpicIds.has(id));
-        }
+
+        // 1. Determine added and removed epics
+        const originalEpicIds = new Set(originalSprint?.epicIds || []);
+        const newEpicIds = new Set(sprintToSave.epicIds || []);
+        const addedEpicIds = [...newEpicIds].filter(id => !originalEpicIds.has(id));
+        const removedEpicIds = [...originalEpicIds].filter(id => !newEpicIds.has(id));
 
         // 2. Prepare the final sprint object
         const finalSprint: Sprint = {
@@ -757,20 +773,36 @@ const App: React.FC = () => {
             epicIds: sprintToSave.epicIds!,
         };
 
-        // 3. Update work items if there are newly added epics
-        if (newlyAddedEpicIds.length > 0) {
-            setWorkItems(prevItems =>
-                prevItems.map(item => {
-                    const isInNewEpic = item.epicId && newlyAddedEpicIds.includes(item.epicId);
-                    const isUnassigned = !item.sprintId;
-                    const isNotDone = item.status !== Status.DONE;
-
-                    if (isInNewEpic && isUnassigned && isNotDone) {
-                        return { ...item, sprintId: finalSprint.id };
+        // 3. Apply inheritance policy
+        if (addedEpicIds.length > 0 || removedEpicIds.length > 0) {
+            setWorkItems(prevItems => {
+                return prevItems.map(item => {
+                    // Policy A: Assign open, auto-bound/unassigned items from ADDED epics
+                    if (item.epicId && addedEpicIds.includes(item.epicId)) {
+                        const isUnassigned = !item.sprintId;
+                        const isAutoBound = item.sprintBinding === 'auto';
+                        const isNotDone = item.status !== Status.DONE;
+                        
+                        if ((isUnassigned || isAutoBound) && isNotDone) {
+                            return { ...item, sprintId: finalSprint.id, sprintBinding: 'auto' };
+                        }
                     }
+
+                    // Policy D (simplified): Unassign open, auto-bound items from REMOVED epics
+                    // that were in the sprint being edited.
+                    if (item.epicId && removedEpicIds.includes(item.epicId)) {
+                        const wasInThisSprint = item.sprintId === sprintId;
+                        const isAutoBound = item.sprintBinding === 'auto';
+                        const isNotDone = item.status !== Status.DONE;
+
+                        if (wasInThisSprint && isAutoBound && isNotDone) {
+                            return { ...item, sprintId: undefined, sprintBinding: 'auto' };
+                        }
+                    }
+                    
                     return item;
-                })
-            );
+                });
+            });
         }
 
         // 4. Save the sprint itself
@@ -874,7 +906,8 @@ const App: React.FC = () => {
                  {onboardingModal === 'JOIN_BOARD' && (
                     <JoinBoardModal
                         onClose={() => setOnboardingModal(null)}
-                        onJoinRequest={(code) => {
+// FIX: Explicitly typed the 'code' parameter as a string to resolve the type error.
+                        onJoinRequest={(code: string) => {
                             console.log('TELEMETRY: user.join_request', { code }); // Simulate telemetry
                             setOnboardingStatus('PENDING_APPROVAL');
                             setOnboardingModal(null);

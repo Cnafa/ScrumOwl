@@ -73,6 +73,8 @@ export interface WorkItem {
   reporter: User;
   priority: Priority;
   sprintId?: string;
+  sprintBinding?: 'auto' | 'manual'; // EP-SSR-01
+  doneInSprintId?: string; // EP-SSR-01
   group: string;
   stack: string;
   estimationPoints: number;

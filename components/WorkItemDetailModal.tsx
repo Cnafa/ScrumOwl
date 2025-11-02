@@ -194,7 +194,16 @@ export const WorkItemDetailModal: React.FC<WorkItemDetailModalProps> = ({ workIt
                  </DetailField>
                  <DetailField label={'Reporter'} highlightKey="reporter"><UserDisplay user={workItem.reporter} /></DetailField>
                  <DetailField label={t('priority')} highlightKey="priority"><span className="font-bold">{workItem.priority}</span></DetailField>
-                 <DetailField label={'Sprint'} highlightKey="sprint">{sprintName}</DetailField>
+                 <DetailField label={'Sprint'} highlightKey="sprint">
+                    <div className="flex items-center gap-2">
+                        <span>{sprintName}</span>
+                        {workItem.sprintId && (
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${workItem.sprintBinding === 'auto' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700'}`}>
+                                {workItem.sprintBinding === 'auto' ? 'Auto' : 'Manual'}
+                            </span>
+                        )}
+                    </div>
+                </DetailField>
                  <DetailField label={'Group'} highlightKey="group">{workItem.group}</DetailField>
                  <DetailField label={t('type')} highlightKey="type">{workItem.type}</DetailField>
                  <DetailField label={t('stack')} highlightKey="stack">{workItem.stack || 'N/A'}</DetailField>

@@ -133,7 +133,7 @@ export const WorkItemCard: React.FC<WorkItemCardProps> = ({ workItem, onSelect }
         <p className="text-xs font-medium text-slate-500">{workItem.id}</p>
         <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${config.classes}`}>{config.label}</span>
       </div>
-      <h3 className="font-medium text-slate-800 text-sm leading-snug text-start">{workItem.title}</h3>
+      <h3 title={workItem.title} className="font-medium text-slate-800 text-sm leading-snug text-start truncate">{workItem.title}</h3>
       <div className="flex justify-between items-center pt-1">
         {workItem.teamInfo ? (
             <div className="flex items-center gap-1 text-xs text-slate-500" title={`Team: ${workItem.teamInfo.name}`}>

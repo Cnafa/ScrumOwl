@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { WorkItem, Status, Priority, WorkItemType, Epic, Team, User, Sprint, SprintState } from '../types';
 import { useLocale } from '../context/LocaleContext';
-import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon, StarIcon } from './icons';
+import { XMarkIcon, TypeIcon, FileTextIcon, UserRoundIcon, MilestoneIcon, BoxesIcon, TimerIcon, CalendarIcon, FlagIcon, PaperclipIcon, CheckSquareIcon, GitBranchIcon, TagIcon, UsersRoundIcon, MountainIcon, LayoutKanbanIcon, ClipboardCheckIcon, StarIcon, LockClosedIcon } from './icons';
 import { PRIORITIES, STACKS, WORK_ITEM_TYPES, WORKFLOW_RULES } from '../constants';
 import { LabelInput } from './LabelInput';
 import { ChecklistInput } from './ChecklistInput';
@@ -96,8 +96,8 @@ const SideFieldWrapper: React.FC<{ label: string, children: React.ReactNode, hig
   </div>
 );
 
-const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, disabled?: boolean }> = ({ icon, value, onChange, children, name, disabled }) => (
-  <div className="relative w-full">
+const SelectWithIcon: React.FC<{ icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode, name: string, disabled?: boolean, className?: string }> = ({ icon, value, onChange, children, name, disabled, className }) => (
+  <div className={`relative ${className || 'w-full'}`}>
       <div className="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none text-slate-500">{icon}</div>
       <select name={name} value={value} onChange={onChange} disabled={disabled} className="w-full ps-9 pe-3 py-1.5 min-h-[34px] bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-slate-50">
           {children}
@@ -247,11 +247,16 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
 
   const handleSprintChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sprintId = e.target.value;
-    const selectedSprint = selectableSprints.find(s => s.id === sprintId);
     setLocalWorkItem(prev => ({
         ...prev,
-        sprintId: selectedSprint?.id,
+        sprintId: sprintId || undefined,
+        sprintBinding: 'manual', // EP-SSR-01: Manual change sets binding to manual
     }));
+  };
+
+  const handleToggleBinding = () => {
+    const newBinding = localWorkItem.sprintBinding === 'manual' ? 'auto' : 'manual';
+    setLocalWorkItem(prev => ({ ...prev, sprintBinding: newBinding }));
   };
   
   const handleGenerateSummary = async () => {
@@ -408,10 +413,22 @@ export const WorkItemEditor: React.FC<WorkItemEditorProps> = ({ workItem, epics,
             </SideFieldWrapper>
 
             <SideFieldWrapper label={t('sprint')} highlightKey="sprint">
-               <SelectWithIcon icon={<MilestoneIcon className="w-4 h-4" />} name="sprintId" value={localWorkItem.sprintId || ''} onChange={handleSprintChange}>
-                    <option value="">{t('noSprint')}</option>
-                    {selectableSprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </SelectWithIcon>
+                <div className="flex items-center gap-2">
+                   <SelectWithIcon className="flex-grow" icon={<MilestoneIcon className="w-4 h-4" />} name="sprintId" value={localWorkItem.sprintId || ''} onChange={handleSprintChange}>
+                        <option value="">{t('noSprint')}</option>
+                        {selectableSprints.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </SelectWithIcon>
+                  <button
+                    type="button"
+                    onClick={handleToggleBinding}
+                    title={localWorkItem.sprintBinding === 'manual' ? 'Unpin to allow auto-assignment by epic' : 'Pin to prevent auto-assignment'}
+                    className="p-2 rounded-lg hover:bg-slate-200"
+                  >
+                    {localWorkItem.sprintBinding === 'manual' 
+                        ? <LockClosedIcon className="w-5 h-5 text-slate-600" /> 
+                        : <GitBranchIcon className="w-5 h-5 text-blue-600" />}
+                  </button>
+                </div>
             </SideFieldWrapper>
             
             <SideFieldWrapper label={t('stack')} highlightKey="stack">

@@ -3,6 +3,7 @@ export const translations = {
   'en-US': {
     // General
     actions: 'Actions',
+    actions_clearAll: 'Clear all',
     addChecklistItem: 'Add a checklist item...',
     addComment: 'Add a comment...',
     addLabel: 'Add a label...',
@@ -125,6 +126,8 @@ export const translations = {
     filterbar_teams_plural: '{count} Team(s)',
     filterbar_types_plural: '{count} Type(s)',
     filters_applied: 'Filters Applied',
+    filters_assignees_more: '+{count} more',
+    filters_assignees_selected: 'Selected Assignees',
     generateSummary: 'Generate with AI',
     goal: 'Goal',
     googlePickerTitle: 'Select a file from Google Drive',
@@ -430,6 +433,7 @@ export const translations = {
   'fa-IR': {
     // General
     actions: 'عملیات',
+    actions_clearAll: 'پاک کردن همه',
     addChecklistItem: 'افزودن آیتم چک‌لیست...',
     addComment: 'افزودن نظر...',
     addLabel: 'افزودن برچسب...',
@@ -554,6 +558,8 @@ export const translations = {
     filterbar_teams_plural: '{count} تیم',
     filterbar_types_plural: '{count} نوع',
     filters_applied: 'فیلترهای اعمال‌شده',
+    filters_assignees_more: '+{count} نفر دیگر',
+    filters_assignees_selected: 'اساینی‌های انتخاب‌شده',
     generateSummary: 'ایجاد با هوش مصنوعی',
     goal: 'هدف',
     googlePickerTitle: 'انتخاب فایل از گوگل درایو',

@@ -41,9 +41,9 @@ export const getVelocityData = (workItems: WorkItem[], sprints: Sprint[]) => {
     });
 
     workItems
-        .filter(item => item.status === Status.DONE && item.sprintId)
+        .filter(item => item.status === Status.DONE && item.doneInSprintId)
         .forEach(item => {
-            const sprintName = sprints.find(s => s.id === item.sprintId)?.name;
+            const sprintName = sprints.find(s => s.id === item.doneInSprintId)?.name;
             if (sprintName && velocityBySprint.hasOwnProperty(sprintName)) {
                 velocityBySprint[sprintName] += item.estimationPoints || 0;
             }

@@ -3,21 +3,25 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { FilterSet, Team, Sprint, User, WorkItemType } from '../types';
 import { ALL_USERS, WORK_ITEM_TYPES } from '../constants';
 import { useLocale } from '../context/LocaleContext';
-import { BookmarkPlusIcon, FolderCogIcon, XMarkIcon, UserRoundIcon } from './icons';
+import { BookmarkPlusIcon, FolderCogIcon, XMarkIcon, MagnifyingGlassIcon } from './icons';
 
-interface FilterBarProps {
-  filterSet: FilterSet;
-  onFilterChange: (filters: FilterSet) => void;
-  onResetFilters: () => void;
-  onOpenSaveViewModal: () => void;
-  onOpenManageViewsModal: () => void;
-  teams: Team[];
-  groupBy: 'status' | 'epic';
-  onGroupByChange: (groupBy: 'status' | 'epic') => void;
-  activeSprint: Sprint | null | undefined;
-  includeUnassignedEpicItems: boolean;
-  onIncludeUnassignedEpicItemsChange: (checked: boolean) => void;
-}
+// --- Start of US-51 SelectedAssigneesChips Component ---
+
+// A hook to get the window size category for responsiveness
+const useWindowSize = () => {
+    const [size, setSize] = useState<'sm' | 'md' | 'lg'>('lg');
+    useEffect(() => {
+        const updateSize = () => {
+            if (window.innerWidth < 640) setSize('sm');
+            else if (window.innerWidth < 1024) setSize('md');
+            else setSize('lg');
+        };
+        window.addEventListener('resize', updateSize);
+        updateSize();
+        return () => window.removeEventListener('resize', updateSize);
+    }, []);
+    return size;
+};
 
 const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) => {
     useEffect(() => {
@@ -33,6 +37,95 @@ const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: Mou
         };
     }, [ref, handler]);
 };
+
+interface SelectedAssigneesChipsProps {
+  selectedUsers: User[];
+  onRemove: (userId: string) => void;
+  onClearAll: () => void;
+}
+
+const SelectedAssigneesChips: React.FC<SelectedAssigneesChipsProps> = ({ selectedUsers, onRemove, onClearAll }) => {
+    const { t } = useLocale();
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const popoverRef = useRef<HTMLDivElement>(null);
+    useClickOutside(popoverRef, () => setIsPopoverOpen(false));
+    const screenSize = useWindowSize();
+
+    const maxVisible = useMemo(() => {
+        if (screenSize === 'sm') return 0;
+        if (screenSize === 'md') return 1;
+        return 2;
+    }, [screenSize]);
+
+    const visibleUsers = selectedUsers.slice(0, maxVisible);
+    const overflowCount = selectedUsers.length - maxVisible;
+
+    const filteredPopoverUsers = useMemo(() => {
+        if (!search) return selectedUsers;
+        return selectedUsers.filter(u => u.name.toLowerCase().includes(search.toLowerCase()));
+    }, [search, selectedUsers]);
+
+    if (selectedUsers.length === 0) return null;
+
+    return (
+        <div className="flex items-center gap-1.5" ref={popoverRef}>
+            {/* Visible Chips */}
+            {visibleUsers.map(user => (
+                <div key={user.id} className="h-7 px-2 rounded-full border bg-white text-xs flex items-center gap-1 shadow-sm">
+                    <img src={user.avatarUrl} alt={user.name} className="w-5 h-5 rounded-full object-cover" />
+                    <span className="max-w-[96px] truncate" title={user.name}>{user.name}</span>
+                    <button onClick={() => onRemove(user.id)} className="p-0.5 rounded-full hover:bg-gray-100" aria-label={`Remove ${user.name}`}>
+                        <XMarkIcon className="w-3 h-3" />
+                    </button>
+                </div>
+            ))}
+            {/* Avatar Stack for small screens */}
+            {screenSize === 'sm' && selectedUsers.slice(0, 2).map((user, index) => (
+                <img key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} className={`w-7 h-7 rounded-full object-cover border-2 border-white ${index > 0 ? '-ml-2' : ''}`} />
+            ))}
+
+            {/* Counter Chip */}
+            {overflowCount > 0 && (
+                 <button 
+                    onClick={() => setIsPopoverOpen(true)}
+                    className="h-7 px-2 rounded-full bg-gray-100 text-gray-700 border border-gray-200 cursor-pointer text-xs font-medium"
+                    aria-label={`Open selected assignees (${overflowCount} more)`}
+                    title={t('filters_assignees_more').replace('{count}', overflowCount.toString())}
+                 >
+                    +{overflowCount > 99 ? '99+' : overflowCount}
+                </button>
+            )}
+
+            {/* Popover */}
+            {isPopoverOpen && (
+                <div className="absolute top-full mt-2 z-20 w-72 bg-white rounded-lg shadow-lg border">
+                    <div className="p-2 border-b flex justify-between items-center">
+                        <h3 className="text-sm font-semibold">{t('filters_assignees_selected')}</h3>
+                        <button onClick={onClearAll} className="text-xs text-primary hover:underline">{t('actions_clearAll')}</button>
+                    </div>
+                    <div className="p-2 border-b">
+                         <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} className="w-full px-2 py-1 border rounded-md text-xs"/>
+                    </div>
+                    <ul className="max-h-60 overflow-auto p-1">
+                        {filteredPopoverUsers.map(user => (
+                            <li key={user.id} className="flex items-center justify-between p-1.5 rounded hover:bg-gray-50">
+                                <div className="flex items-center gap-2">
+                                    <img src={user.avatarUrl} alt={user.name} className="w-6 h-6 rounded-full" />
+                                    <span className="text-sm">{user.name}</span>
+                                </div>
+                                <button onClick={() => onRemove(user.id)} className="p-1 rounded-full hover:bg-gray-200" aria-label={`Remove ${user.name}`}>
+                                    <XMarkIcon className="w-4 h-4 text-gray-500" />
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+// --- End of US-51 Component ---
 
 
 const FilterChip: React.FC<{ onRemove: () => void; children: React.ReactNode }> = ({ onRemove, children }) => (
@@ -93,6 +186,20 @@ const MultiSelectDropdown: React.FC<{
   );
 };
 
+interface FilterBarProps {
+  filterSet: FilterSet;
+  onFilterChange: (filters: FilterSet) => void;
+  onResetFilters: () => void;
+  onOpenSaveViewModal: () => void;
+  onOpenManageViewsModal: () => void;
+  teams: Team[];
+  groupBy: 'status' | 'epic';
+  onGroupByChange: (groupBy: 'status' | 'epic') => void;
+  activeSprint: Sprint | null | undefined;
+  includeUnassignedEpicItems: boolean;
+  onIncludeUnassignedEpicItemsChange: (checked: boolean) => void;
+}
+
 const FILTERABLE_TYPES = [
     WorkItemType.STORY,
     WorkItemType.TASK,
@@ -113,6 +220,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   
   const isFiltered = filterSet.searchQuery !== '' || filterSet.assigneeIds.length > 0 || filterSet.typeIds.length > 0 || filterSet.teamIds.length > 0;
 
+  const selectedUsers = useMemo(() => 
+    filterSet.assigneeIds.map(id => ALL_USERS.find(u => u.id === id)).filter((u): u is User => !!u),
+    [filterSet.assigneeIds]
+  );
+
   return (
     <div className="h-10 flex-shrink-0 bg-white/70 backdrop-blur-sm flex items-center justify-between px-2 border-b border-slate-200/80">
       <div className="flex items-center gap-2">
@@ -126,14 +238,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         />
         
         {/* Active Filters as Chips */}
-        {filterSet.assigneeIds.map(id => {
-          const user = ALL_USERS.find(u => u.id === id);
-          if (!user) return null;
-          return <FilterChip key={id} onRemove={() => onFilterChange({...filterSet, assigneeIds: filterSet.assigneeIds.filter(i => i !== id)})}>
-              <img src={user.avatarUrl} className="w-4 h-4 rounded-full me-1" alt={user.name} />
-              {user.name}
-          </FilterChip>
-        })}
+        <SelectedAssigneesChips
+            selectedUsers={selectedUsers}
+            onRemove={(userId) => onFilterChange({ ...filterSet, assigneeIds: filterSet.assigneeIds.filter(id => id !== userId) })}
+            onClearAll={() => onFilterChange({ ...filterSet, assigneeIds: [] })}
+        />
 
         {filterSet.teamIds.map(id => {
           const team = teams.find(t => t.id === id);
